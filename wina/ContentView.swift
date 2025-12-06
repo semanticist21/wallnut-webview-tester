@@ -10,6 +10,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var urlText: String = ""
     @State private var isFocused: Bool = false
+    @State private var showSettings: Bool = false
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData: Data = Data()
 
@@ -33,10 +34,11 @@ struct ContentView: View {
     private let inputWidth: CGFloat = 340
 
     var body: some View {
-        GeometryReader { geometry in
-            VStack(spacing: 16) {
-                // URL parts chips - FlowLayout으로 줄바꿈
-                FlowLayout(spacing: 8) {
+        ZStack(alignment: .topTrailing) {
+            GeometryReader { geometry in
+                VStack(spacing: 16) {
+                    // URL parts chips - FlowLayout으로 줄바꿈
+                    FlowLayout(spacing: 8) {
                     ForEach(urlParts, id: \.self) { part in
                         ChipButton(label: part) {
                             urlText += part
@@ -144,6 +146,17 @@ struct ContentView: View {
                 textFieldFocused = false
             }
             .position(x: geometry.size.width / 2, y: geometry.size.height * 0.25)
+            }
+
+            // Settings button
+            GlassIconButton(icon: "gearshape") {
+                showSettings = true
+            }
+            .padding(.top, 8)
+            .padding(.trailing, 16)
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
     }
 
@@ -171,68 +184,6 @@ struct ContentView: View {
         if let data = try? JSONEncoder().encode(urls) {
             recentURLsData = data
         }
-    }
-}
-
-struct ChipButton: View {
-    let label: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-        }
-        .buttonStyle(.plain)
-        .glassEffect(in: .capsule)
-    }
-}
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
-        return result.size
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
-        for (index, position) in result.positions.enumerated() {
-            subviews[index].place(
-                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
-                proposal: .unspecified
-            )
-        }
-    }
-
-    private func arrangeSubviews(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, positions: [CGPoint]) {
-        let maxWidth = proposal.width ?? .infinity
-        var positions: [CGPoint] = []
-        var currentX: CGFloat = 0
-        var currentY: CGFloat = 0
-        var lineHeight: CGFloat = 0
-        var totalHeight: CGFloat = 0
-
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-
-            if currentX + size.width > maxWidth && currentX > 0 {
-                currentX = 0
-                currentY += lineHeight + spacing
-                lineHeight = 0
-            }
-
-            positions.append(CGPoint(x: currentX, y: currentY))
-            lineHeight = max(lineHeight, size.height)
-            currentX += size.width + spacing
-            totalHeight = currentY + lineHeight
-        }
-
-        return (CGSize(width: maxWidth, height: totalHeight), positions)
     }
 }
 
