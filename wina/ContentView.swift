@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var showSettings: Bool = false
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData: Data = Data()
+    @AppStorage("isDarkMode") private var isDarkMode = false
 
     private var recentURLs: [String] {
         (try? JSONDecoder().decode([String].self, from: recentURLsData)) ?? []
@@ -34,7 +35,7 @@ struct ContentView: View {
     private let inputWidth: CGFloat = 340
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        ZStack {
             GeometryReader { geometry in
                 VStack(spacing: 16) {
                     // URL parts chips - FlowLayout으로 줄바꿈
@@ -148,18 +149,32 @@ struct ContentView: View {
             .position(x: geometry.size.width / 2, y: geometry.size.height * 0.25)
             }
 
-            // Top right buttons
-            HStack(spacing: 12) {
-                GlassIconButton(icon: "checkmark.shield") {
-                    // TODO: 호환성 확인 기능 구현
-                }
+            // Top bar
+            VStack {
+                HStack {
+                    // Theme toggle button (left)
+                    GlassIconButton(icon: isDarkMode ? "moon.fill" : "sun.max.fill") {
+                        isDarkMode.toggle()
+                    }
 
-                GlassIconButton(icon: "gearshape") {
-                    showSettings = true
+                    Spacer()
+
+                    // Right buttons
+                    HStack(spacing: 12) {
+                        GlassIconButton(icon: "checkmark.shield") {
+                            // TODO: 호환성 확인 기능 구현
+                        }
+
+                        GlassIconButton(icon: "gearshape") {
+                            showSettings = true
+                        }
+                    }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 8)
+
+                Spacer()
             }
-            .padding(.top, 8)
-            .padding(.trailing, 16)
         }
         .sheet(isPresented: $showSettings) {
             SettingsView()
