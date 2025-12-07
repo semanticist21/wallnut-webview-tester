@@ -13,7 +13,6 @@ struct ContentView: View {
     @State private var showSettings: Bool = false
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData: Data = Data()
-    @AppStorage("isDarkMode") private var isDarkMode = false
 
     private var recentURLs: [String] {
         (try? JSONDecoder().decode([String].self, from: recentURLsData)) ?? []
@@ -146,28 +145,19 @@ struct ContentView: View {
                 isFocused = false
                 textFieldFocused = false
             }
-            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.25)
+            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32)
             }
 
             // Top bar
             VStack {
                 HStack {
-                    // Theme toggle button (left)
-                    GlassIconButton(icon: isDarkMode ? "moon.fill" : "sun.max.fill") {
-                        isDarkMode.toggle()
-                    }
+                    ThemeToggleButton()
 
                     Spacer()
 
-                    // Right buttons
                     HStack(spacing: 12) {
-                        GlassIconButton(icon: "checkmark.shield") {
-                            // TODO: 호환성 확인 기능 구현
-                        }
-
-                        GlassIconButton(icon: "gearshape") {
-                            showSettings = true
-                        }
+                        CompatibilityCheckButton()
+                        SettingsButton(showSettings: $showSettings)
                     }
                 }
                 .padding(.horizontal, 16)
