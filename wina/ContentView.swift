@@ -37,6 +37,16 @@ struct ContentView: View {
         ZStack {
             GeometryReader { geometry in
                 VStack(spacing: 16) {
+                    // Walnut logo
+                    if let walnutURL = Bundle.main.url(forResource: "walnut", withExtension: "avif"),
+                       let imageData = try? Data(contentsOf: walnutURL),
+                       let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 120)
+                    }
+
                     // URL parts chips - FlowLayout으로 줄바꿈
                     FlowLayout(spacing: 8, alignment: .center) {
                         ForEach(urlParts, id: \.self) { part in
