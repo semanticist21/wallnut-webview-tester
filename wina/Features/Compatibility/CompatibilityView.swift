@@ -123,9 +123,7 @@ struct WebViewInfoView: View {
                 }
 
                 Section("User Agent") {
-                    Text(info.userAgent)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
+                    UserAgentText(userAgent: info.userAgent)
                 }
 
                 Section("Display") {
@@ -261,6 +259,51 @@ private struct CapabilityRow: View {
             Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .foregroundStyle(supported ? .green : .red)
         }
+    }
+}
+
+private struct UserAgentText: View {
+    let userAgent: String
+
+    var body: some View {
+        Text(formattedUserAgent)
+            .font(.system(.caption, design: .monospaced))
+            .textSelection(.enabled)
+    }
+
+    private var formattedUserAgent: AttributedString {
+
+        // 패턴: key/value 또는 괄호 내용
+        let patterns: [(pattern: String, color: Color)] = [
+            ("Mozilla/[\\d.]+", .blue),
+            ("AppleWebKit/[\\d.]+", .orange),
+            ("Version/[\\d.]+", .purple),
+            ("Mobile/[\\w]+", .green),
+            ("Safari/[\\d.]+", .pink),
+            ("\\([^)]+\\)", .secondary),
+        ]
+
+        var text = userAgent
+
+        // 주요 구분자에서 줄바꿈 추가
+        text = text.replacingOccurrences(of: ") ", with: ")\n")
+
+        var attributed = AttributedString(text)
+
+        for (pattern, color) in patterns {
+            if let regex = try? NSRegularExpression(pattern: pattern) {
+                let nsRange = NSRange(text.startIndex..., in: text)
+                for match in regex.matches(in: text, range: nsRange) {
+                    if let range = Range(match.range, in: text),
+                       let attrRange = Range(range, in: attributed)
+                    {
+                        attributed[attrRange].foregroundColor = color
+                    }
+                }
+            }
+        }
+
+        return attributed
     }
 }
 
