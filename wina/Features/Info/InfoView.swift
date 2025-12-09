@@ -1518,21 +1518,21 @@ private struct PerformanceInfo: Sendable {
     // Total
     let totalScore: Int
 
-    // iPhone 14 Pro reference values (ops/sec)
+    // iPhone 14 Pro reference values (ops/sec) - calibrated to score 10,000
     private static let reference: [String: Double] = [
-        "math": 30_300_000,
-        "array": 20_300_000,
-        "string": 11_800_000,
-        "object": 4_800_000,
-        "regexp": 17_800_000,
-        "domCreate": 4_700_000,
+        "math": 21_100_000,
+        "array": 19_900_000,
+        "string": 11_600_000,
+        "object": 4_900_000,
+        "regexp": 18_300_000,
+        "domCreate": 4_600_000,
         "domQuery": 8_300_000,
         "domModify": 2_900_000,
-        "canvas2d": 326_000,
-        "webgl": 6_400_000,
+        "canvas2d": 828_000,
+        "webgl": 5_800_000,
         "memoryAlloc": 3_500_000,
-        "memoryOps": 3_100_000,
-        "cryptoHash": 10_800_000
+        "memoryOps": 3_000_000,
+        "cryptoHash": 10_700_000
     ]
 
     @MainActor
