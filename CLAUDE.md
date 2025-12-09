@@ -12,7 +12,7 @@ WKWebView의 다양한 설정 옵션을 실시간으로 테스트하고 검증�
 - WKWebView 설정 옵션 토글 (JavaScript, 쿠키, 줌, 미디어 자동재생 등)
 - User-Agent 커스터마이징
 - URL 입력 및 웹페이지 로딩 테스트
-- Device/WebView 호환성 정보 및 46개 capability 체크
+- WKWebView Info: Device, Browser, API Capabilities (46개+), Media Codecs, Performance, Display, Accessibility
 
 ## Build & Run
 
@@ -24,8 +24,8 @@ open wina.xcodeproj
 # CLI 빌드 (시뮬레이터)
 xcodebuild -project wina.xcodeproj -scheme wina -sdk iphonesimulator build
 
-# 문법 검사만 (빠름)
-xcodebuild -project wina.xcodeproj -scheme wina -sdk iphonesimulator build -dry-run 2>&1 | head -50
+# 특정 시뮬레이터 지정 빌드
+xcodebuild -project wina.xcodeproj -scheme wina -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
 ## Architecture
@@ -41,9 +41,9 @@ wina/
 │   ├── AppBar/                # 상단 바 버튼들
 │   │   ├── ThemeToggleButton.swift
 │   │   ├── SettingsButton.swift
-│   │   └── CompatibilityCheckButton.swift
-│   └── Compatibility/         # Device/WebView 정보 표시
-│       └── CompatibilityView.swift
+│   │   └── InfoButton.swift
+│   └── Info/                  # WKWebView 정보 표시 (7개 서브메뉴)
+│       └── InfoView.swift     # Device, Browser, API, Codecs, Performance, Display, Accessibility
 ├── Shared/Components/         # 재사용 컴포넌트
 │   ├── GlassIconButton.swift  # 원형 glass effect 버튼
 │   ├── ChipButton.swift       # 탭 가능한 칩 버튼
@@ -53,7 +53,7 @@ wina/
 
 ### 데이터 흐름
 - `@AppStorage` 사용하여 설정 값 UserDefaults 영속화
-- Sheet 기반 모달 (Settings, Compatibility)
+- Sheet 기반 모달 (Settings, Info)
 - WKWebView JavaScript 평가로 브라우저 capability 감지
 
 ## Design System
@@ -112,3 +112,51 @@ rsvg-convert -w 1024 -h 1024 input.svg -o output.png
 # 사용하지 말 것 (색상 왜곡)
 magick input.svg output.png
 ```
+
+## WKWebView API Capability 체크 주의사항
+
+### Info.plist 권한이 필요한 API
+앱에 권한이 선언되지 않으면 WebKit이 API를 노출하지 않아 false 반환:
+- **Media Devices / WebRTC**: `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`
+- **Geolocation**: `NSLocationWhenInUseUsageDescription`
+
+**현재 등록된 권한** (`Info.plist` - 프로젝트 루트):
+- `NSCameraUsageDescription`: 카메라 (Media Devices, WebRTC 테스트용)
+- `NSMicrophoneUsageDescription`: 마이크 (Media Devices, WebRTC 테스트용)
+- `NSLocationWhenInUseUsageDescription`: 위치 (Geolocation 테스트용)
+
+> 실제 권한 요청 다이얼로그를 표시하려면 `WKUIDelegate`의 `requestMediaCapturePermission` 구현 필요
+
+### WKWebView에서 항상 미지원 (WebKit 정책)
+Safari에서만 지원되거나 WebKit에서 구현하지 않은 API:
+- **Service Workers**: Safari/홈 화면 PWA 전용. WKWebView는 App-Bound Domains 필요
+- **Web Push Notifications**: Safari/홈 화면 PWA 전용 (iOS 16.4+)
+- **Vibration, Battery, Bluetooth, USB, NFC**: WebKit 보안/개인정보 정책으로 미구현
+
+### iOS 특수 API
+
+- **MediaSource**: iOS 17+에서 `ManagedMediaSource` 사용 (기존 MSE 미지원, WKWebView에서는 N/A)
+- **localStorage/sessionStorage**: `loadHTMLString` 사용 시 `baseURL`을 실제 URL로 설정해야 접근 가능
+
+## Performance 벤치마크
+
+3DMark 스타일 점수 시스템. **iPhone 14 Pro = 10,000점** 기준.
+
+### 벤치마크 항목
+
+| 카테고리 | 테스트 |
+|----------|--------|
+| JavaScript | Math, Array, String, Object, RegExp |
+| DOM | Create, Query, Modify |
+| Graphics | Canvas 2D, WebGL |
+| Memory | Allocation, Operations |
+| Crypto | Hash |
+
+### 레퍼런스 값 (iPhone 14 Pro)
+
+`PerformanceInfo.reference` 딕셔너리에 정의됨. 새 기기 측정 시 이 값 업데이트 가능.
+
+### 주의사항
+
+- 벤치마크 JavaScript는 동기 실행 필수 (async/await 사용 시 WKWebView에서 "unsupported type" 에러)
+- Canvas/WebGL은 `document.createElement`로 동적 생성 (HTML 내 element는 `baseURL: nil`일 때 접근 불가할 수 있음)
