@@ -191,6 +191,24 @@ struct InfoView: View {
             ])
         }
 
+        // Performance (항목만 노출, 값은 벤치마크 실행 필요)
+        let perfPlaceholder = "Run benchmark"
+        items.append(contentsOf: [
+            InfoSearchItem(category: "Performance", label: "Math", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "Array", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "String", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "Object", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "RegExp", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "DOM Create", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "DOM Query", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "DOM Modify", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "Canvas 2D", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "WebGL", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "Memory Allocation", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "Memory Operations", value: perfPlaceholder, linkToPerformance: true),
+            InfoSearchItem(category: "Performance", label: "Crypto Hash", value: perfPlaceholder, linkToPerformance: true)
+        ])
+
         return items
     }
 
@@ -216,19 +234,33 @@ struct InfoView: View {
                         ForEach(filteredItems.keys.sorted(), id: \.self) { category in
                             Section(category) {
                                 ForEach(filteredItems[category] ?? []) { item in
-                                    HStack {
-                                        Text(item.label)
-                                        Spacer()
-                                        if item.value == "Supported" {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .foregroundStyle(.green)
-                                        } else if item.value == "Not Supported" {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .foregroundStyle(.secondary)
-                                        } else {
-                                            Text(item.value)
-                                                .foregroundStyle(.secondary)
-                                                .lineLimit(1)
+                                    if item.linkToPerformance {
+                                        NavigationLink {
+                                            PerformanceView()
+                                        } label: {
+                                            HStack {
+                                                Text(item.label)
+                                                Spacer()
+                                                Text(item.value)
+                                                    .foregroundStyle(.blue)
+                                                    .font(.subheadline)
+                                            }
+                                        }
+                                    } else {
+                                        HStack {
+                                            Text(item.label)
+                                            Spacer()
+                                            if item.value == "Supported" {
+                                                Image(systemName: "checkmark.circle.fill")
+                                                    .foregroundStyle(.green)
+                                            } else if item.value == "Not Supported" {
+                                                Image(systemName: "xmark.circle.fill")
+                                                    .foregroundStyle(.secondary)
+                                            } else {
+                                                Text(item.value)
+                                                    .foregroundStyle(.secondary)
+                                                    .lineLimit(1)
+                                            }
                                         }
                                     }
                                 }
@@ -324,6 +356,7 @@ private struct InfoSearchItem: Identifiable {
     let label: String
     let value: String
     var info: String?
+    var linkToPerformance: Bool = false
 }
 
 // MARK: - Device Information
