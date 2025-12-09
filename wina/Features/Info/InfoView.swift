@@ -9,54 +9,287 @@ import WebKit
 
 struct InfoView: View {
     @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    @State private var webViewInfo: WebViewInfo?
+    @State private var deviceInfo: DeviceInfo?
+    @State private var codecInfo: MediaCodecInfo?
+    @State private var displayInfo: DisplayInfo?
+    @State private var accessibilityInfo: AccessibilityInfo?
+    @State private var loadingStatus = "Loading..."
+    @State private var isLoading = true
+
+    private var allItems: [InfoSearchItem] {
+        var items: [InfoSearchItem] = []
+
+        // Device items
+        if let info = deviceInfo {
+            items.append(contentsOf: [
+                InfoSearchItem(category: "Device", label: "Model", value: info.model),
+                InfoSearchItem(category: "Device", label: "Model Identifier", value: info.modelIdentifier),
+                InfoSearchItem(category: "Device", label: "System", value: "\(info.systemName) \(info.systemVersion)"),
+                InfoSearchItem(category: "Device", label: "CPU Cores", value: info.cpuCores),
+                InfoSearchItem(category: "Device", label: "Active Cores", value: info.activeCores),
+                InfoSearchItem(category: "Device", label: "Physical Memory", value: info.physicalMemory),
+                InfoSearchItem(category: "Device", label: "Thermal State", value: info.thermalState),
+                InfoSearchItem(category: "Device", label: "GPU", value: info.gpuName),
+                InfoSearchItem(category: "Device", label: "Screen Size", value: info.screenSize),
+                InfoSearchItem(category: "Device", label: "Screen Scale", value: info.screenScale),
+                InfoSearchItem(category: "Device", label: "Native Scale", value: info.nativeScale),
+                InfoSearchItem(category: "Device", label: "Brightness", value: info.brightness),
+                InfoSearchItem(category: "Device", label: "Language", value: info.language),
+                InfoSearchItem(category: "Device", label: "Region", value: info.region),
+                InfoSearchItem(category: "Device", label: "Timezone", value: info.timezone)
+            ])
+        }
+
+        // Browser & API items from WebViewInfo
+        if let info = webViewInfo {
+            // Browser
+            items.append(contentsOf: [
+                InfoSearchItem(category: "Browser", label: "User Agent", value: info.userAgent),
+                InfoSearchItem(category: "Browser", label: "Language", value: info.language),
+                InfoSearchItem(category: "Browser", label: "Languages", value: info.languages),
+                InfoSearchItem(category: "Browser", label: "Platform", value: info.platform),
+                InfoSearchItem(category: "Browser", label: "Vendor", value: info.vendor),
+                InfoSearchItem(category: "Browser", label: "WebKit Version", value: info.webKitVersion),
+                InfoSearchItem(category: "Browser", label: "JavaScriptCore Version", value: info.jsCoreVersion),
+                InfoSearchItem(category: "Browser", label: "Color Depth", value: info.colorDepth),
+                InfoSearchItem(category: "Browser", label: "WebGL Renderer", value: info.webGLRenderer),
+                InfoSearchItem(category: "Browser", label: "WebGL Vendor", value: info.webGLVendor),
+                InfoSearchItem(category: "Browser", label: "WebGL Version", value: info.webGLVersion)
+            ])
+
+            // API Capabilities
+            let apis: [(String, Bool, String?)] = [
+                ("JavaScript", info.supportsJavaScript, nil),
+                ("WebAssembly", info.supportsWebAssembly, nil),
+                ("Web Workers", info.supportsWebWorkers, nil),
+                ("Service Workers", info.supportsServiceWorkers, "Only in Safari or home screen web apps."),
+                ("Shared Workers", info.supportsSharedWorkers, nil),
+                ("WebGL", info.supportsWebGL, nil),
+                ("WebGL 2", info.supportsWebGL2, nil),
+                ("Web Audio", info.supportsWebAudio, nil),
+                ("Media Devices", info.supportsMediaDevices, "Requires camera & microphone permission."),
+                ("Media Recorder", info.supportsMediaRecorder, "Supports MP4 format only."),
+                ("Media Source", info.supportsMediaSource, "iOS 17+ only."),
+                ("Picture in Picture", info.supportsPictureInPicture, nil),
+                ("Fullscreen", info.supportsFullscreen, "Video only on iPhone, full support on iPad."),
+                ("Cookies", info.cookiesEnabled, nil),
+                ("LocalStorage", info.supportsLocalStorage, "5MB limit per website."),
+                ("SessionStorage", info.supportsSessionStorage, nil),
+                ("IndexedDB", info.supportsIndexedDB, "Data may be cleared after 7 days of inactivity."),
+                ("Cache API", info.supportsCacheAPI, "Data may be cleared after 7 days of inactivity."),
+                ("Online", info.isOnline, nil),
+                ("WebSocket", info.supportsWebSocket, nil),
+                ("WebRTC", info.supportsWebRTC, "Requires camera & microphone permission."),
+                ("Fetch", info.supportsFetch, nil),
+                ("Beacon", info.supportsBeacon, nil),
+                ("Event Source", info.supportsEventSource, "Real-time server updates."),
+                ("Geolocation", info.supportsGeolocation, "Requires location permission."),
+                ("Device Orientation", info.supportsDeviceOrientation, nil),
+                ("Device Motion", info.supportsDeviceMotion, nil),
+                ("Vibration", info.supportsVibration, "Not supported on iOS."),
+                ("Battery", info.supportsBattery, "Not supported for privacy."),
+                ("Bluetooth", info.supportsBluetooth, "Use native app instead."),
+                ("USB", info.supportsUSB, "Use native app instead."),
+                ("NFC", info.supportsNFC, "Use native app instead."),
+                ("Clipboard", info.supportsClipboard, "Requires user interaction."),
+                ("Web Share", info.supportsWebShare, nil),
+                ("Notifications", info.supportsNotifications, "Only in Safari or home screen web apps."),
+                ("Pointer Events", info.supportsPointerEvents, nil),
+                ("Touch Events", info.supportsTouchEvents, nil),
+                ("Gamepad", info.supportsGamepad, "Works with MFi controllers."),
+                ("Drag and Drop", info.supportsDragDrop, "Full support on iPad only."),
+                ("Intersection Observer", info.supportsIntersectionObserver, nil),
+                ("Resize Observer", info.supportsResizeObserver, nil),
+                ("Mutation Observer", info.supportsMutationObserver, nil),
+                ("Performance Observer", info.supportsPerformanceObserver, nil),
+                ("Crypto", info.supportsCrypto, "Requires HTTPS."),
+                ("Credentials", info.supportsCredentials, nil),
+                ("Payment Request", info.supportsPaymentRequest, "Apple Pay integration. Requires HTTPS.")
+            ]
+            for (label, supported, infoText) in apis {
+                items.append(InfoSearchItem(category: "API", label: label, value: supported ? "Supported" : "Not Supported", info: infoText))
+            }
+        }
+
+        // Media Codecs
+        if let info = codecInfo {
+            let videoCodecs: [(String, CodecSupport)] = [
+                ("H.264 (AVC)", info.h264),
+                ("H.265 (HEVC)", info.hevc),
+                ("VP8", info.vp8),
+                ("VP9", info.vp9),
+                ("AV1", info.av1),
+                ("Theora", info.theora)
+            ]
+            for (label, support) in videoCodecs {
+                items.append(InfoSearchItem(category: "Video Codecs", label: label, value: support.displayValue))
+            }
+
+            let audioCodecs: [(String, CodecSupport)] = [
+                ("AAC", info.aac),
+                ("MP3", info.mp3),
+                ("Opus", info.opus),
+                ("Vorbis", info.vorbis),
+                ("FLAC", info.flac),
+                ("WAV (PCM)", info.wav)
+            ]
+            for (label, support) in audioCodecs {
+                items.append(InfoSearchItem(category: "Audio Codecs", label: label, value: support.displayValue))
+            }
+
+            let containers: [(String, CodecSupport)] = [
+                ("MP4", info.mp4),
+                ("WebM", info.webm),
+                ("Ogg", info.ogg),
+                ("HLS", info.hls)
+            ]
+            for (label, support) in containers {
+                items.append(InfoSearchItem(category: "Containers", label: label, value: support.displayValue))
+            }
+        }
+
+        // Display
+        if let info = displayInfo {
+            items.append(contentsOf: [
+                InfoSearchItem(category: "Display", label: "Screen Width", value: info.screenWidth),
+                InfoSearchItem(category: "Display", label: "Screen Height", value: info.screenHeight),
+                InfoSearchItem(category: "Display", label: "Available Width", value: info.availWidth),
+                InfoSearchItem(category: "Display", label: "Available Height", value: info.availHeight),
+                InfoSearchItem(category: "Display", label: "Device Pixel Ratio", value: info.devicePixelRatio),
+                InfoSearchItem(category: "Display", label: "Orientation", value: info.orientation),
+                InfoSearchItem(category: "Display", label: "Color Depth", value: info.colorDepth),
+                InfoSearchItem(category: "Display", label: "Pixel Depth", value: info.pixelDepth),
+                InfoSearchItem(category: "Display", label: "sRGB", value: info.supportsSRGB ? "Supported" : "Not Supported"),
+                InfoSearchItem(category: "Display", label: "Display P3", value: info.supportsP3 ? "Supported" : "Not Supported"),
+                InfoSearchItem(category: "Display", label: "Rec.2020", value: info.supportsRec2020 ? "Supported" : "Not Supported"),
+                InfoSearchItem(category: "Display", label: "HDR", value: info.supportsHDR ? "Supported" : "Not Supported"),
+                InfoSearchItem(category: "Display", label: "Dynamic Range", value: info.dynamicRange),
+                InfoSearchItem(category: "Display", label: "Color Scheme", value: info.colorScheme),
+                InfoSearchItem(category: "Display", label: "Inverted Colors", value: info.invertedColors ? "Yes" : "No"),
+                InfoSearchItem(category: "Display", label: "Forced Colors", value: info.forcedColors ? "Yes" : "No")
+            ])
+        }
+
+        // Accessibility
+        if let info = accessibilityInfo {
+            items.append(contentsOf: [
+                InfoSearchItem(category: "Accessibility", label: "Reduced Motion", value: info.reducedMotion),
+                InfoSearchItem(category: "Accessibility", label: "Reduced Transparency", value: info.reducedTransparency),
+                InfoSearchItem(category: "Accessibility", label: "Contrast", value: info.contrast),
+                InfoSearchItem(category: "Accessibility", label: "Color Scheme", value: info.colorScheme),
+                InfoSearchItem(category: "Accessibility", label: "Reduced Data", value: info.reducedData),
+                InfoSearchItem(category: "Accessibility", label: "Prefers Reduced Data", value: info.prefersReducedData),
+                InfoSearchItem(category: "Accessibility", label: "Inverted Colors", value: info.invertedColors),
+                InfoSearchItem(category: "Accessibility", label: "Forced Colors", value: info.forcedColors),
+                InfoSearchItem(category: "Accessibility", label: "Color Gamut", value: info.colorGamut),
+                InfoSearchItem(category: "Accessibility", label: "Pointer Type", value: info.pointerType),
+                InfoSearchItem(category: "Accessibility", label: "Any Pointer", value: info.anyPointer),
+                InfoSearchItem(category: "Accessibility", label: "Hover", value: info.hover),
+                InfoSearchItem(category: "Accessibility", label: "Any Hover", value: info.anyHover)
+            ])
+        }
+
+        return items
+    }
+
+    private var filteredItems: [String: [InfoSearchItem]] {
+        let filtered = searchText.isEmpty ? allItems : allItems.filter {
+            $0.label.localizedCaseInsensitiveContains(searchText) ||
+            $0.value.localizedCaseInsensitiveContains(searchText) ||
+            $0.category.localizedCaseInsensitiveContains(searchText)
+        }
+        return Dictionary(grouping: filtered, by: { $0.category })
+    }
+
+    private var isSearching: Bool {
+        !searchText.isEmpty
+    }
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    NavigationLink {
-                        DeviceInfoView()
-                    } label: {
-                        Label("Device", systemImage: "iphone")
+            Group {
+                if isSearching {
+                    // Search results view
+                    List {
+                        ForEach(filteredItems.keys.sorted(), id: \.self) { category in
+                            Section(category) {
+                                ForEach(filteredItems[category] ?? []) { item in
+                                    HStack {
+                                        Text(item.label)
+                                        Spacer()
+                                        if item.value == "Supported" {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundStyle(.green)
+                                        } else if item.value == "Not Supported" {
+                                            Image(systemName: "xmark.circle.fill")
+                                                .foregroundStyle(.secondary)
+                                        } else {
+                                            Text(item.value)
+                                                .foregroundStyle(.secondary)
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
-
-                    NavigationLink {
-                        BrowserInfoView()
-                    } label: {
-                        Label("Browser", systemImage: "safari")
+                    .overlay {
+                        if filteredItems.isEmpty {
+                            ContentUnavailableView.search(text: searchText)
+                        }
                     }
+                } else {
+                    // Default menu view
+                    List {
+                        Section {
+                            NavigationLink {
+                                DeviceInfoView()
+                            } label: {
+                                Label("Device", systemImage: "iphone")
+                            }
 
-                    NavigationLink {
-                        APICapabilitiesView()
-                    } label: {
-                        Label("API Capabilities", systemImage: "checklist")
-                    }
+                            NavigationLink {
+                                BrowserInfoView()
+                            } label: {
+                                Label("Browser", systemImage: "safari")
+                            }
 
-                    NavigationLink {
-                        MediaCodecsView()
-                    } label: {
-                        Label("Media Codecs", systemImage: "play.rectangle")
-                    }
+                            NavigationLink {
+                                APICapabilitiesView()
+                            } label: {
+                                Label("API Capabilities", systemImage: "checklist")
+                            }
 
-                    NavigationLink {
-                        PerformanceView()
-                    } label: {
-                        Label("Performance", systemImage: "gauge.with.needle")
-                    }
+                            NavigationLink {
+                                MediaCodecsView()
+                            } label: {
+                                Label("Media Codecs", systemImage: "play.rectangle")
+                            }
 
-                    NavigationLink {
-                        DisplayFeaturesView()
-                    } label: {
-                        Label("Display", systemImage: "sparkles.rectangle.stack")
-                    }
+                            NavigationLink {
+                                PerformanceView()
+                            } label: {
+                                Label("Performance", systemImage: "gauge.with.needle")
+                            }
 
-                    NavigationLink {
-                        AccessibilityFeaturesView()
-                    } label: {
-                        Label("Accessibility", systemImage: "accessibility")
+                            NavigationLink {
+                                DisplayFeaturesView()
+                            } label: {
+                                Label("Display", systemImage: "sparkles.rectangle.stack")
+                            }
+
+                            NavigationLink {
+                                AccessibilityFeaturesView()
+                            } label: {
+                                Label("Accessibility", systemImage: "accessibility")
+                            }
+                        }
                     }
                 }
             }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search all info")
             .navigationTitle("WKWebView Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -67,7 +300,30 @@ struct InfoView: View {
                 }
             }
         }
+        .task {
+            deviceInfo = await DeviceInfo.load()
+            webViewInfo = await WebViewInfo.load { status in
+                loadingStatus = status
+            }
+            async let codec = MediaCodecInfo.load { _ in }
+            async let display = DisplayInfo.load { _ in }
+            async let accessibility = AccessibilityInfo.load { _ in }
+
+            codecInfo = await codec
+            displayInfo = await display
+            accessibilityInfo = await accessibility
+        }
     }
+}
+
+// MARK: - Info Search Item
+
+private struct InfoSearchItem: Identifiable {
+    let id = UUID()
+    let category: String
+    let label: String
+    let value: String
+    var info: String?
 }
 
 // MARK: - Device Information
@@ -190,78 +446,91 @@ struct BrowserInfoView: View {
 struct APICapabilitiesView: View {
     @State private var webViewInfo: WebViewInfo?
     @State private var loadingStatus = "Launching WebView process..."
+    @State private var searchText = ""
+
+    private var capabilities: [CapabilitySection] {
+        guard let info = webViewInfo else { return [] }
+        return [
+            CapabilitySection(name: "Core APIs", items: [
+                CapabilityItem(label: "JavaScript", supported: info.supportsJavaScript),
+                CapabilityItem(label: "WebAssembly", supported: info.supportsWebAssembly),
+                CapabilityItem(label: "Web Workers", supported: info.supportsWebWorkers),
+                CapabilityItem(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Only in Safari or home screen web apps.", unavailable: true),
+                CapabilityItem(label: "Shared Workers", supported: info.supportsSharedWorkers)
+            ]),
+            CapabilitySection(name: "Graphics & Media", items: [
+                CapabilityItem(label: "WebGL", supported: info.supportsWebGL),
+                CapabilityItem(label: "WebGL 2", supported: info.supportsWebGL2),
+                CapabilityItem(label: "Web Audio", supported: info.supportsWebAudio),
+                CapabilityItem(label: "Media Devices", supported: info.supportsMediaDevices, info: "Requires camera & microphone permission."),
+                CapabilityItem(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Supports MP4 format only."),
+                CapabilityItem(label: "Media Source", supported: info.supportsMediaSource, info: "iOS 17+ only."),
+                CapabilityItem(label: "Picture in Picture", supported: info.supportsPictureInPicture),
+                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: "Video only on iPhone, full support on iPad.")
+            ]),
+            CapabilitySection(name: "Storage", items: [
+                CapabilityItem(label: "Cookies", supported: info.cookiesEnabled),
+                CapabilityItem(label: "LocalStorage", supported: info.supportsLocalStorage, info: "5MB limit per website."),
+                CapabilityItem(label: "SessionStorage", supported: info.supportsSessionStorage),
+                CapabilityItem(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Data may be cleared after 7 days of inactivity."),
+                CapabilityItem(label: "Cache API", supported: info.supportsCacheAPI, info: "Data may be cleared after 7 days of inactivity.")
+            ]),
+            CapabilitySection(name: "Network", items: [
+                CapabilityItem(label: "Online", supported: info.isOnline),
+                CapabilityItem(label: "WebSocket", supported: info.supportsWebSocket),
+                CapabilityItem(label: "WebRTC", supported: info.supportsWebRTC, info: "Requires camera & microphone permission."),
+                CapabilityItem(label: "Fetch", supported: info.supportsFetch),
+                CapabilityItem(label: "Beacon", supported: info.supportsBeacon),
+                CapabilityItem(label: "Event Source", supported: info.supportsEventSource, info: "Real-time server updates.")
+            ]),
+            CapabilitySection(name: "Device APIs", items: [
+                CapabilityItem(label: "Geolocation", supported: info.supportsGeolocation, info: "Requires location permission."),
+                CapabilityItem(label: "Device Orientation", supported: info.supportsDeviceOrientation),
+                CapabilityItem(label: "Device Motion", supported: info.supportsDeviceMotion),
+                CapabilityItem(label: "Vibration", supported: info.supportsVibration, info: "Not supported on iOS.", unavailable: true),
+                CapabilityItem(label: "Battery", supported: info.supportsBattery, info: "Not supported for privacy.", unavailable: true),
+                CapabilityItem(label: "Bluetooth", supported: info.supportsBluetooth, info: "Use native app instead.", unavailable: true),
+                CapabilityItem(label: "USB", supported: info.supportsUSB, info: "Use native app instead.", unavailable: true),
+                CapabilityItem(label: "NFC", supported: info.supportsNFC, info: "Use native app instead.", unavailable: true)
+            ]),
+            CapabilitySection(name: "UI & Interaction", items: [
+                CapabilityItem(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user interaction."),
+                CapabilityItem(label: "Web Share", supported: info.supportsWebShare),
+                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Only in Safari or home screen web apps."),
+                CapabilityItem(label: "Pointer Events", supported: info.supportsPointerEvents),
+                CapabilityItem(label: "Touch Events", supported: info.supportsTouchEvents),
+                CapabilityItem(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers."),
+                CapabilityItem(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Full support on iPad only.")
+            ]),
+            CapabilitySection(name: "Observers", items: [
+                CapabilityItem(label: "Intersection Observer", supported: info.supportsIntersectionObserver),
+                CapabilityItem(label: "Resize Observer", supported: info.supportsResizeObserver),
+                CapabilityItem(label: "Mutation Observer", supported: info.supportsMutationObserver),
+                CapabilityItem(label: "Performance Observer", supported: info.supportsPerformanceObserver)
+            ]),
+            CapabilitySection(name: "Security & Payments", items: [
+                CapabilityItem(label: "Crypto", supported: info.supportsCrypto, info: "Requires HTTPS."),
+                CapabilityItem(label: "Credentials", supported: info.supportsCredentials),
+                CapabilityItem(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Apple Pay integration. Requires HTTPS.")
+            ])
+        ]
+    }
+
+    private var filteredCapabilities: [CapabilitySection] {
+        if searchText.isEmpty { return capabilities }
+        return capabilities.compactMap { section in
+            let filtered = section.items.filter { $0.label.localizedCaseInsensitiveContains(searchText) }
+            return filtered.isEmpty ? nil : CapabilitySection(name: section.name, items: filtered)
+        }
+    }
 
     var body: some View {
         List {
-            if let info = webViewInfo {
-                Section("Core APIs") {
-                    CapabilityRow(label: "JavaScript", supported: info.supportsJavaScript)
-                    CapabilityRow(label: "WebAssembly", supported: info.supportsWebAssembly)
-                    CapabilityRow(label: "Web Workers", supported: info.supportsWebWorkers)
-                    CapabilityRow(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Only in Safari or home screen web apps.", unavailable: true)
-                    CapabilityRow(label: "Shared Workers", supported: info.supportsSharedWorkers)
-                }
-
-                Section("Graphics & Media") {
-                    CapabilityRow(label: "WebGL", supported: info.supportsWebGL)
-                    CapabilityRow(label: "WebGL 2", supported: info.supportsWebGL2)
-                    CapabilityRow(label: "Web Audio", supported: info.supportsWebAudio)
-                    CapabilityRow(label: "Media Devices", supported: info.supportsMediaDevices, info: "Requires camera & microphone permission.")
-                    CapabilityRow(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Supports MP4 format only.")
-                    CapabilityRow(label: "Media Source", supported: info.supportsMediaSource, info: "iOS 17+ only.")
-                    CapabilityRow(label: "Picture in Picture", supported: info.supportsPictureInPicture)
-                    CapabilityRow(label: "Fullscreen", supported: info.supportsFullscreen, info: "Video only on iPhone, full support on iPad.")
-                }
-
-                Section("Storage") {
-                    CapabilityRow(label: "Cookies", supported: info.cookiesEnabled)
-                    CapabilityRow(label: "LocalStorage", supported: info.supportsLocalStorage, info: "5MB limit per website.")
-                    CapabilityRow(label: "SessionStorage", supported: info.supportsSessionStorage)
-                    CapabilityRow(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Data may be cleared after 7 days of inactivity.")
-                    CapabilityRow(label: "Cache API", supported: info.supportsCacheAPI, info: "Data may be cleared after 7 days of inactivity.")
-                }
-
-                Section("Network") {
-                    CapabilityRow(label: "Online", supported: info.isOnline)
-                    CapabilityRow(label: "WebSocket", supported: info.supportsWebSocket)
-                    CapabilityRow(label: "WebRTC", supported: info.supportsWebRTC, info: "Requires camera & microphone permission.")
-                    CapabilityRow(label: "Fetch", supported: info.supportsFetch)
-                    CapabilityRow(label: "Beacon", supported: info.supportsBeacon)
-                    CapabilityRow(label: "Event Source", supported: info.supportsEventSource, info: "Real-time server updates.")
-                }
-
-                Section("Device APIs") {
-                    CapabilityRow(label: "Geolocation", supported: info.supportsGeolocation, info: "Requires location permission.")
-                    CapabilityRow(label: "Device Orientation", supported: info.supportsDeviceOrientation)
-                    CapabilityRow(label: "Device Motion", supported: info.supportsDeviceMotion)
-                    CapabilityRow(label: "Vibration", supported: info.supportsVibration, info: "Not supported on iOS.", unavailable: true)
-                    CapabilityRow(label: "Battery", supported: info.supportsBattery, info: "Not supported for privacy.", unavailable: true)
-                    CapabilityRow(label: "Bluetooth", supported: info.supportsBluetooth, info: "Use native app instead.", unavailable: true)
-                    CapabilityRow(label: "USB", supported: info.supportsUSB, info: "Use native app instead.", unavailable: true)
-                    CapabilityRow(label: "NFC", supported: info.supportsNFC, info: "Use native app instead.", unavailable: true)
-                }
-
-                Section("UI & Interaction") {
-                    CapabilityRow(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user interaction.")
-                    CapabilityRow(label: "Web Share", supported: info.supportsWebShare)
-                    CapabilityRow(label: "Notifications", supported: info.supportsNotifications, info: "Only in Safari or home screen web apps.")
-                    CapabilityRow(label: "Pointer Events", supported: info.supportsPointerEvents)
-                    CapabilityRow(label: "Touch Events", supported: info.supportsTouchEvents)
-                    CapabilityRow(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers.")
-                    CapabilityRow(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Full support on iPad only.")
-                }
-
-                Section("Observers") {
-                    CapabilityRow(label: "Intersection Observer", supported: info.supportsIntersectionObserver)
-                    CapabilityRow(label: "Resize Observer", supported: info.supportsResizeObserver)
-                    CapabilityRow(label: "Mutation Observer", supported: info.supportsMutationObserver)
-                    CapabilityRow(label: "Performance Observer", supported: info.supportsPerformanceObserver)
-                }
-
-                Section("Security & Payments") {
-                    CapabilityRow(label: "Crypto", supported: info.supportsCrypto, info: "Requires HTTPS.")
-                    CapabilityRow(label: "Credentials", supported: info.supportsCredentials)
-                    CapabilityRow(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Apple Pay integration. Requires HTTPS.")
+            ForEach(filteredCapabilities) { section in
+                Section(section.name) {
+                    ForEach(section.items) { item in
+                        CapabilityRow(label: item.label, supported: item.supported, info: item.info, unavailable: item.unavailable)
+                    }
                 }
             }
         }
@@ -273,8 +542,11 @@ struct APICapabilitiesView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+            } else if filteredCapabilities.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             }
         }
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search APIs")
         .navigationTitle("API Capabilities")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -283,6 +555,22 @@ struct APICapabilitiesView: View {
             }
         }
     }
+}
+
+// MARK: - Capability Data Models
+
+private struct CapabilitySection: Identifiable {
+    let id = UUID()
+    let name: String
+    let items: [CapabilityItem]
+}
+
+private struct CapabilityItem: Identifiable {
+    let id = UUID()
+    let label: String
+    let supported: Bool
+    var info: String?
+    var unavailable: Bool = false
 }
 
 // MARK: - Supporting Views
@@ -919,6 +1207,14 @@ enum CodecSupport: String {
         case .probably: return .green
         case .maybe: return .orange
         case .none: return .red
+        }
+    }
+
+    var displayValue: String {
+        switch self {
+        case .probably: return "Supported"
+        case .maybe: return "Maybe"
+        case .none: return "Not Supported"
         }
     }
 }
