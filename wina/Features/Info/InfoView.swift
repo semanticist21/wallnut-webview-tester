@@ -198,70 +198,70 @@ struct APICapabilitiesView: View {
                     CapabilityRow(label: "JavaScript", supported: info.supportsJavaScript)
                     CapabilityRow(label: "WebAssembly", supported: info.supportsWebAssembly)
                     CapabilityRow(label: "Web Workers", supported: info.supportsWebWorkers)
-                    CapabilityRow(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Only available in Safari and home screen PWAs. Requires App-Bound Domains entitlement in WKWebView.", unavailable: true)
-                    CapabilityRow(label: "Shared Workers", supported: info.supportsSharedWorkers, info: "Supported since Safari 16.0 (2022).")
+                    CapabilityRow(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Only in Safari or home screen web apps.", unavailable: true)
+                    CapabilityRow(label: "Shared Workers", supported: info.supportsSharedWorkers)
                 }
 
                 Section("Graphics & Media") {
                     CapabilityRow(label: "WebGL", supported: info.supportsWebGL)
-                    CapabilityRow(label: "WebGL 2", supported: info.supportsWebGL2, info: "Supported since Safari 15 (2021). Uses Metal-based ANGLE.")
+                    CapabilityRow(label: "WebGL 2", supported: info.supportsWebGL2)
                     CapabilityRow(label: "Web Audio", supported: info.supportsWebAudio)
-                    CapabilityRow(label: "Media Devices", supported: info.supportsMediaDevices, info: "⚠️ Requires Info.plist: NSCameraUsageDescription and NSMicrophoneUsageDescription. Available since iOS 14.3.")
-                    CapabilityRow(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Supports MP4/H.264/AAC. WebM not supported.")
-                    CapabilityRow(label: "Media Source", supported: info.supportsMediaSource, info: "Uses ManagedMediaSource on iOS 17+. Traditional MSE not available.")
+                    CapabilityRow(label: "Media Devices", supported: info.supportsMediaDevices, info: "Requires camera & microphone permission.")
+                    CapabilityRow(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Supports MP4 format only.")
+                    CapabilityRow(label: "Media Source", supported: info.supportsMediaSource, info: "iOS 17+ only.")
                     CapabilityRow(label: "Picture in Picture", supported: info.supportsPictureInPicture)
-                    CapabilityRow(label: "Fullscreen", supported: info.supportsFullscreen, info: "Works on iPadOS. On iOS, only video elements support fullscreen.")
+                    CapabilityRow(label: "Fullscreen", supported: info.supportsFullscreen, info: "Video only on iPhone, full support on iPad.")
                 }
 
                 Section("Storage") {
                     CapabilityRow(label: "Cookies", supported: info.cookiesEnabled)
-                    CapabilityRow(label: "LocalStorage", supported: info.supportsLocalStorage, info: "LocalStorage is limited to 5MB per origin.")
+                    CapabilityRow(label: "LocalStorage", supported: info.supportsLocalStorage, info: "5MB limit per website.")
                     CapabilityRow(label: "SessionStorage", supported: info.supportsSessionStorage)
-                    CapabilityRow(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Data may be evicted after 7 days without user interaction. PWAs added to home screen are exempt.")
-                    CapabilityRow(label: "Cache API", supported: info.supportsCacheAPI, info: "Cache API data may be evicted after 7 days without user interaction.")
+                    CapabilityRow(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Data may be cleared after 7 days of inactivity.")
+                    CapabilityRow(label: "Cache API", supported: info.supportsCacheAPI, info: "Data may be cleared after 7 days of inactivity.")
                 }
 
                 Section("Network") {
                     CapabilityRow(label: "Online", supported: info.isOnline)
                     CapabilityRow(label: "WebSocket", supported: info.supportsWebSocket)
-                    CapabilityRow(label: "WebRTC", supported: info.supportsWebRTC, info: "⚠️ Requires Info.plist: NSCameraUsageDescription and NSMicrophoneUsageDescription for camera/mic access.")
+                    CapabilityRow(label: "WebRTC", supported: info.supportsWebRTC, info: "Requires camera & microphone permission.")
                     CapabilityRow(label: "Fetch", supported: info.supportsFetch)
-                    CapabilityRow(label: "Beacon", supported: info.supportsBeacon, info: "Sends data to server without waiting for response.")
-                    CapabilityRow(label: "Event Source", supported: info.supportsEventSource, info: "Server-Sent Events (SSE) for server-to-client streaming.")
+                    CapabilityRow(label: "Beacon", supported: info.supportsBeacon)
+                    CapabilityRow(label: "Event Source", supported: info.supportsEventSource, info: "Real-time server updates.")
                 }
 
                 Section("Device APIs") {
-                    CapabilityRow(label: "Geolocation", supported: info.supportsGeolocation, info: "⚠️ Requires Info.plist: NSLocationWhenInUseUsageDescription. May show double permission prompt.")
+                    CapabilityRow(label: "Geolocation", supported: info.supportsGeolocation, info: "Requires location permission.")
                     CapabilityRow(label: "Device Orientation", supported: info.supportsDeviceOrientation)
                     CapabilityRow(label: "Device Motion", supported: info.supportsDeviceMotion)
-                    CapabilityRow(label: "Vibration", supported: info.supportsVibration, info: "Removed from WebKit. Not supported in Safari.", unavailable: true)
-                    CapabilityRow(label: "Battery", supported: info.supportsBattery, info: "Not implemented due to privacy/fingerprinting concerns.", unavailable: true)
-                    CapabilityRow(label: "Bluetooth", supported: info.supportsBluetooth, info: "Not implemented. Use native CoreBluetooth APIs.", unavailable: true)
-                    CapabilityRow(label: "USB", supported: info.supportsUSB, info: "Not implemented due to security concerns.", unavailable: true)
-                    CapabilityRow(label: "NFC", supported: info.supportsNFC, info: "Not implemented. Use native Core NFC APIs.", unavailable: true)
+                    CapabilityRow(label: "Vibration", supported: info.supportsVibration, info: "Not supported on iOS.", unavailable: true)
+                    CapabilityRow(label: "Battery", supported: info.supportsBattery, info: "Not supported for privacy.", unavailable: true)
+                    CapabilityRow(label: "Bluetooth", supported: info.supportsBluetooth, info: "Use native app instead.", unavailable: true)
+                    CapabilityRow(label: "USB", supported: info.supportsUSB, info: "Use native app instead.", unavailable: true)
+                    CapabilityRow(label: "NFC", supported: info.supportsNFC, info: "Use native app instead.", unavailable: true)
                 }
 
                 Section("UI & Interaction") {
-                    CapabilityRow(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user gesture. Reading requires permission.")
-                    CapabilityRow(label: "Web Share", supported: info.supportsWebShare, info: "Shares text, URLs, and files to native apps.")
-                    CapabilityRow(label: "Notifications", supported: info.supportsNotifications, info: "⚠️ WKWebView limitation: Web Push only works in Safari and home screen PWAs (iOS 16.4+).")
+                    CapabilityRow(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user interaction.")
+                    CapabilityRow(label: "Web Share", supported: info.supportsWebShare)
+                    CapabilityRow(label: "Notifications", supported: info.supportsNotifications, info: "Only in Safari or home screen web apps.")
                     CapabilityRow(label: "Pointer Events", supported: info.supportsPointerEvents)
                     CapabilityRow(label: "Touch Events", supported: info.supportsTouchEvents)
-                    CapabilityRow(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers. Supported since Safari 10.1.")
-                    CapabilityRow(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Works on iPadOS. Limited on iOS due to touch interaction.")
+                    CapabilityRow(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers.")
+                    CapabilityRow(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Full support on iPad only.")
                 }
 
                 Section("Observers") {
-                    CapabilityRow(label: "Intersection Observer", supported: info.supportsIntersectionObserver, info: "Detects element visibility in viewport. Useful for lazy loading and infinite scroll.")
-                    CapabilityRow(label: "Resize Observer", supported: info.supportsResizeObserver, info: "Observes element size changes. Supported since Safari 13.1.")
-                    CapabilityRow(label: "Mutation Observer", supported: info.supportsMutationObserver, info: "Monitors DOM tree changes. Replacement for deprecated Mutation Events.")
-                    CapabilityRow(label: "Performance Observer", supported: info.supportsPerformanceObserver, info: "Collects performance metrics like paint timing and resource loading.")
+                    CapabilityRow(label: "Intersection Observer", supported: info.supportsIntersectionObserver)
+                    CapabilityRow(label: "Resize Observer", supported: info.supportsResizeObserver)
+                    CapabilityRow(label: "Mutation Observer", supported: info.supportsMutationObserver)
+                    CapabilityRow(label: "Performance Observer", supported: info.supportsPerformanceObserver)
                 }
 
                 Section("Security & Payments") {
-                    CapabilityRow(label: "Crypto", supported: info.supportsCrypto, info: "Web Crypto API provides cryptographic primitives. Requires HTTPS in production.")
-                    CapabilityRow(label: "Credentials", supported: info.supportsCredentials, info: "Credential Management API for password and federated login management.")
-                    CapabilityRow(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Payment Request API integrates with Apple Pay. Requires HTTPS.")
+                    CapabilityRow(label: "Crypto", supported: info.supportsCrypto, info: "Requires HTTPS.")
+                    CapabilityRow(label: "Credentials", supported: info.supportsCredentials)
+                    CapabilityRow(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Apple Pay integration. Requires HTTPS.")
                 }
             }
         }
