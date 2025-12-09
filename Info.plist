@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses the camera to test WKWebView media device capabilities.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app uses the microphone to test WKWebView media device and WebRTC capabilities.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app accesses your location to test WKWebView geolocation capabilities.</string>
+</dict>
+</plist>

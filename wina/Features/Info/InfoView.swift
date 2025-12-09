@@ -195,22 +195,22 @@ struct APICapabilitiesView: View {
         List {
             if let info = webViewInfo {
                 Section("Core APIs") {
-                    CapabilityRow(label: "JavaScript", supported: true)
+                    CapabilityRow(label: "JavaScript", supported: info.supportsJavaScript)
                     CapabilityRow(label: "WebAssembly", supported: info.supportsWebAssembly)
-                    CapabilityRow(label: "Web Workers", supported: info.supportsWebWorkers, info: "Web Workers may fail with 'SecurityError' when loading from local HTML in WKWebView.")
-                    CapabilityRow(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Service Workers are not available in WKWebView by default. Only Safari and home screen web apps support them.")
-                    CapabilityRow(label: "Shared Workers", supported: info.supportsSharedWorkers, info: "Shared Workers are supported since Safari 16.0 (2022). They allow multiple tabs to share the same worker.")
+                    CapabilityRow(label: "Web Workers", supported: info.supportsWebWorkers)
+                    CapabilityRow(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Only available in Safari and home screen PWAs. Requires App-Bound Domains entitlement in WKWebView.", unavailable: true)
+                    CapabilityRow(label: "Shared Workers", supported: info.supportsSharedWorkers, info: "Supported since Safari 16.0 (2022).")
                 }
 
                 Section("Graphics & Media") {
                     CapabilityRow(label: "WebGL", supported: info.supportsWebGL)
-                    CapabilityRow(label: "WebGL 2", supported: info.supportsWebGL2, info: "WebGL 2 is supported since Safari 15 (2021). Uses Metal-based ANGLE implementation.")
+                    CapabilityRow(label: "WebGL 2", supported: info.supportsWebGL2, info: "Supported since Safari 15 (2021). Uses Metal-based ANGLE.")
                     CapabilityRow(label: "Web Audio", supported: info.supportsWebAudio)
-                    CapabilityRow(label: "Media Devices", supported: info.supportsMediaDevices, info: "getUserMedia is available in WKWebView since iOS 14.3.")
-                    CapabilityRow(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "MediaRecorder supports MP4/H.264/AAC format. WebM is not supported.")
-                    CapabilityRow(label: "Media Source", supported: info.supportsMediaSource, info: "Media Source Extensions enable adaptive bitrate streaming. Supported since Safari 8.")
-                    CapabilityRow(label: "Picture in Picture", supported: info.supportsPictureInPicture, info: "Picture-in-Picture is supported on iOS since Safari 14 (iOS 14).")
-                    CapabilityRow(label: "Fullscreen", supported: info.supportsFullscreen, info: "Fullscreen API works on iPadOS with webkit prefix. On iOS, only video elements support fullscreen.")
+                    CapabilityRow(label: "Media Devices", supported: info.supportsMediaDevices, info: "⚠️ Requires Info.plist: NSCameraUsageDescription and NSMicrophoneUsageDescription. Available since iOS 14.3.")
+                    CapabilityRow(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Supports MP4/H.264/AAC. WebM not supported.")
+                    CapabilityRow(label: "Media Source", supported: info.supportsMediaSource, info: "Uses ManagedMediaSource on iOS 17+. Traditional MSE not available.")
+                    CapabilityRow(label: "Picture in Picture", supported: info.supportsPictureInPicture)
+                    CapabilityRow(label: "Fullscreen", supported: info.supportsFullscreen, info: "Works on iPadOS. On iOS, only video elements support fullscreen.")
                 }
 
                 Section("Storage") {
@@ -224,31 +224,31 @@ struct APICapabilitiesView: View {
                 Section("Network") {
                     CapabilityRow(label: "Online", supported: info.isOnline)
                     CapabilityRow(label: "WebSocket", supported: info.supportsWebSocket)
-                    CapabilityRow(label: "WebRTC", supported: info.supportsWebRTC, info: "WebRTC is supported since iOS 11. Requires user permission for camera/microphone access.")
+                    CapabilityRow(label: "WebRTC", supported: info.supportsWebRTC, info: "⚠️ Requires Info.plist: NSCameraUsageDescription and NSMicrophoneUsageDescription for camera/mic access.")
                     CapabilityRow(label: "Fetch", supported: info.supportsFetch)
-                    CapabilityRow(label: "Beacon", supported: info.supportsBeacon, info: "Beacon API sends small data to server without waiting for response. Useful for analytics.")
-                    CapabilityRow(label: "Event Source", supported: info.supportsEventSource, info: "Server-Sent Events (SSE) for one-way server-to-client streaming.")
+                    CapabilityRow(label: "Beacon", supported: info.supportsBeacon, info: "Sends data to server without waiting for response.")
+                    CapabilityRow(label: "Event Source", supported: info.supportsEventSource, info: "Server-Sent Events (SSE) for server-to-client streaming.")
                 }
 
                 Section("Device APIs") {
-                    CapabilityRow(label: "Geolocation", supported: info.supportsGeolocation, info: "Geolocation may not work in cross-origin iframes within WKWebView.")
+                    CapabilityRow(label: "Geolocation", supported: info.supportsGeolocation, info: "⚠️ Requires Info.plist: NSLocationWhenInUseUsageDescription. May show double permission prompt.")
                     CapabilityRow(label: "Device Orientation", supported: info.supportsDeviceOrientation)
                     CapabilityRow(label: "Device Motion", supported: info.supportsDeviceMotion)
-                    CapabilityRow(label: "Vibration", supported: info.supportsVibration, info: "Vibration API is not supported in Safari/WebKit.")
-                    CapabilityRow(label: "Battery", supported: info.supportsBattery, info: "Battery Status API is not supported in Safari/WebKit for privacy reasons.")
-                    CapabilityRow(label: "Bluetooth", supported: info.supportsBluetooth, info: "Web Bluetooth is not supported in Safari/WebKit. Use native APIs instead.")
-                    CapabilityRow(label: "USB", supported: info.supportsUSB, info: "WebUSB is not supported in Safari/WebKit. Use native APIs instead.")
-                    CapabilityRow(label: "NFC", supported: info.supportsNFC, info: "Web NFC is not supported in Safari/WebKit. Use native APIs instead.")
+                    CapabilityRow(label: "Vibration", supported: info.supportsVibration, info: "Removed from WebKit. Not supported in Safari.", unavailable: true)
+                    CapabilityRow(label: "Battery", supported: info.supportsBattery, info: "Not implemented due to privacy/fingerprinting concerns.", unavailable: true)
+                    CapabilityRow(label: "Bluetooth", supported: info.supportsBluetooth, info: "Not implemented. Use native CoreBluetooth APIs.", unavailable: true)
+                    CapabilityRow(label: "USB", supported: info.supportsUSB, info: "Not implemented due to security concerns.", unavailable: true)
+                    CapabilityRow(label: "NFC", supported: info.supportsNFC, info: "Not implemented. Use native Core NFC APIs.", unavailable: true)
                 }
 
                 Section("UI & Interaction") {
-                    CapabilityRow(label: "Clipboard", supported: info.supportsClipboard, info: "Clipboard API requires user gesture. Reading clipboard needs user permission.")
-                    CapabilityRow(label: "Web Share", supported: info.supportsWebShare, info: "Web Share API allows sharing text, URLs, and files to native apps.")
-                    CapabilityRow(label: "Notifications", supported: info.supportsNotifications, info: "Web Push Notifications are not supported in WKWebView. Only Safari supports them.")
+                    CapabilityRow(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user gesture. Reading requires permission.")
+                    CapabilityRow(label: "Web Share", supported: info.supportsWebShare, info: "Shares text, URLs, and files to native apps.")
+                    CapabilityRow(label: "Notifications", supported: info.supportsNotifications, info: "⚠️ WKWebView limitation: Web Push only works in Safari and home screen PWAs (iOS 16.4+).")
                     CapabilityRow(label: "Pointer Events", supported: info.supportsPointerEvents)
                     CapabilityRow(label: "Touch Events", supported: info.supportsTouchEvents)
-                    CapabilityRow(label: "Gamepad", supported: info.supportsGamepad, info: "Gamepad API is supported since Safari 10.1. Works with MFi controllers.")
-                    CapabilityRow(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Drag and Drop API works on iPadOS. Limited support on iOS due to touch-based interaction.")
+                    CapabilityRow(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers. Supported since Safari 10.1.")
+                    CapabilityRow(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Works on iPadOS. Limited on iOS due to touch interaction.")
                 }
 
                 Section("Observers") {
@@ -306,12 +306,14 @@ private struct CapabilityRow: View {
     let label: String
     let supported: Bool
     var info: String? = nil
+    var unavailable: Bool = false  // WebKit policy: never supported
 
     @State private var showingInfo = false
 
     var body: some View {
         HStack {
             Text(label)
+                .foregroundStyle(unavailable ? .secondary : .primary)
             if info != nil {
                 Button {
                     showingInfo = true
@@ -323,8 +325,14 @@ private struct CapabilityRow: View {
                 .buttonStyle(.plain)
             }
             Spacer()
-            Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundStyle(supported ? .green : .red)
+            if unavailable {
+                Text("N/A")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(supported ? .green : .red)
+            }
         }
         .alert(label, isPresented: $showingInfo) {
             Button("OK", role: .cancel) {}
@@ -491,6 +499,7 @@ private struct WebViewInfo: Sendable {
     let webGLVersion: String
 
     // Core APIs
+    let supportsJavaScript: Bool
     let supportsWebAssembly: Bool
     let supportsWebWorkers: Bool
     let supportsServiceWorkers: Bool
@@ -562,9 +571,10 @@ private struct WebViewInfo: Sendable {
         let webView = WKWebView(frame: .zero, configuration: config)
 
         // Load blank HTML and wait for actual load completion
+        // Use a real URL as baseURL to enable localStorage/sessionStorage access
         onStatusUpdate("Initializing WebView...")
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: nil)
+            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 continuation.resume()
             }
@@ -611,10 +621,21 @@ private struct WebViewInfo: Sendable {
         onStatusUpdate("Checking capabilities...")
         let capabilitiesScript = """
         (function() {
+            var isSecure = window.isSecureContext;
             return {
                 // Core APIs
+                javaScript: true,
                 webAssembly: typeof WebAssembly !== 'undefined',
-                webWorkers: typeof Worker !== 'undefined',
+                webWorkers: (function() {
+                    try {
+                        var blob = new Blob([''], { type: 'application/javascript' });
+                        var url = URL.createObjectURL(blob);
+                        var worker = new Worker(url);
+                        worker.terminate();
+                        URL.revokeObjectURL(url);
+                        return true;
+                    } catch(e) { return false; }
+                })(),
                 serviceWorkers: 'serviceWorker' in navigator,
                 sharedWorkers: typeof SharedWorker !== 'undefined',
 
@@ -624,7 +645,7 @@ private struct WebViewInfo: Sendable {
                 webAudio: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
                 mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
                 mediaRecorder: typeof MediaRecorder !== 'undefined',
-                mediaSource: typeof MediaSource !== 'undefined',
+                mediaSource: typeof ManagedMediaSource !== 'undefined' || typeof MediaSource !== 'undefined',
                 pictureInPicture: 'pictureInPictureEnabled' in document,
                 fullscreen: !!(document.fullscreenEnabled || document.webkitFullscreenEnabled),
 
@@ -653,9 +674,12 @@ private struct WebViewInfo: Sendable {
                 nfc: 'NDEFReader' in window,
 
                 // UI & Interaction
-                clipboard: !!(navigator.clipboard && navigator.clipboard.writeText),
+                clipboard: (function() {
+                    if (navigator.clipboard && navigator.clipboard.writeText) return true;
+                    return document.queryCommandSupported && document.queryCommandSupported('copy');
+                })(),
                 webShare: 'share' in navigator,
-                notifications: 'Notification' in window,
+                notifications: 'Notification' in window && Notification.permission !== 'denied',
                 pointerEvents: 'PointerEvent' in window,
                 touchEvents: 'ontouchstart' in window,
                 gamepad: 'getGamepads' in navigator,
@@ -667,10 +691,10 @@ private struct WebViewInfo: Sendable {
                 mutationObserver: typeof MutationObserver !== 'undefined',
                 performanceObserver: typeof PerformanceObserver !== 'undefined',
 
-                // Security & Payments
-                crypto: !!(window.crypto && window.crypto.subtle),
-                credentials: 'credentials' in navigator,
-                paymentRequest: typeof PaymentRequest !== 'undefined'
+                // Security & Payments (require secure context)
+                crypto: isSecure && !!(window.crypto && window.crypto.subtle),
+                credentials: isSecure && 'credentials' in navigator,
+                paymentRequest: isSecure && typeof PaymentRequest !== 'undefined'
             };
         })()
         """
@@ -713,6 +737,7 @@ private struct WebViewInfo: Sendable {
             webGLVendor: webGLVendor,
             webGLVersion: webGLVersion,
             // Core APIs
+            supportsJavaScript: caps["javaScript"] ?? false,
             supportsWebAssembly: caps["webAssembly"] ?? false,
             supportsWebWorkers: caps["webWorkers"] ?? false,
             supportsServiceWorkers: caps["serviceWorkers"] ?? false,
@@ -779,7 +804,10 @@ private struct WebViewInfo: Sendable {
 extension WKWebView {
     func evaluateJavaScriptAsync(_ script: String) async -> Any? {
         await withCheckedContinuation { continuation in
-            evaluateJavaScript(script) { result, _ in
+            evaluateJavaScript(script) { result, error in
+                if let error = error {
+                    print("[WKWebView] JavaScript error: \(error.localizedDescription)")
+                }
                 continuation.resume(returning: result)
             }
         }
@@ -794,6 +822,13 @@ struct MediaCodecsView: View {
 
     var body: some View {
         List {
+            Section {
+                Text("Codec support may vary depending on device and OS version.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .listRowBackground(Color.clear)
+            }
+
             if let info = codecInfo {
                 Section("Video Codecs") {
                     CodecRow(label: "H.264 (AVC)", support: info.h264)
@@ -822,7 +857,12 @@ struct MediaCodecsView: View {
 
                 Section("Media Capabilities API") {
                     CapabilityRow(label: "MediaCapabilities", supported: info.supportsMediaCapabilities)
-                    CapabilityRow(label: "MediaSource Extensions", supported: info.supportsMSE)
+                    CapabilityRow(
+                        label: "MediaSource Extensions",
+                        supported: false,
+                        info: "API for adaptive streaming (e.g., DASH). Not supported in WKWebView.",
+                        unavailable: true
+                    )
                     CapabilityRow(label: "Encrypted Media", supported: info.supportsEME)
                 }
             }
@@ -855,7 +895,7 @@ private struct CodecRow: View {
         HStack {
             Text(label)
             Spacer()
-            Text(support.rawValue)
+            Image(systemName: support.icon)
                 .foregroundStyle(support.color)
         }
     }
@@ -864,7 +904,15 @@ private struct CodecRow: View {
 enum CodecSupport: String {
     case probably = "probably"
     case maybe = "maybe"
-    case none = "no"
+    case none = ""
+
+    var icon: String {
+        switch self {
+        case .probably: return "checkmark.circle.fill"
+        case .maybe: return "questionmark.circle.fill"
+        case .none: return "xmark.circle.fill"
+        }
+    }
 
     var color: Color {
         switch self {
@@ -912,7 +960,7 @@ private struct MediaCodecInfo: Sendable {
 
         onStatusUpdate("Initializing WebView...")
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: nil)
+            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 continuation.resume()
             }
@@ -1011,23 +1059,13 @@ struct PerformanceView: View {
                         VStack(spacing: 4) {
                             Text("\(info.totalScore)")
                                 .font(.system(size: 48, weight: .bold, design: .rounded))
-                            Text("/ 1000")
+                            Text("iPhone 14 Pro ≈ 10,000")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         Spacer()
                     }
                     .padding(.vertical, 8)
-                } footer: {
-                    HStack(spacing: 16) {
-                        GradeLegend(color: .pink, label: "Best")
-                        GradeLegend(color: .blue, label: "Good")
-                        GradeLegend(color: .green, label: "Normal")
-                        GradeLegend(color: .orange, label: "Bad")
-                        GradeLegend(color: .red, label: "Worst")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, 8)
                 }
 
                 Section("System") {
@@ -1035,22 +1073,32 @@ struct PerformanceView: View {
                     InfoRow(label: "Timer Resolution", value: info.timerResolution)
                 }
 
-                Section {
-                    BenchmarkRow(label: "Math", ops: info.mathOps, grade: info.mathGrade)
-                    BenchmarkRow(label: "Array", ops: info.arrayOps, grade: info.arrayGrade)
-                    BenchmarkRow(label: "String", ops: info.stringOps, grade: info.stringGrade)
-                    BenchmarkRow(label: "Object", ops: info.objectOps, grade: info.objectGrade)
-                    BenchmarkRow(label: "RegExp", ops: info.regexpOps, grade: info.regexpGrade)
-                } header: {
-                    Text("JavaScript")
+                Section("JavaScript") {
+                    BenchmarkRow(label: "Math", ops: info.mathOps)
+                    BenchmarkRow(label: "Array", ops: info.arrayOps)
+                    BenchmarkRow(label: "String", ops: info.stringOps)
+                    BenchmarkRow(label: "Object", ops: info.objectOps)
+                    BenchmarkRow(label: "RegExp", ops: info.regexpOps)
                 }
 
-                Section {
-                    BenchmarkRow(label: "Create", ops: info.domCreate, grade: info.domCreateGrade)
-                    BenchmarkRow(label: "Query", ops: info.domQuery, grade: info.domQueryGrade)
-                    BenchmarkRow(label: "Modify", ops: info.domModify, grade: info.domModifyGrade)
-                } header: {
-                    Text("DOM")
+                Section("DOM") {
+                    BenchmarkRow(label: "Create", ops: info.domCreate)
+                    BenchmarkRow(label: "Query", ops: info.domQuery)
+                    BenchmarkRow(label: "Modify", ops: info.domModify)
+                }
+
+                Section("Graphics") {
+                    BenchmarkRow(label: "Canvas 2D", ops: info.canvas2d)
+                    BenchmarkRow(label: "WebGL", ops: info.webgl)
+                }
+
+                Section("Memory") {
+                    BenchmarkRow(label: "Allocation", ops: info.memoryAlloc)
+                    BenchmarkRow(label: "Operations", ops: info.memoryOps)
+                }
+
+                Section("Crypto") {
+                    BenchmarkRow(label: "Hash", ops: info.cryptoHash)
                 }
 
                 Section {
@@ -1099,54 +1147,13 @@ struct PerformanceView: View {
 private struct BenchmarkRow: View {
     let label: String
     let ops: String
-    let grade: BenchmarkGrade
 
     var body: some View {
         HStack {
             Text(label)
             Spacer()
             Text(ops)
-                .foregroundStyle(grade.color)
-        }
-    }
-}
-
-private struct GradeLegend: View {
-    let color: Color
-    let label: String
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-            Text(label)
-                .font(.caption2)
                 .foregroundStyle(.secondary)
-        }
-    }
-}
-
-enum BenchmarkGrade {
-    case best, good, normal, bad, worst
-
-    var color: Color {
-        switch self {
-        case .best: return .pink
-        case .good: return .blue
-        case .normal: return .green
-        case .bad: return .orange
-        case .worst: return .red
-        }
-    }
-
-    var score: Int {
-        switch self {
-        case .best: return 100
-        case .good: return 80
-        case .normal: return 60
-        case .bad: return 40
-        case .worst: return 20
         }
     }
 }
@@ -1168,28 +1175,36 @@ private struct PerformanceInfo: Sendable {
     let domQuery: String
     let domModify: String
 
-    // Grades
-    let mathGrade: BenchmarkGrade
-    let arrayGrade: BenchmarkGrade
-    let stringGrade: BenchmarkGrade
-    let objectGrade: BenchmarkGrade
-    let regexpGrade: BenchmarkGrade
-    let domCreateGrade: BenchmarkGrade
-    let domQueryGrade: BenchmarkGrade
-    let domModifyGrade: BenchmarkGrade
+    // Graphics Benchmark
+    let canvas2d: String
+    let webgl: String
+
+    // Memory Benchmark
+    let memoryAlloc: String
+    let memoryOps: String
+
+    // Crypto Benchmark
+    let cryptoHash: String
 
     // Total
     let totalScore: Int
 
-    // Grade thresholds based on ops/sec (desktop browser baseline)
-    private static func gradeFor(ops: Int, thresholds: [Int]) -> BenchmarkGrade {
-        // thresholds: [best, good, normal, bad] (descending)
-        if ops >= thresholds[0] { return .best }
-        if ops >= thresholds[1] { return .good }
-        if ops >= thresholds[2] { return .normal }
-        if ops >= thresholds[3] { return .bad }
-        return .worst
-    }
+    // iPhone 14 Pro reference values (ops/sec)
+    private static let reference: [String: Double] = [
+        "math": 30_300_000,
+        "array": 20_300_000,
+        "string": 11_800_000,
+        "object": 4_800_000,
+        "regexp": 17_800_000,
+        "domCreate": 4_700_000,
+        "domQuery": 8_300_000,
+        "domModify": 2_900_000,
+        "canvas2d": 326_000,
+        "webgl": 6_400_000,
+        "memoryAlloc": 3_500_000,
+        "memoryOps": 3_100_000,
+        "cryptoHash": 10_800_000
+    ]
 
     @MainActor
     static func load(onStatusUpdate: @escaping (String) -> Void) async -> PerformanceInfo {
@@ -1270,7 +1285,7 @@ private struct PerformanceInfo: Sendable {
                     'hello'.replace(/l/g, 'x');
                 }, 100);
 
-                // DOM benchmarks - create container dynamically
+                // DOM benchmarks
                 var container = document.createElement('div');
                 document.body.appendChild(container);
 
@@ -1280,7 +1295,6 @@ private struct PerformanceInfo: Sendable {
                     el.textContent = 'test';
                 }, 100);
 
-                // Setup for query test
                 for (var i = 0; i < 100; i++) {
                     var div = document.createElement('div');
                     div.className = 'item item-' + i;
@@ -1304,6 +1318,67 @@ private struct PerformanceInfo: Sendable {
                     }, 100);
                 }
 
+                // Canvas 2D benchmark
+                var canvas2d = 0;
+                try {
+                    var canvas = document.createElement('canvas');
+                    canvas.width = 256;
+                    canvas.height = 256;
+                    var ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        canvas2d = bench(function() {
+                            ctx.fillStyle = 'rgb(' + Math.floor(Math.random()*255) + ',0,0)';
+                            ctx.fillRect(Math.random()*200, Math.random()*200, 50, 50);
+                            ctx.beginPath();
+                            ctx.arc(128, 128, 50, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }, 100);
+                    }
+                } catch(e) {}
+
+                // WebGL benchmark
+                var webgl = 0;
+                try {
+                    var glCanvas = document.createElement('canvas');
+                    glCanvas.width = 256;
+                    glCanvas.height = 256;
+                    var gl = glCanvas.getContext('webgl') || glCanvas.getContext('experimental-webgl');
+                    if (gl) {
+                        webgl = bench(function() {
+                            gl.clearColor(Math.random(), Math.random(), Math.random(), 1.0);
+                            gl.clear(gl.COLOR_BUFFER_BIT);
+                        }, 100);
+                    }
+                } catch(e) {}
+
+                // Memory benchmark - ArrayBuffer allocation
+                var memoryAlloc = bench(function() {
+                    var buf = new ArrayBuffer(1024);
+                    var view = new Uint8Array(buf);
+                    view[0] = 255;
+                }, 100);
+
+                // Memory benchmark - Large array operations
+                var memoryOps = bench(function() {
+                    var arr = new Float64Array(100);
+                    for (var i = 0; i < 100; i++) {
+                        arr[i] = i * 1.5;
+                    }
+                    arr.sort();
+                }, 100);
+
+                // Crypto benchmark - simple hash simulation (sync)
+                var cryptoHash = bench(function() {
+                    var data = 'benchmark test string for hashing';
+                    var hash = 0;
+                    for (var i = 0; i < data.length; i++) {
+                        var char = data.charCodeAt(i);
+                        hash = ((hash << 5) - hash) + char;
+                        hash = hash & hash;
+                    }
+                    return hash;
+                }, 100);
+
                 return {
                     hardwareConcurrency: navigator.hardwareConcurrency || 0,
                     timerResolution: resolution,
@@ -1314,7 +1389,12 @@ private struct PerformanceInfo: Sendable {
                     regexpOps: regexpOps,
                     domCreate: domCreate,
                     domQuery: domQuery,
-                    domModify: domModify
+                    domModify: domModify,
+                    canvas2d: canvas2d,
+                    webgl: webgl,
+                    memoryAlloc: memoryAlloc,
+                    memoryOps: memoryOps,
+                    cryptoHash: cryptoHash
                 };
             } catch(e) {
                 return { error: e.message };
@@ -1324,13 +1404,6 @@ private struct PerformanceInfo: Sendable {
 
         let rawResult = await webView.evaluateJavaScriptAsync(script)
         let result = rawResult as? [String: Any] ?? [:]
-
-        // Debug: print result
-        print("Benchmark raw result type: \(type(of: rawResult))")
-        print("Benchmark result: \(result)")
-        if let error = result["error"] as? String {
-            print("Benchmark error: \(error)")
-        }
 
         func formatOps(_ value: Int) -> String {
             if value >= 1_000_000 {
@@ -1359,20 +1432,37 @@ private struct PerformanceInfo: Sendable {
         let domCreate = toInt(result["domCreate"])
         let domQuery = toInt(result["domQuery"])
         let domModify = toInt(result["domModify"])
+        let canvas2d = toInt(result["canvas2d"])
+        let webgl = toInt(result["webgl"])
+        let memoryAlloc = toInt(result["memoryAlloc"])
+        let memoryOps = toInt(result["memoryOps"])
+        let cryptoHash = toInt(result["cryptoHash"])
 
-        // Thresholds: [best, good, normal, bad] - Mobile baseline (iPhone 14 Pro ≈ Good)
-        let mathGrade = gradeFor(ops: mathOps, thresholds: [25_000_000, 18_000_000, 10_000_000, 5_000_000])
-        let arrayGrade = gradeFor(ops: arrayOps, thresholds: [25_000_000, 18_000_000, 10_000_000, 5_000_000])
-        let stringGrade = gradeFor(ops: stringOps, thresholds: [15_000_000, 11_000_000, 6_000_000, 3_000_000])
-        let objectGrade = gradeFor(ops: objectOps, thresholds: [6_000_000, 4_000_000, 2_000_000, 1_000_000])
-        let regexpGrade = gradeFor(ops: regexpOps, thresholds: [25_000_000, 16_000_000, 10_000_000, 5_000_000])
-        let domCreateGrade = gradeFor(ops: domCreate, thresholds: [6_000_000, 4_000_000, 2_000_000, 1_000_000])
-        let domQueryGrade = gradeFor(ops: domQuery, thresholds: [10_000_000, 7_000_000, 4_000_000, 2_000_000])
-        let domModifyGrade = gradeFor(ops: domModify, thresholds: [4_000_000, 2_500_000, 1_500_000, 800_000])
+        // Calculate score relative to iPhone 14 Pro (= 10,000 points)
+        let scores: [(Int, String)] = [
+            (mathOps, "math"),
+            (arrayOps, "array"),
+            (stringOps, "string"),
+            (objectOps, "object"),
+            (regexpOps, "regexp"),
+            (domCreate, "domCreate"),
+            (domQuery, "domQuery"),
+            (domModify, "domModify"),
+            (canvas2d, "canvas2d"),
+            (webgl, "webgl"),
+            (memoryAlloc, "memoryAlloc"),
+            (memoryOps, "memoryOps"),
+            (cryptoHash, "cryptoHash")
+        ]
 
-        let grades = [mathGrade, arrayGrade, stringGrade, objectGrade, regexpGrade, domCreateGrade, domQueryGrade, domModifyGrade]
-        let totalScore = grades.map { $0.score }.reduce(0, +) * 100 / (grades.count * 100)
-        let scaledScore = Int(Double(totalScore) * 10.0) // 0-1000 scale
+        var totalRatio = 0.0
+        for (ops, key) in scores {
+            if let ref = reference[key], ref > 0 {
+                totalRatio += Double(ops) / ref
+            }
+        }
+        let averageRatio = totalRatio / Double(scores.count)
+        let totalScore = Int(averageRatio * 10000) // iPhone 14 Pro = 10,000
 
         return PerformanceInfo(
             hardwareConcurrency: cores > 0 ? "\(cores)" : "N/A",
@@ -1385,15 +1475,12 @@ private struct PerformanceInfo: Sendable {
             domCreate: formatOps(domCreate),
             domQuery: formatOps(domQuery),
             domModify: formatOps(domModify),
-            mathGrade: mathGrade,
-            arrayGrade: arrayGrade,
-            stringGrade: stringGrade,
-            objectGrade: objectGrade,
-            regexpGrade: regexpGrade,
-            domCreateGrade: domCreateGrade,
-            domQueryGrade: domQueryGrade,
-            domModifyGrade: domModifyGrade,
-            totalScore: scaledScore
+            canvas2d: formatOps(canvas2d),
+            webgl: formatOps(webgl),
+            memoryAlloc: formatOps(memoryAlloc),
+            memoryOps: formatOps(memoryOps),
+            cryptoHash: formatOps(cryptoHash),
+            totalScore: totalScore
         )
     }
 }
@@ -1489,7 +1576,7 @@ private struct DisplayInfo: Sendable {
 
         onStatusUpdate("Initializing WebView...")
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: nil)
+            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 continuation.resume()
             }
@@ -1655,7 +1742,7 @@ private struct AccessibilityInfo: Sendable {
 
         onStatusUpdate("Initializing WebView...")
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: nil)
+            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 continuation.resume()
             }
