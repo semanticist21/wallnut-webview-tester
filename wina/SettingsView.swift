@@ -13,12 +13,28 @@ import CoreLocation
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
-    // WebView Settings
+    // Core Settings
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
-    @AppStorage("enableCookies") private var enableCookies: Bool = true
     @AppStorage("allowZoom") private var allowZoom: Bool = true
+
+    // Media Settings
     @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
     @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
+    @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
+    @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
+
+    // Content Settings
+    @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
+    @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
+    @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
+    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
+    @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+
+    // Content Mode
+    @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0  // 0: recommended, 1: mobile, 2: desktop
+
+    // User Agent
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
     @State private var cameraStatus: AVAuthorizationStatus = .notDetermined
@@ -31,17 +47,43 @@ struct SettingsView: View {
             List {
                 Section {
                     Toggle("JavaScript", isOn: $enableJavaScript)
-                    Toggle("Cookies", isOn: $enableCookies)
-                    Toggle("Zoom", isOn: $allowZoom)
+                    Toggle("Content JavaScript", isOn: $allowsContentJavaScript)
+                    Toggle("Ignore Viewport Scale Limits", isOn: $allowZoom)
                 } header: {
-                    Text("Core Settings")
+                    Text("Core")
+                } footer: {
+                    Text("Content JavaScript controls scripts from web pages only")
                 }
 
                 Section {
                     Toggle("Auto-play Media", isOn: $mediaAutoplay)
                     Toggle("Inline Playback", isOn: $inlineMediaPlayback)
+                    Toggle("AirPlay", isOn: $allowsAirPlay)
+                    Toggle("Picture in Picture", isOn: $allowsPictureInPicture)
                 } header: {
                     Text("Media")
+                }
+
+                Section {
+                    Picker("Content Mode", selection: $preferredContentMode) {
+                        Text("Recommended").tag(0)
+                        Text("Mobile").tag(1)
+                        Text("Desktop").tag(2)
+                    }
+                } header: {
+                    Text("Content Mode")
+                } footer: {
+                    Text("Controls viewport and user agent behavior")
+                }
+
+                Section {
+                    Toggle("JS Can Open Windows", isOn: $javaScriptCanOpenWindows)
+                    Toggle("Fraudulent Website Warning", isOn: $fraudulentWebsiteWarning)
+                    Toggle("Text Interaction", isOn: $textInteractionEnabled)
+                    Toggle("Element Fullscreen API", isOn: $elementFullscreenEnabled)
+                    Toggle("Suppress Incremental Rendering", isOn: $suppressesIncrementalRendering)
+                } header: {
+                    Text("Behavior")
                 }
 
                 Section {

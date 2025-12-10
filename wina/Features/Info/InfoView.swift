@@ -18,8 +18,50 @@ struct InfoView: View {
     @State private var loadingStatus = "Loading..."
     @State private var isLoading = true
 
+    // Instance Settings from AppStorage
+    @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
+    @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
+    @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
+    @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
+    @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
+    @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
+    @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
+    @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
+    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
+    @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+    @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
+    @AppStorage("customUserAgent") private var customUserAgent: String = ""
+
+    private var contentModeText: String {
+        switch preferredContentMode {
+        case 1: return "Mobile"
+        case 2: return "Desktop"
+        default: return "Recommended"
+        }
+    }
+
     private var allItems: [InfoSearchItem] {
         var items: [InfoSearchItem] = []
+
+        // Instance Settings (always available)
+        items.append(contentsOf: [
+            InfoSearchItem(category: "Instance Settings", label: "JavaScript", value: enableJavaScript ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Content JavaScript", value: allowsContentJavaScript ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Ignore Viewport Scale Limits", value: allowZoom ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Auto-play Media", value: mediaAutoplay ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Inline Playback", value: inlineMediaPlayback ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "AirPlay", value: allowsAirPlay ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Picture in Picture", value: allowsPictureInPicture ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Content Mode", value: contentModeText),
+            InfoSearchItem(category: "Instance Settings", label: "JS Can Open Windows", value: javaScriptCanOpenWindows ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Fraudulent Website Warning", value: fraudulentWebsiteWarning ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Text Interaction", value: textInteractionEnabled ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Element Fullscreen API", value: elementFullscreenEnabled ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Suppress Incremental Rendering", value: suppressesIncrementalRendering ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Instance Settings", label: "Custom User-Agent", value: customUserAgent.isEmpty ? "Default" : "Custom")
+        ])
 
         // Device items
         if let info = deviceInfo {
@@ -277,6 +319,16 @@ struct InfoView: View {
                     List {
                         Section {
                             NavigationLink {
+                                InstanceSettingsView()
+                            } label: {
+                                Label("Instance Settings", systemImage: "slider.horizontal.3")
+                            }
+                        } header: {
+                            Text("Current Configuration")
+                        }
+
+                        Section {
+                            NavigationLink {
                                 DeviceInfoView()
                             } label: {
                                 Label("Device", systemImage: "iphone")
@@ -317,6 +369,8 @@ struct InfoView: View {
                             } label: {
                                 Label("Accessibility", systemImage: "accessibility")
                             }
+                        } header: {
+                            Text("WebView Capabilities")
                         }
                     }
                 }
@@ -2159,6 +2213,108 @@ private struct AccessibilityInfo: Sendable {
             hover: result["hover"] ?? "Unknown",
             anyHover: result["anyHover"] ?? "Unknown"
         )
+    }
+}
+
+// MARK: - Instance Settings
+
+struct InstanceSettingsView: View {
+    // Core Settings
+    @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
+    @AppStorage("allowZoom") private var allowZoom: Bool = true
+
+    // Media Settings
+    @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
+    @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
+    @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
+    @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
+
+    // Content Settings
+    @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
+    @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
+    @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
+    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
+    @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+
+    // Content Mode
+    @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
+
+    // User Agent
+    @AppStorage("customUserAgent") private var customUserAgent: String = ""
+
+    private var contentModeText: String {
+        switch preferredContentMode {
+        case 1: return "Mobile"
+        case 2: return "Desktop"
+        default: return "Recommended"
+        }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Text("These settings reflect the current WebView configuration from Settings. Changes in Settings will affect the WebView instance.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
+            .listSectionSpacing(0)
+
+            Section("Core") {
+                SettingRow(label: "JavaScript", enabled: enableJavaScript)
+                SettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript)
+                SettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom)
+            }
+
+            Section("Media") {
+                SettingRow(label: "Auto-play Media", enabled: mediaAutoplay)
+                SettingRow(label: "Inline Playback", enabled: inlineMediaPlayback)
+                SettingRow(label: "AirPlay", enabled: allowsAirPlay)
+                SettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture)
+            }
+
+            Section("Content Mode") {
+                InfoRow(label: "Preferred Mode", value: contentModeText)
+            }
+
+            Section("Behavior") {
+                SettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows)
+                SettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning)
+                SettingRow(label: "Text Interaction", enabled: textInteractionEnabled)
+                SettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled)
+                SettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering)
+            }
+
+            Section("User-Agent") {
+                if customUserAgent.isEmpty {
+                    InfoRow(label: "Status", value: "Default")
+                } else {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Custom")
+                            .foregroundStyle(.secondary)
+                        Text(customUserAgent)
+                            .font(.system(size: 12, design: .monospaced))
+                            .textSelection(.enabled)
+                    }
+                }
+            }
+        }
+        .navigationTitle("Instance Settings")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct SettingRow: View {
+    let label: String
+    let enabled: Bool
+
+    var body: some View {
+        HStack {
+            Text(label)
+            Spacer()
+            Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                .foregroundStyle(enabled ? .green : .secondary)
+        }
     }
 }
 
