@@ -17,20 +17,30 @@ struct InfoView: View {
     @State private var accessibilityInfo: AccessibilityInfo?
     @State private var loadingStatus = "Loading..."
     @State private var isLoading = true
+    @State private var showSettings = false
 
     // Instance Settings from AppStorage
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
     @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
     @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
     @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
     @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
     @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
+    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
     @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
-    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
     @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
     @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
     @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
     @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+    @AppStorage("detectPhoneNumbers") private var detectPhoneNumbers: Bool = false
+    @AppStorage("detectLinks") private var detectLinks: Bool = false
+    @AppStorage("detectAddresses") private var detectAddresses: Bool = false
+    @AppStorage("detectCalendarEvents") private var detectCalendarEvents: Bool = false
+    @AppStorage("privateBrowsing") private var privateBrowsing: Bool = false
+    @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
     @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
@@ -42,25 +52,40 @@ struct InfoView: View {
         }
     }
 
+    private var activeDataDetectors: String {
+        var detectors: [String] = []
+        if detectPhoneNumbers { detectors.append("Phone") }
+        if detectLinks { detectors.append("Links") }
+        if detectAddresses { detectors.append("Address") }
+        if detectCalendarEvents { detectors.append("Calendar") }
+        return detectors.isEmpty ? "None" : detectors.joined(separator: ", ")
+    }
+
     private var allItems: [InfoSearchItem] {
         var items: [InfoSearchItem] = []
 
-        // Instance Settings (always available)
+        // Active Settings (always available)
         items.append(contentsOf: [
-            InfoSearchItem(category: "Instance Settings", label: "JavaScript", value: enableJavaScript ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Content JavaScript", value: allowsContentJavaScript ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Ignore Viewport Scale Limits", value: allowZoom ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Auto-play Media", value: mediaAutoplay ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Inline Playback", value: inlineMediaPlayback ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "AirPlay", value: allowsAirPlay ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Picture in Picture", value: allowsPictureInPicture ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Content Mode", value: contentModeText),
-            InfoSearchItem(category: "Instance Settings", label: "JS Can Open Windows", value: javaScriptCanOpenWindows ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Fraudulent Website Warning", value: fraudulentWebsiteWarning ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Text Interaction", value: textInteractionEnabled ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Element Fullscreen API", value: elementFullscreenEnabled ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Suppress Incremental Rendering", value: suppressesIncrementalRendering ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Instance Settings", label: "Custom User-Agent", value: customUserAgent.isEmpty ? "Default" : "Custom")
+            InfoSearchItem(category: "Active Settings", label: "JavaScript", value: enableJavaScript ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Content JavaScript", value: allowsContentJavaScript ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Ignore Viewport Scale Limits", value: allowZoom ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt"),
+            InfoSearchItem(category: "Active Settings", label: "Auto-play Media", value: mediaAutoplay ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Inline Playback", value: inlineMediaPlayback ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "AirPlay", value: allowsAirPlay ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Picture in Picture", value: allowsPictureInPicture ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Back/Forward Gestures", value: allowsBackForwardGestures ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Link Preview", value: allowsLinkPreview ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Content Mode", value: contentModeText),
+            InfoSearchItem(category: "Active Settings", label: "JS Can Open Windows", value: javaScriptCanOpenWindows ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Fraudulent Website Warning", value: fraudulentWebsiteWarning ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Text Interaction", value: textInteractionEnabled ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Element Fullscreen API", value: elementFullscreenEnabled ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Suppress Incremental Rendering", value: suppressesIncrementalRendering ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Data Detectors", value: activeDataDetectors),
+            InfoSearchItem(category: "Active Settings", label: "Private Browsing", value: privateBrowsing ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Upgrade to HTTPS", value: upgradeToHTTPS ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Custom User-Agent", value: customUserAgent.isEmpty ? "Default" : "Custom")
         ])
 
         // Device items
@@ -319,9 +344,9 @@ struct InfoView: View {
                     List {
                         Section {
                             NavigationLink {
-                                InstanceSettingsView()
+                                ActiveSettingsView(showSettings: $showSettings)
                             } label: {
-                                Label("Instance Settings", systemImage: "slider.horizontal.3")
+                                Label("Active Settings", systemImage: "slider.horizontal.3")
                             }
                         } header: {
                             Text("Current Configuration")
@@ -399,6 +424,9 @@ struct InfoView: View {
             displayInfo = await display
             accessibilityInfo = await accessibility
         }
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
+        }
     }
 }
 
@@ -429,10 +457,10 @@ struct DeviceInfoView: View {
                 }
 
                 Section("Processor") {
-                    InfoRow(label: "CPU Cores", value: info.cpuCores)
-                    InfoRow(label: "Active Cores", value: info.activeCores)
+                    InfoRow(label: "CPU Cores", value: info.cpuCores, info: "Total logical processor cores available.")
+                    InfoRow(label: "Active Cores", value: info.activeCores, info: "Cores currently active. May vary based on power state.")
                     InfoRow(label: "Physical Memory", value: info.physicalMemory)
-                    InfoRow(label: "Thermal State", value: info.thermalState)
+                    InfoRow(label: "Thermal State", value: info.thermalState, info: "Nominal: Normal\nFair: Slightly elevated\nSerious: High\nCritical: Throttling")
                     CapabilityRow(label: "Low Power Mode", supported: info.isLowPowerMode)
                 }
 
@@ -441,9 +469,9 @@ struct DeviceInfoView: View {
                 }
 
                 Section("Display") {
-                    InfoRow(label: "Screen Size", value: info.screenSize)
-                    InfoRow(label: "Screen Scale", value: info.screenScale)
-                    InfoRow(label: "Native Scale", value: info.nativeScale)
+                    InfoRow(label: "Screen Size", value: info.screenSize, info: "Logical screen size in points.")
+                    InfoRow(label: "Screen Scale", value: info.screenScale, info: "Current display scale factor (points to pixels).")
+                    InfoRow(label: "Native Scale", value: info.nativeScale, info: "Physical pixel density of the screen.")
                     InfoRow(label: "Brightness", value: info.brightness)
                 }
 
@@ -489,8 +517,8 @@ struct BrowserInfoView: View {
                 }
 
                 Section("Engine") {
-                    InfoRow(label: "WebKit Version", value: info.webKitVersion)
-                    InfoRow(label: "JavaScript Core", value: info.jsCoreVersion)
+                    InfoRow(label: "WebKit Version", value: info.webKitVersion, info: "Apple's web rendering engine version.")
+                    InfoRow(label: "JavaScript Core", value: info.jsCoreVersion, info: "Apple's JavaScript engine version.")
                 }
 
                 Section("User Agent") {
@@ -504,7 +532,7 @@ struct BrowserInfoView: View {
                 }
 
                 Section("Input") {
-                    InfoRow(label: "Max Touch Points", value: info.maxTouchPoints)
+                    InfoRow(label: "Max Touch Points", value: info.maxTouchPoints, info: "Maximum simultaneous touch points supported.")
                 }
             }
         }
@@ -653,11 +681,30 @@ private struct CapabilityItem: Identifiable {
 private struct InfoRow: View {
     let label: String
     let value: String
+    var info: String? = nil
+
+    @State private var showingInfo = false
 
     var body: some View {
         HStack {
             Text(label)
                 .foregroundStyle(.secondary)
+            if let info {
+                Button {
+                    showingInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(.tertiary)
+                        .font(.footnote)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showingInfo) {
+                    Text(info)
+                        .font(.footnote)
+                        .padding()
+                        .presentationCompactAdaptation(.popover)
+                }
+            }
             Spacer()
             Text(value)
                 .textSelection(.enabled)
@@ -677,7 +724,7 @@ private struct CapabilityRow: View {
         HStack {
             Text(label)
                 .foregroundStyle(unavailable ? .secondary : .primary)
-            if info != nil {
+            if let info {
                 Button {
                     showingInfo = true
                 } label: {
@@ -686,6 +733,12 @@ private struct CapabilityRow: View {
                         .font(.footnote)
                 }
                 .buttonStyle(.plain)
+                .popover(isPresented: $showingInfo) {
+                    Text(info)
+                        .font(.footnote)
+                        .padding()
+                        .presentationCompactAdaptation(.popover)
+                }
             }
             Spacer()
             if unavailable {
@@ -696,11 +749,6 @@ private struct CapabilityRow: View {
                 Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
                     .foregroundStyle(supported ? .green : .red)
             }
-        }
-        .alert(label, isPresented: $showingInfo) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(info ?? "")
         }
     }
 }
@@ -1010,7 +1058,7 @@ private struct WebViewInfo: Sendable {
                 mediaRecorder: typeof MediaRecorder !== 'undefined',
                 mediaSource: typeof ManagedMediaSource !== 'undefined' || typeof MediaSource !== 'undefined',
                 pictureInPicture: 'pictureInPictureEnabled' in document,
-                fullscreen: !!(document.fullscreenEnabled || document.webkitFullscreenEnabled),
+                fullscreen: !!document.documentElement.requestFullscreen || !!document.documentElement.webkitRequestFullscreen,
 
                 // Storage - test actual read/write capability
                 cookies: navigator.cookieEnabled,
@@ -1381,21 +1429,21 @@ private struct MediaCodecInfo: Sendable {
 
                 // Audio codecs
                 aac: check(audio, 'audio/mp4; codecs="mp4a.40.2"'),
-                mp3: check(audio, 'audio/mpeg'),
+                mp3: check(audio, 'audio/mpeg; codecs="mp3"'),
                 opus: check(audio, 'audio/ogg; codecs="opus"'),
                 vorbis: check(audio, 'audio/ogg; codecs="vorbis"'),
                 flac: check(audio, 'audio/flac'),
                 wav: check(audio, 'audio/wav'),
 
-                // Containers
-                mp4: check(video, 'video/mp4'),
-                webm: check(video, 'video/webm'),
-                ogg: check(video, 'video/ogg'),
-                hls: check(video, 'application/vnd.apple.mpegurl'),
+                // Containers (with common codec for accurate detection)
+                mp4: check(video, 'video/mp4; codecs="avc1.42E01E"'),
+                webm: check(video, 'video/webm; codecs="vp8"'),
+                ogg: check(video, 'video/ogg; codecs="theora"'),
+                hls: check(video, 'application/vnd.apple.mpegurl; codecs="avc1.42E01E"'),
 
                 // APIs
                 mediaCapabilities: 'mediaCapabilities' in navigator,
-                mse: 'MediaSource' in window,
+                mse: 'ManagedMediaSource' in window || 'MediaSource' in window,
                 eme: 'requestMediaKeySystemAccess' in navigator
             };
         })()
@@ -1462,36 +1510,36 @@ struct PerformanceView: View {
                 }
 
                 Section("System") {
-                    InfoRow(label: "Logical Cores", value: info.hardwareConcurrency)
-                    InfoRow(label: "Timer Resolution", value: info.timerResolution)
+                    InfoRow(label: "Logical Cores", value: info.hardwareConcurrency, info: "CPU cores available to JavaScript via navigator.hardwareConcurrency.")
+                    InfoRow(label: "Timer Resolution", value: info.timerResolution, info: "Minimum time difference measurable by performance.now().")
                 }
 
                 Section("JavaScript") {
-                    BenchmarkRow(label: "Math", ops: info.mathOps)
-                    BenchmarkRow(label: "Array", ops: info.arrayOps)
-                    BenchmarkRow(label: "String", ops: info.stringOps)
-                    BenchmarkRow(label: "Object", ops: info.objectOps)
-                    BenchmarkRow(label: "RegExp", ops: info.regexpOps)
+                    BenchmarkRow(label: "Math", ops: info.mathOps, info: "Math.sqrt, sin, cos operations.")
+                    BenchmarkRow(label: "Array", ops: info.arrayOps, info: "map, filter, reduce operations.")
+                    BenchmarkRow(label: "String", ops: info.stringOps, info: "split, join, indexOf operations.")
+                    BenchmarkRow(label: "Object", ops: info.objectOps, info: "Object.keys, values, JSON parse/stringify.")
+                    BenchmarkRow(label: "RegExp", ops: info.regexpOps, info: "Regular expression match and replace.")
                 }
 
                 Section("DOM") {
-                    BenchmarkRow(label: "Create", ops: info.domCreate)
-                    BenchmarkRow(label: "Query", ops: info.domQuery)
-                    BenchmarkRow(label: "Modify", ops: info.domModify)
+                    BenchmarkRow(label: "Create", ops: info.domCreate, info: "createElement, className, textContent.")
+                    BenchmarkRow(label: "Query", ops: info.domQuery, info: "querySelectorAll, getElementById, getElementsByClassName.")
+                    BenchmarkRow(label: "Modify", ops: info.domModify, info: "style changes, setAttribute, classList toggle.")
                 }
 
                 Section("Graphics") {
-                    BenchmarkRow(label: "Canvas 2D", ops: info.canvas2d)
-                    BenchmarkRow(label: "WebGL", ops: info.webgl)
+                    BenchmarkRow(label: "Canvas 2D", ops: info.canvas2d, info: "fillRect, beginPath, arc, stroke operations.")
+                    BenchmarkRow(label: "WebGL", ops: info.webgl, info: "clearColor, clear operations.")
                 }
 
                 Section("Memory") {
-                    BenchmarkRow(label: "Allocation", ops: info.memoryAlloc)
-                    BenchmarkRow(label: "Operations", ops: info.memoryOps)
+                    BenchmarkRow(label: "Allocation", ops: info.memoryAlloc, info: "ArrayBuffer and Uint8Array allocation.")
+                    BenchmarkRow(label: "Operations", ops: info.memoryOps, info: "Float64Array fill and sort.")
                 }
 
                 Section("Crypto") {
-                    BenchmarkRow(label: "Hash", ops: info.cryptoHash)
+                    BenchmarkRow(label: "Hash", ops: info.cryptoHash, info: "Simple hash function simulation.")
                 }
 
                 Section {
@@ -1540,10 +1588,29 @@ struct PerformanceView: View {
 private struct BenchmarkRow: View {
     let label: String
     let ops: String
+    var info: String? = nil
+
+    @State private var showingInfo = false
 
     var body: some View {
         HStack {
             Text(label)
+            if let info {
+                Button {
+                    showingInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(.tertiary)
+                        .font(.footnote)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showingInfo) {
+                    Text(info)
+                        .font(.footnote)
+                        .padding()
+                        .presentationCompactAdaptation(.popover)
+                }
+            }
             Spacer()
             Text(ops)
                 .foregroundStyle(.secondary)
@@ -1890,28 +1957,28 @@ struct DisplayFeaturesView: View {
                 Section("Screen") {
                     InfoRow(label: "Width", value: info.screenWidth)
                     InfoRow(label: "Height", value: info.screenHeight)
-                    InfoRow(label: "Available Width", value: info.availWidth)
-                    InfoRow(label: "Available Height", value: info.availHeight)
-                    InfoRow(label: "Device Pixel Ratio", value: info.devicePixelRatio)
+                    InfoRow(label: "Available Width", value: info.availWidth, info: "Screen width minus system UI elements.")
+                    InfoRow(label: "Available Height", value: info.availHeight, info: "Screen height minus system UI elements.")
+                    InfoRow(label: "Device Pixel Ratio", value: info.devicePixelRatio, info: "CSS pixels to device pixels ratio.")
                     InfoRow(label: "Orientation", value: info.orientation)
                 }
 
                 Section("Color") {
-                    InfoRow(label: "Color Depth", value: info.colorDepth)
-                    InfoRow(label: "Pixel Depth", value: info.pixelDepth)
-                    CapabilityRow(label: "sRGB", supported: info.supportsSRGB)
-                    CapabilityRow(label: "Display-P3", supported: info.supportsP3)
-                    CapabilityRow(label: "Rec. 2020", supported: info.supportsRec2020)
+                    InfoRow(label: "Color Depth", value: info.colorDepth, info: "Bits per pixel for color representation.")
+                    InfoRow(label: "Pixel Depth", value: info.pixelDepth, info: "Bits per pixel at screen depth.")
+                    CapabilityRow(label: "sRGB", supported: info.supportsSRGB, info: "Standard RGB color space.")
+                    CapabilityRow(label: "Display-P3", supported: info.supportsP3, info: "Wide color gamut used by Apple devices.")
+                    CapabilityRow(label: "Rec. 2020", supported: info.supportsRec2020, info: "Ultra-wide color gamut for HDR content.")
                 }
 
                 Section("HDR") {
-                    CapabilityRow(label: "HDR Display", supported: info.supportsHDR)
+                    CapabilityRow(label: "HDR Display", supported: info.supportsHDR, info: "High Dynamic Range for brighter highlights.")
                     InfoRow(label: "Dynamic Range", value: info.dynamicRange)
                 }
 
                 Section("Media Queries") {
-                    CapabilityRow(label: "Inverted Colors", supported: info.invertedColors)
-                    CapabilityRow(label: "Forced Colors", supported: info.forcedColors)
+                    CapabilityRow(label: "Inverted Colors", supported: info.invertedColors, info: "Accessibility setting to invert display colors.")
+                    CapabilityRow(label: "Forced Colors", supported: info.forcedColors, info: "High contrast mode for accessibility.")
                 }
             }
         }
@@ -2216,12 +2283,16 @@ private struct AccessibilityInfo: Sendable {
     }
 }
 
-// MARK: - Instance Settings
+// MARK: - Active Settings
 
-struct InstanceSettingsView: View {
+struct ActiveSettingsView: View {
+    @Binding var showSettings: Bool
+
     // Core Settings
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
     @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
 
     // Media Settings
     @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
@@ -2229,13 +2300,26 @@ struct InstanceSettingsView: View {
     @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
     @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
 
-    // Content Settings
+    // Navigation
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
+    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
+
+    // Behavior
     @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
-    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
     @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
     @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
     @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
     @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+
+    // Data Detectors
+    @AppStorage("detectPhoneNumbers") private var detectPhoneNumbers: Bool = false
+    @AppStorage("detectLinks") private var detectLinks: Bool = false
+    @AppStorage("detectAddresses") private var detectAddresses: Bool = false
+    @AppStorage("detectCalendarEvents") private var detectCalendarEvents: Bool = false
+
+    // Privacy & Security
+    @AppStorage("privateBrowsing") private var privateBrowsing: Bool = false
+    @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
 
     // Content Mode
     @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
@@ -2251,38 +2335,59 @@ struct InstanceSettingsView: View {
         }
     }
 
+    private var activeDataDetectors: String {
+        var detectors: [String] = []
+        if detectPhoneNumbers { detectors.append("Phone") }
+        if detectLinks { detectors.append("Links") }
+        if detectAddresses { detectors.append("Address") }
+        if detectCalendarEvents { detectors.append("Calendar") }
+        return detectors.isEmpty ? "None" : detectors.joined(separator: ", ")
+    }
+
     var body: some View {
         List {
             Section {
-                Text("These settings reflect the current WebView configuration from Settings. Changes in Settings will affect the WebView instance.")
+                Text("Current WebView configuration. Modify these in Settings.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
             }
             .listSectionSpacing(0)
 
             Section("Core") {
-                SettingRow(label: "JavaScript", enabled: enableJavaScript)
-                SettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript)
-                SettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom)
+                ActiveSettingRow(label: "JavaScript", enabled: enableJavaScript, info: "Master switch for all JavaScript execution.")
+                ActiveSettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript, info: "Scripts from web pages only. App-injected scripts still work.")
+                ActiveSettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom, info: "Allow pinch-to-zoom even when page disables it.")
+                InfoRow(label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt")
             }
 
             Section("Media") {
-                SettingRow(label: "Auto-play Media", enabled: mediaAutoplay)
-                SettingRow(label: "Inline Playback", enabled: inlineMediaPlayback)
-                SettingRow(label: "AirPlay", enabled: allowsAirPlay)
-                SettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture)
+                ActiveSettingRow(label: "Auto-play Media", enabled: mediaAutoplay, info: "Videos with autoplay start without user interaction.")
+                ActiveSettingRow(label: "Inline Playback", enabled: inlineMediaPlayback, info: "Play videos inline instead of fullscreen.")
+                ActiveSettingRow(label: "AirPlay", enabled: allowsAirPlay)
+                ActiveSettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture)
             }
 
-            Section("Content Mode") {
-                InfoRow(label: "Preferred Mode", value: contentModeText)
+            Section("Navigation") {
+                ActiveSettingRow(label: "Back/Forward Gestures", enabled: allowsBackForwardGestures, info: "Swipe from edge to navigate history.")
+                ActiveSettingRow(label: "Link Preview", enabled: allowsLinkPreview, info: "Page preview on long-press or 3D Touch.")
+                InfoRow(label: "Content Mode", value: contentModeText)
             }
 
             Section("Behavior") {
-                SettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows)
-                SettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning)
-                SettingRow(label: "Text Interaction", enabled: textInteractionEnabled)
-                SettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled)
-                SettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering)
+                ActiveSettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows, info: "Allow window.open() without user gesture.")
+                ActiveSettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning, info: "Warning for phishing or malware sites.")
+                ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "Text selection, copy, and other interactions.")
+                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: "Allow pages to request fullscreen for elements.")
+                ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "Wait for full page load before displaying.")
+            }
+
+            Section("Data Detectors") {
+                InfoRow(label: "Active", value: activeDataDetectors)
+            }
+
+            Section("Privacy & Security") {
+                ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "Non-persistent data store. No cookies or cache saved.")
+                ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "Auto-upgrade HTTP to HTTPS for known secure hosts.")
             }
 
             Section("User-Agent") {
@@ -2299,18 +2404,46 @@ struct InstanceSettingsView: View {
                 }
             }
         }
-        .navigationTitle("Instance Settings")
+        .navigationTitle("Active Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                }
+            }
+        }
     }
 }
 
-private struct SettingRow: View {
+private struct ActiveSettingRow: View {
     let label: String
     let enabled: Bool
+    var info: String? = nil
+
+    @State private var showingInfo = false
 
     var body: some View {
         HStack {
             Text(label)
+            if let info {
+                Button {
+                    showingInfo = true
+                } label: {
+                    Image(systemName: "info.circle")
+                        .foregroundStyle(.secondary)
+                        .font(.footnote)
+                }
+                .buttonStyle(.plain)
+                .popover(isPresented: $showingInfo) {
+                    Text(info)
+                        .font(.footnote)
+                        .padding()
+                        .presentationCompactAdaptation(.popover)
+                }
+            }
             Spacer()
             Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
                 .foregroundStyle(enabled ? .green : .secondary)

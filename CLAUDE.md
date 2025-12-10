@@ -13,7 +13,7 @@ WKWebView의 다양한 설정 옵션을 실시간으로 테스트하고 검증�
 - User-Agent 커스터마이징
 - URL 입력 및 웹페이지 로딩 테스트
 - WKWebView Info: Device, Browser, API Capabilities (46개+), Media Codecs, Performance, Display, Accessibility
-- Info 전체 검색: 모든 카테고리에서 통합 검색 가능
+- Info 전체 검색: 모든 카테고리에서 통합 검색 가능 (Active Settings 20개 항목 포함)
 - 권한 관리: Settings에서 Camera, Microphone, Location 권한 요청/확인
 
 ## Build & Run
@@ -38,14 +38,14 @@ SwiftUI 기반 단일 타겟 iOS 앱. 최소 지원 버전: iOS 26.1 (Tahoe)
 wina/
 ├── winaApp.swift              # App entry point (@main), 다크모드 상태 관리
 ├── ContentView.swift          # Root view, URL 입력 + 최근 URL 기록
-├── SettingsView.swift         # WebView 설정 + 권한 관리 (Camera, Mic, Location)
+├── SettingsView.swift         # WebView 설정 (20개 항목) + 권한 관리 (Camera, Mic, Location)
 ├── Features/
 │   ├── AppBar/                # 상단 바 버튼들
 │   │   ├── ThemeToggleButton.swift
 │   │   ├── SettingsButton.swift
 │   │   └── InfoButton.swift
-│   └── Info/                  # WKWebView 정보 표시 (7개 서브메뉴 + 전체 검색)
-│       └── InfoView.swift     # 단일 파일에 모든 Info 뷰/모델 포함 (~2100줄)
+│   └── Info/                  # WKWebView 정보 표시 (8개 서브메뉴 + 전체 검색)
+│       └── InfoView.swift     # 단일 파일에 모든 Info 뷰/모델 포함 (~2400줄)
 ├── Shared/Components/         # 재사용 컴포넌트
 │   ├── GlassIconButton.swift  # 원형 glass effect 버튼
 │   ├── ChipButton.swift       # 탭 가능한 칩 버튼
@@ -166,7 +166,37 @@ Safari에서만 지원되거나 WebKit에서 구현하지 않은 API:
 ## Info 검색 구조
 
 `InfoView`의 `allItems` computed property가 모든 검색 가능 항목을 통합:
+- Active Settings (20개): 현재 WebView 설정 상태 (항상 표시), Settings 바로가기 버튼 포함
 - Device, Browser, API, Codecs, Display, Accessibility: 데이터 로드 후 검색 가능
 - Performance: 항목만 노출 (`linkToPerformance: true`), 클릭 시 벤치마크 화면으로 이동
 
 검색 결과는 `filteredItems`에서 카테고리별로 그룹화되어 표시.
+
+## Settings 구조
+
+SettingsView에서 관리하는 모든 WKWebView 설정 (20개):
+
+| 섹션 | 설정 |
+|------|------|
+| Core | JavaScript, Content JavaScript, Ignore Viewport Scale Limits, Minimum Font Size |
+| Media | Auto-play Media, Inline Playback, AirPlay, Picture in Picture |
+| Navigation | Back/Forward Gestures, Link Preview |
+| Content Mode | Recommended / Mobile / Desktop |
+| Behavior | JS Can Open Windows, Fraudulent Website Warning, Text Interaction, Element Fullscreen API, Suppress Incremental Rendering |
+| Data Detectors | Phone Numbers, Links, Addresses, Calendar Events |
+| Privacy & Security | Private Browsing, Upgrade to HTTPS |
+| User-Agent | Custom User-Agent string |
+| Permissions | Camera, Microphone, Location |
+
+모든 설정은 `@AppStorage`로 UserDefaults에 영속화됨.
+
+## Info 버튼 컴포넌트
+
+Info 뷰에서 사용되는 재사용 컴포넌트들:
+- `InfoRow`: 라벨-값 쌍 표시, 선택적 info 버튼
+- `CapabilityRow`: 지원 여부 체크마크 표시, 선택적 info 버튼, unavailable 플래그
+- `ActiveSettingRow`: 설정 상태 표시 (enabled/disabled), 선택적 info 버튼
+- `BenchmarkRow`: 벤치마크 결과 표시 (ops/s), 선택적 info 버튼
+- `CodecRow`: 코덱 지원 상태 (probably/maybe/none)
+
+info 버튼 클릭 시 popover로 설명 표시 (통일된 스타일).

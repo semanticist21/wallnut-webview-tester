@@ -15,7 +15,9 @@ struct SettingsView: View {
 
     // Core Settings
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
     @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
 
     // Media Settings
     @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
@@ -23,13 +25,26 @@ struct SettingsView: View {
     @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
     @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
 
+    // Navigation & Gestures
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
+    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
+
     // Content Settings
     @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
-    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
     @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
     @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
     @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
     @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+
+    // Data Detectors
+    @AppStorage("detectPhoneNumbers") private var detectPhoneNumbers: Bool = false
+    @AppStorage("detectLinks") private var detectLinks: Bool = false
+    @AppStorage("detectAddresses") private var detectAddresses: Bool = false
+    @AppStorage("detectCalendarEvents") private var detectCalendarEvents: Bool = false
+
+    // Privacy & Security
+    @AppStorage("privateBrowsing") private var privateBrowsing: Bool = false
+    @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
 
     // Content Mode
     @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0  // 0: recommended, 1: mobile, 2: desktop
@@ -46,22 +61,73 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    Toggle("JavaScript", isOn: $enableJavaScript)
-                    Toggle("Content JavaScript", isOn: $allowsContentJavaScript)
-                    Toggle("Ignore Viewport Scale Limits", isOn: $allowZoom)
+                    SettingToggleRow(
+                        title: "JavaScript",
+                        isOn: $enableJavaScript,
+                        info: "Master switch for all JavaScript execution in WebView."
+                    )
+                    SettingToggleRow(
+                        title: "Content JavaScript",
+                        isOn: $allowsContentJavaScript,
+                        info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
+                    )
+                    SettingToggleRow(
+                        title: "Ignore Viewport Scale Limits",
+                        isOn: $allowZoom,
+                        info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
+                    )
+                    HStack {
+                        Text("Minimum Font Size")
+                        Spacer()
+                        TextField("0", value: $minimumFontSize, format: .number)
+                            .keyboardType(.decimalPad)
+                            .multilineTextAlignment(.trailing)
+                            .frame(width: 60)
+                        Text("pt")
+                            .foregroundStyle(.secondary)
+                    }
                 } header: {
                     Text("Core")
-                } footer: {
-                    Text("Content JavaScript controls scripts from web pages only")
                 }
 
                 Section {
-                    Toggle("Auto-play Media", isOn: $mediaAutoplay)
-                    Toggle("Inline Playback", isOn: $inlineMediaPlayback)
-                    Toggle("AirPlay", isOn: $allowsAirPlay)
-                    Toggle("Picture in Picture", isOn: $allowsPictureInPicture)
+                    SettingToggleRow(
+                        title: "Auto-play Media",
+                        isOn: $mediaAutoplay,
+                        info: "Allows videos with autoplay attribute to start without user interaction."
+                    )
+                    SettingToggleRow(
+                        title: "Inline Playback",
+                        isOn: $inlineMediaPlayback,
+                        info: "Plays videos inline instead of fullscreen. Required for background video effects."
+                    )
+                    SettingToggleRow(
+                        title: "AirPlay",
+                        isOn: $allowsAirPlay,
+                        info: "Enables streaming media to Apple TV and other AirPlay devices."
+                    )
+                    SettingToggleRow(
+                        title: "Picture in Picture",
+                        isOn: $allowsPictureInPicture,
+                        info: "Allows videos to continue playing in a floating window."
+                    )
                 } header: {
                     Text("Media")
+                }
+
+                Section {
+                    SettingToggleRow(
+                        title: "Back/Forward Gestures",
+                        isOn: $allowsBackForwardGestures,
+                        info: "Enables swipe from edge to navigate history."
+                    )
+                    SettingToggleRow(
+                        title: "Link Preview",
+                        isOn: $allowsLinkPreview,
+                        info: "Shows page preview on long-press or 3D Touch on links."
+                    )
+                } header: {
+                    Text("Navigation")
                 }
 
                 Section {
@@ -73,17 +139,79 @@ struct SettingsView: View {
                 } header: {
                     Text("Content Mode")
                 } footer: {
-                    Text("Controls viewport and user agent behavior")
+                    Text("Mobile: optimized for small screens. Desktop: requests full website.")
                 }
 
                 Section {
-                    Toggle("JS Can Open Windows", isOn: $javaScriptCanOpenWindows)
-                    Toggle("Fraudulent Website Warning", isOn: $fraudulentWebsiteWarning)
-                    Toggle("Text Interaction", isOn: $textInteractionEnabled)
-                    Toggle("Element Fullscreen API", isOn: $elementFullscreenEnabled)
-                    Toggle("Suppress Incremental Rendering", isOn: $suppressesIncrementalRendering)
+                    SettingToggleRow(
+                        title: "JS Can Open Windows",
+                        isOn: $javaScriptCanOpenWindows,
+                        info: "Allows window.open() without user gesture. Disable to block pop-ups."
+                    )
+                    SettingToggleRow(
+                        title: "Fraudulent Website Warning",
+                        isOn: $fraudulentWebsiteWarning,
+                        info: "Shows warning for suspected phishing or malware sites."
+                    )
+                    SettingToggleRow(
+                        title: "Text Interaction",
+                        isOn: $textInteractionEnabled,
+                        info: "Enables text selection, copy, and other text interactions."
+                    )
+                    SettingToggleRow(
+                        title: "Element Fullscreen API",
+                        isOn: $elementFullscreenEnabled,
+                        info: "Allows web pages to request fullscreen mode for elements like videos."
+                    )
+                    SettingToggleRow(
+                        title: "Suppress Incremental Rendering",
+                        isOn: $suppressesIncrementalRendering,
+                        info: "Waits for full page load before displaying. May feel slower but cleaner."
+                    )
                 } header: {
                     Text("Behavior")
+                }
+
+                Section {
+                    SettingToggleRow(
+                        title: "Phone Numbers",
+                        isOn: $detectPhoneNumbers,
+                        info: "Makes phone numbers tappable to call."
+                    )
+                    SettingToggleRow(
+                        title: "Links",
+                        isOn: $detectLinks,
+                        info: "Converts URL-like text to tappable links."
+                    )
+                    SettingToggleRow(
+                        title: "Addresses",
+                        isOn: $detectAddresses,
+                        info: "Makes addresses tappable to open in Maps."
+                    )
+                    SettingToggleRow(
+                        title: "Calendar Events",
+                        isOn: $detectCalendarEvents,
+                        info: "Detects dates and times, allowing to add to Calendar."
+                    )
+                } header: {
+                    Text("Data Detectors")
+                } footer: {
+                    Text("Automatically detect and link specific content types")
+                }
+
+                Section {
+                    SettingToggleRow(
+                        title: "Private Browsing",
+                        isOn: $privateBrowsing,
+                        info: "Uses non-persistent data store. No cookies or cache saved after session."
+                    )
+                    SettingToggleRow(
+                        title: "Upgrade to HTTPS",
+                        isOn: $upgradeToHTTPS,
+                        info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
+                    )
+                } header: {
+                    Text("Privacy & Security")
                 }
 
                 Section {
@@ -93,7 +221,7 @@ struct SettingsView: View {
                 } header: {
                     Text("User-Agent")
                 } footer: {
-                    Text("Leave empty to use default")
+                    Text("Override the default browser identification string")
                 }
 
                 Section {
@@ -205,6 +333,46 @@ struct SettingsView: View {
     private func openSettings() {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
+        }
+    }
+}
+
+// MARK: - Setting Toggle Row
+
+private struct SettingToggleRow: View {
+    let title: String
+    @Binding var isOn: Bool
+    let info: String?
+
+    init(title: String, isOn: Binding<Bool>, info: String? = nil) {
+        self.title = title
+        self._isOn = isOn
+        self.info = info
+    }
+
+    @State private var showInfo = false
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            HStack {
+                Text(title)
+                if let info {
+                    Button {
+                        showInfo = true
+                    } label: {
+                        Image(systemName: "info.circle")
+                            .foregroundStyle(.secondary)
+                            .font(.footnote)
+                    }
+                    .buttonStyle(.plain)
+                    .popover(isPresented: $showInfo) {
+                        Text(info)
+                            .font(.footnote)
+                            .padding()
+                            .presentationCompactAdaptation(.popover)
+                    }
+                }
+            }
         }
     }
 }
