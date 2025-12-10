@@ -12,9 +12,33 @@ struct ContentView: View {
     @State private var isFocused: Bool = false
     @State private var showSettings: Bool = false
     @State private var showBookmarks: Bool = false
+    @State private var urlValidationState: URLValidationState = .empty
+    @State private var useSafariWebView: Bool = false
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData: Data = Data()
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData: Data = Data()
+
+    private enum URLValidationState {
+        case empty
+        case valid
+        case invalid
+
+        var iconName: String {
+            switch self {
+            case .empty: return "globe"
+            case .valid: return "checkmark.circle.fill"
+            case .invalid: return "xmark.circle.fill"
+            }
+        }
+
+        var iconColor: Color {
+            switch self {
+            case .empty: return .secondary
+            case .valid: return .green
+            case .invalid: return .red
+            }
+        }
+    }
 
     private var recentURLs: [String] {
         (try? JSONDecoder().decode([String].self, from: recentURLsData)) ?? []
@@ -51,6 +75,7 @@ struct ContentView: View {
                             .resizable()
                             .scaledToFit()
                             .frame(height: 120)
+                            .padding(.bottom, -12)
                     }
 
                     // URL parts chips - FlowLayout으로 줄바꿈
@@ -63,40 +88,75 @@ struct ContentView: View {
                     }
                     .frame(width: inputWidth)
 
+                // WebView Type Toggle
+                Picker("WebView Type", selection: $useSafariWebView) {
+                    Label("WKWebView", systemImage: "square.stack.3d.up")
+                        .tag(false)
+                    Label("Safari", systemImage: "safari")
+                        .tag(true)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: inputWidth)
+
                 // URL Input
                 HStack(spacing: 12) {
-                    Image(systemName: "globe")
-                        .foregroundStyle(.secondary)
-                        .font(.system(size: 16))
+                    HStack(spacing: 12) {
+                        Image(systemName: urlValidationState.iconName)
+                            .foregroundStyle(urlValidationState.iconColor)
+                            .font(.system(size: 16))
+                            .contentTransition(.symbolEffect(.replace))
 
-                    TextField("URL 입력", text: $urlText)
-                        .textFieldStyle(.plain)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .keyboardType(.URL)
-                        .submitLabel(.go)
-                        .font(.system(size: 16))
-                        .focused($textFieldFocused)
-                        .onSubmit {
+                        TextField("URL 입력", text: $urlText)
+                            .textFieldStyle(.plain)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.URL)
+                            .submitLabel(.go)
+                            .font(.system(size: 16))
+                            .focused($textFieldFocused)
+                            .onSubmit {
+                                if urlValidationState == .valid {
+                                    isFocused = false
+                                    textFieldFocused = false
+                                    submitURL()
+                                }
+                            }
+                            .onChange(of: urlText) { _, _ in
+                                validateURL()
+                            }
+
+                        if !urlText.isEmpty {
+                            Button {
+                                urlText = ""
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 14)
+                    .frame(width: urlValidationState == .valid ? inputWidth - 60 : inputWidth)
+                    .glassEffect(in: .capsule)
+
+                    if urlValidationState == .valid {
+                        Button {
                             isFocused = false
                             textFieldFocused = false
                             submitURL()
-                        }
-
-                    if !urlText.isEmpty {
-                        Button {
-                            urlText = ""
                         } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .frame(width: 48, height: 48)
+                                .glassEffect(in: .circle)
                         }
                         .buttonStyle(.plain)
+                        .transition(.opacity.animation(.easeOut(duration: 0.15)))
                     }
                 }
-                .padding(.horizontal, 18)
-                .padding(.vertical, 14)
-                .frame(width: inputWidth)
-                .glassEffect(in: .capsule)
+                .animation(.easeOut(duration: 0.25), value: urlValidationState)
                 .overlay(alignment: .top) {
                     // 자동완성 드롭다운 (오버레이)
                     if isFocused && !filteredURLs.isEmpty {
@@ -147,11 +207,11 @@ struct ContentView: View {
                 }
                 .onChange(of: textFieldFocused) { _, newValue in
                     if newValue {
-                        withAnimation(.easeInOut(duration: 0.2)) {
+                        withAnimation(.easeOut(duration: 0.15)) {
                             isFocused = true
                         }
                     } else {
-                        isFocused = false  // 애니메이션 없이 즉시 사라짐
+                        isFocused = false
                     }
                 }
             }
@@ -167,12 +227,14 @@ struct ContentView: View {
             // Top bar
             VStack {
                 HStack {
-                    ThemeToggleButton()
+                    HStack(spacing: 12) {
+                        ThemeToggleButton()
+                        BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: !bookmarkedURLs.isEmpty)
+                    }
 
                     Spacer()
 
                     HStack(spacing: 12) {
-                        BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: !bookmarkedURLs.isEmpty)
                         InfoButton()
                         SettingsButton(showSettings: $showSettings)
                     }
@@ -246,6 +308,72 @@ struct ContentView: View {
         if let data = try? JSONEncoder().encode(bookmarks) {
             bookmarkedURLsData = data
         }
+    }
+
+    private func validateURL() {
+        guard !urlText.isEmpty else {
+            urlValidationState = .empty
+            return
+        }
+        urlValidationState = isValidURL(urlText) ? .valid : .invalid
+    }
+
+    private func isValidURL(_ string: String) -> Bool {
+        // http/https 스킴이 없으면 https:// 붙여서 검증
+        var urlString = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !urlString.lowercased().hasPrefix("http://") && !urlString.lowercased().hasPrefix("https://") {
+            urlString = "https://" + urlString
+        }
+
+        guard let url = URL(string: urlString),
+              let host = url.host,
+              !host.isEmpty else {
+            return false
+        }
+
+        // localhost 허용
+        if host == "localhost" {
+            return true
+        }
+
+        // IP 주소 검증
+        if isValidIPAddress(host) {
+            return true
+        }
+
+        // 도메인 검증: . 으로 분리된 부분이 각각 유효해야 함
+        let parts = host.split(separator: ".", omittingEmptySubsequences: false)
+
+        // 최소 2개 파트 필요 (예: example.com)
+        guard parts.count >= 2 else { return false }
+
+        // 각 파트가 비어있지 않고, 유효한 문자만 포함해야 함
+        for part in parts {
+            // 빈 파트 불허 (.com, example. 등)
+            guard !part.isEmpty else { return false }
+            // 알파벳, 숫자, 하이픈만 허용
+            let allowedChars = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-"))
+            guard part.unicodeScalars.allSatisfy({ allowedChars.contains($0) }) else { return false }
+            // 하이픈으로 시작/끝나면 안됨
+            guard !part.hasPrefix("-") && !part.hasSuffix("-") else { return false }
+        }
+
+        // TLD가 최소 2글자 이상
+        guard let tld = parts.last, tld.count >= 2 else { return false }
+
+        return true
+    }
+
+    private func isValidIPAddress(_ string: String) -> Bool {
+        // IPv4 검증
+        let ipv4Parts = string.split(separator: ".")
+        if ipv4Parts.count == 4 {
+            return ipv4Parts.allSatisfy { part in
+                guard let num = Int(part) else { return false }
+                return num >= 0 && num <= 255
+            }
+        }
+        return false
     }
 }
 
