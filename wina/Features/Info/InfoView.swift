@@ -562,6 +562,10 @@ struct APICapabilitiesView: View {
     @State private var webViewInfo: WebViewInfo?
     @State private var loadingStatus = "Launching WebView process..."
 
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
     private var capabilities: [CapabilitySection] {
         guard let info = webViewInfo else { return [] }
         return [
@@ -580,7 +584,7 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Record audio/video streams.\niOS: MP4/H.264 only.\nWebM/VP8 not supported."),
                 CapabilityItem(label: "Media Source", supported: info.supportsMediaSource, info: "MSE for adaptive streaming.\niOS 17+: ManagedMediaSource.\nOlder iOS: Not supported."),
                 CapabilityItem(label: "Picture in Picture", supported: info.supportsPictureInPicture, info: "Video plays in floating window.\nWorks on video elements.\nUser must initiate."),
-                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: "iPhone: Not supported (API absent).\niPad: Full support.\nWKWebView: Needs isElementFullscreenEnabled.")
+                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: isIPad ? "iPad: Full support.\nWKWebView: Needs isElementFullscreenEnabled.\nWorks with any element." : "iPhone: Not supported.\nFullscreen API absent on iPhone.\niPad only feature.", unavailable: !isIPad)
             ]),
             CapabilitySection(name: "Storage", items: [
                 CapabilityItem(label: "Cookies", supported: info.cookiesEnabled, info: "HTTP cookies enabled.\nControlled by WKWebsiteDataStore.\nPrivate mode disables persistence."),
@@ -614,7 +618,7 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "Pointer Events", supported: info.supportsPointerEvents, info: "Unified input events.\nMouse, touch, pen combined.\nModern event handling."),
                 CapabilityItem(label: "Touch Events", supported: info.supportsTouchEvents, info: "Multi-touch support.\ntouchstart/move/end events.\niOS native touch handling."),
                 CapabilityItem(label: "Gamepad", supported: info.supportsGamepad, info: "Game controller input.\nMFi controllers supported.\nPS/Xbox may work too."),
-                CapabilityItem(label: "Drag and Drop", supported: info.supportsDragDrop, info: "HTML5 drag/drop API.\niPad: Full support.\niPhone: Limited/gesture conflict.")
+                CapabilityItem(label: "Drag and Drop", supported: info.supportsDragDrop, info: isIPad ? "iPad: Full drag/drop support.\nBetween apps, within app.\nSplit View compatible." : "iPhone: Limited support.\nGesture conflicts with scroll.\niPad recommended.", unavailable: !isIPad)
             ]),
             CapabilitySection(name: "Observers", items: [
                 CapabilityItem(label: "Intersection Observer", supported: info.supportsIntersectionObserver, info: "Element visibility detection.\nLazy loading, infinite scroll.\nPerformant scroll handling."),
@@ -2327,6 +2331,10 @@ struct ActiveSettingsView: View {
     // User Agent
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
     private var contentModeText: String {
         switch preferredContentMode {
         case 1: return "Mobile"
@@ -2377,7 +2385,7 @@ struct ActiveSettingsView: View {
                 ActiveSettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows, info: "javaScriptCanOpenWindowsAutomatically.\nAllows window.open().\nOff = popup blocker.")
                 ActiveSettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning, info: "isFraudulentWebsiteWarningEnabled.\nApple Safe Browsing.\nPhishing/malware protection.")
                 ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "isTextInteractionEnabled.\nText selection & copy.\nOff = no text selection.")
-                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: "isElementFullscreenEnabled.\niPad: Full support.\niPhone: Video only.")
+                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: isIPad ? "isElementFullscreenEnabled.\niPad: Full element support.\nWorks with any HTML element." : "isElementFullscreenEnabled.\niPhone: Video elements only.\nFull API not available.", unavailable: !isIPad)
                 ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "suppressesIncrementalRendering.\nOn = wait for full load.\nCleaner but feels slower.")
             }
 
@@ -2422,12 +2430,19 @@ private struct ActiveSettingRow: View {
     let label: String
     let enabled: Bool
     var info: String? = nil
+    var unavailable: Bool = false
 
     @State private var showingInfo = false
 
     var body: some View {
         HStack {
             Text(label)
+                .foregroundStyle(unavailable ? .secondary : .primary)
+            if unavailable {
+                Text("(iPad only)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
             if let info {
                 Button {
                     showingInfo = true
@@ -2445,8 +2460,13 @@ private struct ActiveSettingRow: View {
                 }
             }
             Spacer()
-            Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundStyle(enabled ? .green : .secondary)
+            if unavailable {
+                Image(systemName: "minus.circle.fill")
+                    .foregroundStyle(.tertiary)
+            } else {
+                Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(enabled ? .green : .secondary)
+            }
         }
     }
 }

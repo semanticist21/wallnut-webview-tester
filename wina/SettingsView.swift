@@ -57,6 +57,10 @@ struct SettingsView: View {
     @State private var locationStatus: CLAuthorizationStatus = .notDetermined
     @StateObject private var locationDelegate = LocationManagerDelegate()
 
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -161,7 +165,8 @@ struct SettingsView: View {
                     SettingToggleRow(
                         title: "Element Fullscreen API",
                         isOn: $elementFullscreenEnabled,
-                        info: "Allows web pages to request fullscreen mode for elements like videos."
+                        info: isIPad ? "iPad: Full element fullscreen support.\nWorks with any HTML element.\nVideo, div, canvas, etc." : "iPhone: Limited to video elements only.\nFull API not available.\niPad recommended for full support.",
+                        disabled: !isIPad
                     )
                     SettingToggleRow(
                         title: "Suppress Incremental Rendering",
@@ -343,11 +348,13 @@ private struct SettingToggleRow: View {
     let title: String
     @Binding var isOn: Bool
     let info: String?
+    let disabled: Bool
 
-    init(title: String, isOn: Binding<Bool>, info: String? = nil) {
+    init(title: String, isOn: Binding<Bool>, info: String? = nil, disabled: Bool = false) {
         self.title = title
         self._isOn = isOn
         self.info = info
+        self.disabled = disabled
     }
 
     @State private var showInfo = false
@@ -356,6 +363,12 @@ private struct SettingToggleRow: View {
         Toggle(isOn: $isOn) {
             HStack {
                 Text(title)
+                    .foregroundStyle(disabled ? .secondary : .primary)
+                if disabled {
+                    Text("(iPad only)")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
                 if let info {
                     Button {
                         showInfo = true
@@ -374,6 +387,7 @@ private struct SettingToggleRow: View {
                 }
             }
         }
+        .disabled(disabled)
     }
 }
 
