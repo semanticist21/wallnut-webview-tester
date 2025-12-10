@@ -13,6 +13,8 @@ WKWebView의 다양한 설정 옵션을 실시간으로 테스트하고 검증�
 - User-Agent 커스터마이징
 - URL 입력 및 웹페이지 로딩 테스트
 - WKWebView Info: Device, Browser, API Capabilities (46개+), Media Codecs, Performance, Display, Accessibility
+- Info 전체 검색: 모든 카테고리에서 통합 검색 가능
+- 권한 관리: Settings에서 Camera, Microphone, Location 권한 요청/확인
 
 ## Build & Run
 
@@ -36,14 +38,14 @@ SwiftUI 기반 단일 타겟 iOS 앱. 최소 지원 버전: iOS 26.1 (Tahoe)
 wina/
 ├── winaApp.swift              # App entry point (@main), 다크모드 상태 관리
 ├── ContentView.swift          # Root view, URL 입력 + 최근 URL 기록
-├── SettingsView.swift         # WebView 설정 (JavaScript, 쿠키, 줌, User-Agent)
+├── SettingsView.swift         # WebView 설정 + 권한 관리 (Camera, Mic, Location)
 ├── Features/
 │   ├── AppBar/                # 상단 바 버튼들
 │   │   ├── ThemeToggleButton.swift
 │   │   ├── SettingsButton.swift
 │   │   └── InfoButton.swift
-│   └── Info/                  # WKWebView 정보 표시 (7개 서브메뉴)
-│       └── InfoView.swift     # Device, Browser, API, Codecs, Performance, Display, Accessibility
+│   └── Info/                  # WKWebView 정보 표시 (7개 서브메뉴 + 전체 검색)
+│       └── InfoView.swift     # 단일 파일에 모든 Info 뷰/모델 포함 (~2100줄)
 ├── Shared/Components/         # 재사용 컴포넌트
 │   ├── GlassIconButton.swift  # 원형 glass effect 버튼
 │   ├── ChipButton.swift       # 탭 가능한 칩 버튼
@@ -160,3 +162,11 @@ Safari에서만 지원되거나 WebKit에서 구현하지 않은 API:
 
 - 벤치마크 JavaScript는 동기 실행 필수 (async/await 사용 시 WKWebView에서 "unsupported type" 에러)
 - Canvas/WebGL은 `document.createElement`로 동적 생성 (HTML 내 element는 `baseURL: nil`일 때 접근 불가할 수 있음)
+
+## Info 검색 구조
+
+`InfoView`의 `allItems` computed property가 모든 검색 가능 항목을 통합:
+- Device, Browser, API, Codecs, Display, Accessibility: 데이터 로드 후 검색 가능
+- Performance: 항목만 노출 (`linkToPerformance: true`), 클릭 시 벤치마크 화면으로 이동
+
+검색 결과는 `filteredItems`에서 카테고리별로 그룹화되어 표시.
