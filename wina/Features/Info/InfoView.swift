@@ -94,7 +94,7 @@ struct InfoView: View {
                 ("USB", info.supportsUSB, "Use native app instead."),
                 ("NFC", info.supportsNFC, "Use native app instead."),
                 ("Clipboard", info.supportsClipboard, "Requires user interaction."),
-                ("Web Share", info.supportsWebShare, nil),
+                ("Web Share", info.supportsWebShare, "Requires HTTPS and user gesture. Safari only."),
                 ("Notifications", info.supportsNotifications, "Only in Safari or home screen web apps."),
                 ("Pointer Events", info.supportsPointerEvents, nil),
                 ("Touch Events", info.supportsTouchEvents, nil),
@@ -479,7 +479,6 @@ struct BrowserInfoView: View {
 struct APICapabilitiesView: View {
     @State private var webViewInfo: WebViewInfo?
     @State private var loadingStatus = "Launching WebView process..."
-    @State private var searchText = ""
 
     private var capabilities: [CapabilitySection] {
         guard let info = webViewInfo else { return [] }
@@ -528,8 +527,8 @@ struct APICapabilitiesView: View {
             ]),
             CapabilitySection(name: "UI & Interaction", items: [
                 CapabilityItem(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user interaction."),
-                CapabilityItem(label: "Web Share", supported: info.supportsWebShare),
-                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Only in Safari or home screen web apps."),
+                CapabilityItem(label: "Web Share", supported: info.supportsWebShare, info: "Requires HTTPS and user gesture. Safari only.", unavailable: true),
+                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Only in Safari or home screen web apps.", unavailable: true),
                 CapabilityItem(label: "Pointer Events", supported: info.supportsPointerEvents),
                 CapabilityItem(label: "Touch Events", supported: info.supportsTouchEvents),
                 CapabilityItem(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers."),
@@ -549,17 +548,9 @@ struct APICapabilitiesView: View {
         ]
     }
 
-    private var filteredCapabilities: [CapabilitySection] {
-        if searchText.isEmpty { return capabilities }
-        return capabilities.compactMap { section in
-            let filtered = section.items.filter { $0.label.localizedCaseInsensitiveContains(searchText) }
-            return filtered.isEmpty ? nil : CapabilitySection(name: section.name, items: filtered)
-        }
-    }
-
     var body: some View {
         List {
-            ForEach(filteredCapabilities) { section in
+            ForEach(capabilities) { section in
                 Section(section.name) {
                     ForEach(section.items) { item in
                         CapabilityRow(label: item.label, supported: item.supported, info: item.info, unavailable: item.unavailable)
@@ -575,11 +566,8 @@ struct APICapabilitiesView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-            } else if filteredCapabilities.isEmpty {
-                ContentUnavailableView.search(text: searchText)
             }
         }
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search APIs")
         .navigationTitle("API Capabilities")
         .navigationBarTitleDisplayMode(.inline)
         .task {
@@ -970,12 +958,34 @@ private struct WebViewInfo: Sendable {
                 pictureInPicture: 'pictureInPictureEnabled' in document,
                 fullscreen: !!(document.fullscreenEnabled || document.webkitFullscreenEnabled),
 
-                // Storage
+                // Storage - test actual read/write capability
                 cookies: navigator.cookieEnabled,
-                localStorage: (function() { try { return !!window.localStorage; } catch(e) { return false; } })(),
-                sessionStorage: (function() { try { return !!window.sessionStorage; } catch(e) { return false; } })(),
-                indexedDB: typeof indexedDB !== 'undefined',
-                cacheAPI: 'caches' in window,
+                localStorage: (function() {
+                    try {
+                        var key = '__test__';
+                        localStorage.setItem(key, '1');
+                        localStorage.removeItem(key);
+                        return true;
+                    } catch(e) { return false; }
+                })(),
+                sessionStorage: (function() {
+                    try {
+                        var key = '__test__';
+                        sessionStorage.setItem(key, '1');
+                        sessionStorage.removeItem(key);
+                        return true;
+                    } catch(e) { return false; }
+                })(),
+                indexedDB: (function() {
+                    try {
+                        return typeof indexedDB !== 'undefined' && indexedDB !== null;
+                    } catch(e) { return false; }
+                })(),
+                cacheAPI: (function() {
+                    try {
+                        return 'caches' in window && typeof caches.open === 'function';
+                    } catch(e) { return false; }
+                })(),
 
                 // Network
                 webSocket: typeof WebSocket !== 'undefined',
@@ -1147,8 +1157,8 @@ struct MediaCodecsView: View {
                 Text("Codec support may vary depending on device and OS version.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
-                    .listRowBackground(Color.clear)
             }
+            .listSectionSpacing(0)
 
             if let info = codecInfo {
                 Section("Video Codecs") {
