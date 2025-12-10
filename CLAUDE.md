@@ -13,7 +13,8 @@ WKWebView의 다양한 설정 옵션을 실시간으로 테스트하고 검증�
 - User-Agent 커스터마이징
 - URL 입력 및 웹페이지 로딩 테스트
 - WKWebView Info: Device, Browser, API Capabilities (46개+), Media Codecs, Performance, Display, Accessibility
-- Info 전체 검색: 모든 카테고리에서 통합 검색 가능 (Active Settings 20개 항목 포함)
+- Info 전체 검색: 모든 카테고리에서 통합 검색 가능
+- 기기별 UI: iPad/iPhone에 따라 unavailable 플래그 및 info 텍스트 동적 변경
 - 권한 관리: Settings에서 Camera, Microphone, Location 권한 요청/확인
 
 ## Build & Run
