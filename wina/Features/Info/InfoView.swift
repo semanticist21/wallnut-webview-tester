@@ -457,22 +457,22 @@ struct DeviceInfoView: View {
                 }
 
                 Section("Processor") {
-                    InfoRow(label: "CPU Cores", value: info.cpuCores, info: "Total logical processor cores available.")
-                    InfoRow(label: "Active Cores", value: info.activeCores, info: "Cores currently active. May vary based on power state.")
-                    InfoRow(label: "Physical Memory", value: info.physicalMemory)
-                    InfoRow(label: "Thermal State", value: info.thermalState, info: "Nominal: Normal\nFair: Slightly elevated\nSerious: High\nCritical: Throttling")
-                    CapabilityRow(label: "Low Power Mode", supported: info.isLowPowerMode)
+                    InfoRow(label: "CPU Cores", value: info.cpuCores, info: "Total logical cores.\niPhone uses ARM big.LITTLE:\nPerformance + Efficiency cores.")
+                    InfoRow(label: "Active Cores", value: info.activeCores, info: "Currently active cores.\nMay throttle based on:\nThermal state, Low Power Mode.")
+                    InfoRow(label: "GPU", value: info.gpuName, info: "Apple GPU integrated in SoC.\nMetal API supported.\nShared memory with CPU.")
                 }
 
-                Section("Graphics") {
-                    InfoRow(label: "GPU", value: info.gpuName)
+                Section("Memory & Power") {
+                    InfoRow(label: "Physical Memory", value: info.physicalMemory, info: "Total device RAM.\nShared between system and apps.\niPhone: 4-8GB typically.")
+                    InfoRow(label: "Thermal State", value: info.thermalState, info: "Nominal: Normal operation\nFair: Slightly warm\nSerious: Performance throttled\nCritical: Aggressive throttling")
+                    CapabilityRow(label: "Low Power Mode", supported: info.isLowPowerMode, info: "Settings > Battery toggle.\nReduces CPU/GPU performance.\nDisables background refresh.")
                 }
 
                 Section("Display") {
-                    InfoRow(label: "Screen Size", value: info.screenSize, info: "Logical screen size in points.")
-                    InfoRow(label: "Screen Scale", value: info.screenScale, info: "Current display scale factor (points to pixels).")
-                    InfoRow(label: "Native Scale", value: info.nativeScale, info: "Physical pixel density of the screen.")
-                    InfoRow(label: "Brightness", value: info.brightness)
+                    InfoRow(label: "Screen Size", value: info.screenSize, info: "Logical size in points.\n1 point = 2-3 pixels depending on device.")
+                    InfoRow(label: "Screen Scale", value: info.screenScale, info: "Points to pixels ratio.\n@2x = Retina, @3x = Super Retina.")
+                    InfoRow(label: "Native Scale", value: info.nativeScale, info: "Physical pixel density.\nMay differ from Screen Scale\non some devices.")
+                    InfoRow(label: "Brightness", value: info.brightness, info: "Current screen brightness.\n0.0 (min) to 1.0 (max).\nUser or auto-brightness controlled.")
                 }
 
                 Section("Locale") {
@@ -517,8 +517,8 @@ struct BrowserInfoView: View {
                 }
 
                 Section("Engine") {
-                    InfoRow(label: "WebKit Version", value: info.webKitVersion, info: "Apple's web rendering engine version.")
-                    InfoRow(label: "JavaScript Core", value: info.jsCoreVersion, info: "Apple's JavaScript engine version.")
+                    InfoRow(label: "WebKit Version", value: info.webKitVersion, info: "Safari's rendering engine.\nShared across all iOS browsers.\nUpdated with iOS releases.")
+                    InfoRow(label: "JavaScript Core", value: info.jsCoreVersion, info: "Apple's JS engine (Nitro).\nJIT compilation for speed.\nSame engine as Safari.")
                 }
 
                 Section("User Agent") {
@@ -532,7 +532,7 @@ struct BrowserInfoView: View {
                 }
 
                 Section("Input") {
-                    InfoRow(label: "Max Touch Points", value: info.maxTouchPoints, info: "Maximum simultaneous touch points supported.")
+                    InfoRow(label: "Max Touch Points", value: info.maxTouchPoints, info: "Max simultaneous touches.\niPhone/iPad: Usually 5.\nAffects multi-touch gestures.")
                 }
             }
         }
@@ -569,63 +569,63 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "JavaScript", supported: info.supportsJavaScript),
                 CapabilityItem(label: "WebAssembly", supported: info.supportsWebAssembly),
                 CapabilityItem(label: "Web Workers", supported: info.supportsWebWorkers),
-                CapabilityItem(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Only in Safari or home screen web apps.", unavailable: true),
+                CapabilityItem(label: "Service Workers", supported: info.supportsServiceWorkers, info: "WKWebView: Not supported.\nSafari/PWA only.\nNeeds App-Bound Domains for WKWebView.", unavailable: true),
                 CapabilityItem(label: "Shared Workers", supported: info.supportsSharedWorkers)
             ]),
             CapabilitySection(name: "Graphics & Media", items: [
                 CapabilityItem(label: "WebGL", supported: info.supportsWebGL),
                 CapabilityItem(label: "WebGL 2", supported: info.supportsWebGL2),
                 CapabilityItem(label: "Web Audio", supported: info.supportsWebAudio),
-                CapabilityItem(label: "Media Devices", supported: info.supportsMediaDevices, info: "Requires camera & microphone permission."),
-                CapabilityItem(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Supports MP4 format only."),
-                CapabilityItem(label: "Media Source", supported: info.supportsMediaSource, info: "iOS 17+ only."),
-                CapabilityItem(label: "Picture in Picture", supported: info.supportsPictureInPicture),
-                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: "Video only on iPhone, full support on iPad.")
+                CapabilityItem(label: "Media Devices", supported: info.supportsMediaDevices, info: "getUserMedia() API.\nNeeds NSCameraUsageDescription,\nNSMicrophoneUsageDescription in Info.plist."),
+                CapabilityItem(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Record audio/video streams.\niOS: MP4/H.264 only.\nWebM/VP8 not supported."),
+                CapabilityItem(label: "Media Source", supported: info.supportsMediaSource, info: "MSE for adaptive streaming.\niOS 17+: ManagedMediaSource.\nOlder iOS: Not supported."),
+                CapabilityItem(label: "Picture in Picture", supported: info.supportsPictureInPicture, info: "Video plays in floating window.\nWorks on video elements.\nUser must initiate."),
+                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: "iPhone: Not supported (API absent).\niPad: Full support.\nWKWebView: Needs isElementFullscreenEnabled.")
             ]),
             CapabilitySection(name: "Storage", items: [
-                CapabilityItem(label: "Cookies", supported: info.cookiesEnabled),
-                CapabilityItem(label: "LocalStorage", supported: info.supportsLocalStorage, info: "5MB limit per website."),
-                CapabilityItem(label: "SessionStorage", supported: info.supportsSessionStorage),
-                CapabilityItem(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Data may be cleared after 7 days of inactivity."),
-                CapabilityItem(label: "Cache API", supported: info.supportsCacheAPI, info: "Data may be cleared after 7 days of inactivity.")
+                CapabilityItem(label: "Cookies", supported: info.cookiesEnabled, info: "HTTP cookies enabled.\nControlled by WKWebsiteDataStore.\nPrivate mode disables persistence."),
+                CapabilityItem(label: "LocalStorage", supported: info.supportsLocalStorage, info: "Persistent key-value storage.\n~5MB limit per origin.\nNeeds valid baseURL for access."),
+                CapabilityItem(label: "SessionStorage", supported: info.supportsSessionStorage, info: "Tab-scoped storage.\nCleared when tab closes.\nSame origin policy applies."),
+                CapabilityItem(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Client-side database.\nData may clear after 7 days idle.\nLarger storage than LocalStorage."),
+                CapabilityItem(label: "Cache API", supported: info.supportsCacheAPI, info: "Service Worker cache storage.\nData may clear after 7 days idle.\nGood for offline resources.")
             ]),
             CapabilitySection(name: "Network", items: [
-                CapabilityItem(label: "Online", supported: info.isOnline),
-                CapabilityItem(label: "WebSocket", supported: info.supportsWebSocket),
-                CapabilityItem(label: "WebRTC", supported: info.supportsWebRTC, info: "Requires camera & microphone permission."),
-                CapabilityItem(label: "Fetch", supported: info.supportsFetch),
-                CapabilityItem(label: "Beacon", supported: info.supportsBeacon),
-                CapabilityItem(label: "Event Source", supported: info.supportsEventSource, info: "Real-time server updates.")
+                CapabilityItem(label: "Online", supported: info.isOnline, info: "navigator.onLine status.\nDevice network connectivity.\nMay not reflect actual internet."),
+                CapabilityItem(label: "WebSocket", supported: info.supportsWebSocket, info: "Full-duplex communication.\nPersistent connection to server.\nGood for real-time apps."),
+                CapabilityItem(label: "WebRTC", supported: info.supportsWebRTC, info: "Peer-to-peer communication.\nNeeds camera/mic permissions.\nVideo calls, screen sharing."),
+                CapabilityItem(label: "Fetch", supported: info.supportsFetch, info: "Modern HTTP requests API.\nPromise-based, replaces XHR.\nSupports streaming."),
+                CapabilityItem(label: "Beacon", supported: info.supportsBeacon, info: "Send data on page unload.\nGuaranteed delivery attempt.\nGood for analytics."),
+                CapabilityItem(label: "Event Source", supported: info.supportsEventSource, info: "Server-Sent Events (SSE).\nOne-way server → client.\nAuto-reconnection built-in.")
             ]),
             CapabilitySection(name: "Device APIs", items: [
-                CapabilityItem(label: "Geolocation", supported: info.supportsGeolocation, info: "Requires location permission."),
-                CapabilityItem(label: "Device Orientation", supported: info.supportsDeviceOrientation),
-                CapabilityItem(label: "Device Motion", supported: info.supportsDeviceMotion),
-                CapabilityItem(label: "Vibration", supported: info.supportsVibration, info: "Not supported on iOS.", unavailable: true),
-                CapabilityItem(label: "Battery", supported: info.supportsBattery, info: "Not supported for privacy.", unavailable: true),
-                CapabilityItem(label: "Bluetooth", supported: info.supportsBluetooth, info: "Use native app instead.", unavailable: true),
-                CapabilityItem(label: "USB", supported: info.supportsUSB, info: "Use native app instead.", unavailable: true),
-                CapabilityItem(label: "NFC", supported: info.supportsNFC, info: "Use native app instead.", unavailable: true)
+                CapabilityItem(label: "Geolocation", supported: info.supportsGeolocation, info: "GPS/network location.\nNeeds NSLocationWhenInUseUsageDescription.\nUser permission required."),
+                CapabilityItem(label: "Device Orientation", supported: info.supportsDeviceOrientation, info: "Gyroscope data access.\nalpha/beta/gamma rotation.\niOS 13+: User permission needed."),
+                CapabilityItem(label: "Device Motion", supported: info.supportsDeviceMotion, info: "Accelerometer data access.\naccelerationIncludingGravity.\niOS 13+: User permission needed."),
+                CapabilityItem(label: "Vibration", supported: info.supportsVibration, info: "iOS: Never supported.\nWebKit privacy policy.\nUse native API instead.", unavailable: true),
+                CapabilityItem(label: "Battery", supported: info.supportsBattery, info: "iOS: Never supported.\nFingerprinting concern.\nWebKit privacy policy.", unavailable: true),
+                CapabilityItem(label: "Bluetooth", supported: info.supportsBluetooth, info: "Web Bluetooth API.\niOS: Not implemented.\nUse CoreBluetooth native API.", unavailable: true),
+                CapabilityItem(label: "USB", supported: info.supportsUSB, info: "WebUSB API.\niOS: Not implemented.\nUse native USB framework.", unavailable: true),
+                CapabilityItem(label: "NFC", supported: info.supportsNFC, info: "Web NFC API.\niOS: Not implemented.\nUse CoreNFC native API.", unavailable: true)
             ]),
             CapabilitySection(name: "UI & Interaction", items: [
-                CapabilityItem(label: "Clipboard", supported: info.supportsClipboard, info: "Requires user interaction."),
-                CapabilityItem(label: "Web Share", supported: info.supportsWebShare, info: "Requires HTTPS and user gesture. Safari only.", unavailable: true),
-                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Only in Safari or home screen web apps.", unavailable: true),
-                CapabilityItem(label: "Pointer Events", supported: info.supportsPointerEvents),
-                CapabilityItem(label: "Touch Events", supported: info.supportsTouchEvents),
-                CapabilityItem(label: "Gamepad", supported: info.supportsGamepad, info: "Works with MFi controllers."),
-                CapabilityItem(label: "Drag and Drop", supported: info.supportsDragDrop, info: "Full support on iPad only.")
+                CapabilityItem(label: "Clipboard", supported: info.supportsClipboard, info: "Async clipboard API.\nNeeds user gesture to write.\nRead may need permission."),
+                CapabilityItem(label: "Web Share", supported: info.supportsWebShare, info: "Native share sheet API.\nSafari only, not WKWebView.\nNeeds HTTPS + user gesture.", unavailable: true),
+                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Push notifications.\nSafari/PWA only (iOS 16.4+).\nWKWebView: Not supported.", unavailable: true),
+                CapabilityItem(label: "Pointer Events", supported: info.supportsPointerEvents, info: "Unified input events.\nMouse, touch, pen combined.\nModern event handling."),
+                CapabilityItem(label: "Touch Events", supported: info.supportsTouchEvents, info: "Multi-touch support.\ntouchstart/move/end events.\niOS native touch handling."),
+                CapabilityItem(label: "Gamepad", supported: info.supportsGamepad, info: "Game controller input.\nMFi controllers supported.\nPS/Xbox may work too."),
+                CapabilityItem(label: "Drag and Drop", supported: info.supportsDragDrop, info: "HTML5 drag/drop API.\niPad: Full support.\niPhone: Limited/gesture conflict.")
             ]),
             CapabilitySection(name: "Observers", items: [
-                CapabilityItem(label: "Intersection Observer", supported: info.supportsIntersectionObserver),
-                CapabilityItem(label: "Resize Observer", supported: info.supportsResizeObserver),
-                CapabilityItem(label: "Mutation Observer", supported: info.supportsMutationObserver),
-                CapabilityItem(label: "Performance Observer", supported: info.supportsPerformanceObserver)
+                CapabilityItem(label: "Intersection Observer", supported: info.supportsIntersectionObserver, info: "Element visibility detection.\nLazy loading, infinite scroll.\nPerformant scroll handling."),
+                CapabilityItem(label: "Resize Observer", supported: info.supportsResizeObserver, info: "Element size changes.\nResponsive components.\nBetter than window.resize."),
+                CapabilityItem(label: "Mutation Observer", supported: info.supportsMutationObserver, info: "DOM change detection.\nReplaces Mutation Events.\nAttribute, child, subtree."),
+                CapabilityItem(label: "Performance Observer", supported: info.supportsPerformanceObserver, info: "Performance metrics.\nLCP, FID, CLS measurement.\nReal user monitoring.")
             ]),
             CapabilitySection(name: "Security & Payments", items: [
-                CapabilityItem(label: "Crypto", supported: info.supportsCrypto, info: "Requires HTTPS."),
-                CapabilityItem(label: "Credentials", supported: info.supportsCredentials),
-                CapabilityItem(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Apple Pay integration. Requires HTTPS.")
+                CapabilityItem(label: "Crypto", supported: info.supportsCrypto, info: "Web Cryptography API.\nHashing, encryption, signing.\nHTTPS required for full API."),
+                CapabilityItem(label: "Credentials", supported: info.supportsCredentials, info: "Credential Management API.\nPasswords, federated login.\nLimited iOS support."),
+                CapabilityItem(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Standardized checkout API.\nApple Pay integration.\nHTTPS + merchant setup needed.")
             ])
         ]
     }
@@ -1510,36 +1510,36 @@ struct PerformanceView: View {
                 }
 
                 Section("System") {
-                    InfoRow(label: "Logical Cores", value: info.hardwareConcurrency, info: "CPU cores available to JavaScript via navigator.hardwareConcurrency.")
-                    InfoRow(label: "Timer Resolution", value: info.timerResolution, info: "Minimum time difference measurable by performance.now().")
+                    InfoRow(label: "Logical Cores", value: info.hardwareConcurrency, info: "navigator.hardwareConcurrency.\nJS thread pool sizing.\nMay be capped for privacy.")
+                    InfoRow(label: "Timer Resolution", value: info.timerResolution, info: "performance.now() precision.\nReduced for Spectre mitigation.\nTypically 1ms in WKWebView.")
                 }
 
                 Section("JavaScript") {
-                    BenchmarkRow(label: "Math", ops: info.mathOps, info: "Math.sqrt, sin, cos operations.")
-                    BenchmarkRow(label: "Array", ops: info.arrayOps, info: "map, filter, reduce operations.")
-                    BenchmarkRow(label: "String", ops: info.stringOps, info: "split, join, indexOf operations.")
-                    BenchmarkRow(label: "Object", ops: info.objectOps, info: "Object.keys, values, JSON parse/stringify.")
-                    BenchmarkRow(label: "RegExp", ops: info.regexpOps, info: "Regular expression match and replace.")
+                    BenchmarkRow(label: "Math", ops: info.mathOps, info: "Math.sqrt, sin, cos, random.\nTests JIT optimization.\nCore computation speed.")
+                    BenchmarkRow(label: "Array", ops: info.arrayOps, info: "map, filter, reduce, sort.\nFunctional programming ops.\nMemory allocation intensive.")
+                    BenchmarkRow(label: "String", ops: info.stringOps, info: "split, join, indexOf, replace.\nText processing speed.\nCommon in web apps.")
+                    BenchmarkRow(label: "Object", ops: info.objectOps, info: "Object.keys/values, spread.\nJSON parse/stringify.\nData manipulation speed.")
+                    BenchmarkRow(label: "RegExp", ops: info.regexpOps, info: "match, replace, test.\nPattern matching speed.\nValidation performance.")
                 }
 
                 Section("DOM") {
-                    BenchmarkRow(label: "Create", ops: info.domCreate, info: "createElement, className, textContent.")
-                    BenchmarkRow(label: "Query", ops: info.domQuery, info: "querySelectorAll, getElementById, getElementsByClassName.")
-                    BenchmarkRow(label: "Modify", ops: info.domModify, info: "style changes, setAttribute, classList toggle.")
+                    BenchmarkRow(label: "Create", ops: info.domCreate, info: "createElement, appendChild.\nNode creation overhead.\nVirtual DOM comparison.")
+                    BenchmarkRow(label: "Query", ops: info.domQuery, info: "querySelector(All), getElement*.\nDOM traversal speed.\nSelector engine perf.")
+                    BenchmarkRow(label: "Modify", ops: info.domModify, info: "style, className, attribute.\nReflow/repaint triggers.\nAnimation performance.")
                 }
 
                 Section("Graphics") {
-                    BenchmarkRow(label: "Canvas 2D", ops: info.canvas2d, info: "fillRect, beginPath, arc, stroke operations.")
-                    BenchmarkRow(label: "WebGL", ops: info.webgl, info: "clearColor, clear operations.")
+                    BenchmarkRow(label: "Canvas 2D", ops: info.canvas2d, info: "2D drawing operations.\nfillRect, arc, stroke.\nSoftware rendering.")
+                    BenchmarkRow(label: "WebGL", ops: info.webgl, info: "GPU-accelerated graphics.\nclear, bindBuffer.\nHardware rendering.")
                 }
 
                 Section("Memory") {
-                    BenchmarkRow(label: "Allocation", ops: info.memoryAlloc, info: "ArrayBuffer and Uint8Array allocation.")
-                    BenchmarkRow(label: "Operations", ops: info.memoryOps, info: "Float64Array fill and sort.")
+                    BenchmarkRow(label: "Allocation", ops: info.memoryAlloc, info: "ArrayBuffer, TypedArray.\nMemory allocation speed.\nGC pressure indicator.")
+                    BenchmarkRow(label: "Operations", ops: info.memoryOps, info: "Fill, copy, sort arrays.\nMemory bandwidth test.\nCPU cache efficiency.")
                 }
 
                 Section("Crypto") {
-                    BenchmarkRow(label: "Hash", ops: info.cryptoHash, info: "Simple hash function simulation.")
+                    BenchmarkRow(label: "Hash", ops: info.cryptoHash, info: "Hashing algorithm test.\nCPU-intensive operations.\nSecurity computation speed.")
                 }
 
                 Section {
@@ -1964,21 +1964,21 @@ struct DisplayFeaturesView: View {
                 }
 
                 Section("Color") {
-                    InfoRow(label: "Color Depth", value: info.colorDepth, info: "Bits per pixel for color representation.")
-                    InfoRow(label: "Pixel Depth", value: info.pixelDepth, info: "Bits per pixel at screen depth.")
-                    CapabilityRow(label: "sRGB", supported: info.supportsSRGB, info: "Standard RGB color space.")
-                    CapabilityRow(label: "Display-P3", supported: info.supportsP3, info: "Wide color gamut used by Apple devices.")
-                    CapabilityRow(label: "Rec. 2020", supported: info.supportsRec2020, info: "Ultra-wide color gamut for HDR content.")
+                    InfoRow(label: "Color Depth", value: info.colorDepth, info: "Bits per pixel for color.\n24-bit = 16.7M colors\n30-bit = 1B colors (HDR)")
+                    InfoRow(label: "Pixel Depth", value: info.pixelDepth, info: "Bits per pixel including alpha.\nUsually equals Color Depth.")
+                    CapabilityRow(label: "sRGB", supported: info.supportsSRGB, info: "Standard color space.\nCovers ~35% of visible colors.\nUsed by most web content.")
+                    CapabilityRow(label: "Display-P3", supported: info.supportsP3, info: "Wide gamut (~25% more than sRGB).\nAll iPhones since iPhone 7.\nVivid reds, greens, oranges.")
+                    CapabilityRow(label: "Rec. 2020", supported: info.supportsRec2020, info: "Ultra-wide gamut (~75% of visible).\nPro Display XDR, some iPad Pro.\niPhone: Not supported yet.")
                 }
 
                 Section("HDR") {
-                    CapabilityRow(label: "HDR Display", supported: info.supportsHDR, info: "High Dynamic Range for brighter highlights.")
+                    CapabilityRow(label: "HDR Display", supported: info.supportsHDR, info: "High Dynamic Range display.\nBrighter highlights, deeper blacks.\niPhone 12+ supports HDR10/Dolby Vision.")
                     InfoRow(label: "Dynamic Range", value: info.dynamicRange)
                 }
 
                 Section("Media Queries") {
-                    CapabilityRow(label: "Inverted Colors", supported: info.invertedColors, info: "Accessibility setting to invert display colors.")
-                    CapabilityRow(label: "Forced Colors", supported: info.forcedColors, info: "High contrast mode for accessibility.")
+                    CapabilityRow(label: "Inverted Colors", supported: info.invertedColors, info: "Settings > Accessibility > Display.\nInverts all screen colors.\nCSS: prefers-color-scheme alternative.")
+                    CapabilityRow(label: "Forced Colors", supported: info.forcedColors, info: "High contrast mode.\niOS: Not used (Windows feature).\nCSS: forced-colors media query.")
                 }
             }
         }
@@ -2354,40 +2354,40 @@ struct ActiveSettingsView: View {
             .listSectionSpacing(0)
 
             Section("Core") {
-                ActiveSettingRow(label: "JavaScript", enabled: enableJavaScript, info: "Master switch for all JavaScript execution.")
-                ActiveSettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript, info: "Scripts from web pages only. App-injected scripts still work.")
-                ActiveSettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom, info: "Allow pinch-to-zoom even when page disables it.")
-                InfoRow(label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt")
+                ActiveSettingRow(label: "JavaScript", enabled: enableJavaScript, info: "WKPreferences.javaScriptEnabled.\nDisables ALL JavaScript execution.\nBreaks most modern websites.")
+                ActiveSettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript, info: "WKWebpagePreferences property.\nBlocks page scripts only.\nApp-injected JS still runs.")
+                ActiveSettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom, info: "ignoresViewportScaleLimits.\nOverrides meta viewport.\nForces pinch-to-zoom enabled.")
+                InfoRow(label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt", info: "minimumFontSize property.\nEnforces readable text.\n0 = no minimum.")
             }
 
             Section("Media") {
-                ActiveSettingRow(label: "Auto-play Media", enabled: mediaAutoplay, info: "Videos with autoplay start without user interaction.")
-                ActiveSettingRow(label: "Inline Playback", enabled: inlineMediaPlayback, info: "Play videos inline instead of fullscreen.")
-                ActiveSettingRow(label: "AirPlay", enabled: allowsAirPlay)
-                ActiveSettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture)
+                ActiveSettingRow(label: "Auto-play Media", enabled: mediaAutoplay, info: "mediaTypesRequiringUserAction.\nOff = autoplay blocked.\nBattery/data saving.")
+                ActiveSettingRow(label: "Inline Playback", enabled: inlineMediaPlayback, info: "allowsInlineMediaPlayback.\nOff = fullscreen only.\nNeeded for background video.")
+                ActiveSettingRow(label: "AirPlay", enabled: allowsAirPlay, info: "allowsAirPlayForMediaPlayback.\nStream to Apple TV.\nOff blocks AirPlay button.")
+                ActiveSettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture, info: "allowsPictureInPictureMediaPlayback.\nFloating video window.\niOS 9+ supported.")
             }
 
             Section("Navigation") {
-                ActiveSettingRow(label: "Back/Forward Gestures", enabled: allowsBackForwardGestures, info: "Swipe from edge to navigate history.")
-                ActiveSettingRow(label: "Link Preview", enabled: allowsLinkPreview, info: "Page preview on long-press or 3D Touch.")
-                InfoRow(label: "Content Mode", value: contentModeText)
+                ActiveSettingRow(label: "Back/Forward Gestures", enabled: allowsBackForwardGestures, info: "allowsBackForwardNavigationGestures.\nEdge swipe to navigate.\nConflicts with app gestures.")
+                ActiveSettingRow(label: "Link Preview", enabled: allowsLinkPreview, info: "allowsLinkPreview.\n3D Touch / long-press preview.\nShows page peek.")
+                InfoRow(label: "Content Mode", value: contentModeText, info: "defaultWebpagePreferences.\nRecommended: Auto-detect.\nMobile/Desktop override.")
             }
 
             Section("Behavior") {
-                ActiveSettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows, info: "Allow window.open() without user gesture.")
-                ActiveSettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning, info: "Warning for phishing or malware sites.")
-                ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "Text selection, copy, and other interactions.")
-                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: "Allow pages to request fullscreen for elements.")
-                ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "Wait for full page load before displaying.")
+                ActiveSettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows, info: "javaScriptCanOpenWindowsAutomatically.\nAllows window.open().\nOff = popup blocker.")
+                ActiveSettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning, info: "isFraudulentWebsiteWarningEnabled.\nApple Safe Browsing.\nPhishing/malware protection.")
+                ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "isTextInteractionEnabled.\nText selection & copy.\nOff = no text selection.")
+                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: "isElementFullscreenEnabled.\niPad: Full support.\niPhone: Video only.")
+                ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "suppressesIncrementalRendering.\nOn = wait for full load.\nCleaner but feels slower.")
             }
 
             Section("Data Detectors") {
-                InfoRow(label: "Active", value: activeDataDetectors)
+                InfoRow(label: "Active", value: activeDataDetectors, info: "WKDataDetectorTypes.\nAuto-link phone, address, etc.\nTappable detected content.")
             }
 
             Section("Privacy & Security") {
-                ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "Non-persistent data store. No cookies or cache saved.")
-                ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "Auto-upgrade HTTP to HTTPS for known secure hosts.")
+                ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "nonPersistentDataStore.\nNo data persists after session.\nCookies, cache, history cleared.")
+                ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "upgradeKnownHostsToHTTPS.\nAuto HTTP→HTTPS upgrade.\niOS 14.5+ feature.")
             }
 
             Section("User-Agent") {
