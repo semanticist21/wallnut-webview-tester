@@ -573,22 +573,22 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "JavaScript", supported: info.supportsJavaScript),
                 CapabilityItem(label: "WebAssembly", supported: info.supportsWebAssembly),
                 CapabilityItem(label: "Web Workers", supported: info.supportsWebWorkers),
-                CapabilityItem(label: "Service Workers", supported: info.supportsServiceWorkers, info: "WKWebView: Not supported.\nSafari/PWA only.\nNeeds App-Bound Domains for WKWebView.", unavailable: true),
+                CapabilityItem(label: "Service Workers", supported: info.supportsServiceWorkers, info: "Background scripts for offline.\nOnly in Safari or home screen apps.\nNot available in embedded browsers.", unavailable: true),
                 CapabilityItem(label: "Shared Workers", supported: info.supportsSharedWorkers)
             ]),
             CapabilitySection(name: "Graphics & Media", items: [
                 CapabilityItem(label: "WebGL", supported: info.supportsWebGL),
                 CapabilityItem(label: "WebGL 2", supported: info.supportsWebGL2),
                 CapabilityItem(label: "Web Audio", supported: info.supportsWebAudio),
-                CapabilityItem(label: "Media Devices", supported: info.supportsMediaDevices, info: "getUserMedia() API.\nNeeds NSCameraUsageDescription,\nNSMicrophoneUsageDescription in Info.plist."),
+                CapabilityItem(label: "Media Devices", supported: info.supportsMediaDevices, info: "Camera and microphone access.\nRequires user permission.\nUsed for video calls, recording."),
                 CapabilityItem(label: "Media Recorder", supported: info.supportsMediaRecorder, info: "Record audio/video streams.\niOS: MP4/H.264 only.\nWebM/VP8 not supported."),
                 CapabilityItem(label: "Media Source", supported: info.supportsMediaSource, info: "MSE for adaptive streaming.\niOS 17+: ManagedMediaSource.\nOlder iOS: Not supported."),
                 CapabilityItem(label: "Picture in Picture", supported: info.supportsPictureInPicture, info: "Video plays in floating window.\nWorks on video elements.\nUser must initiate."),
-                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: isIPad ? "iPad: Full support.\nWKWebView: Needs isElementFullscreenEnabled.\nWorks with any element." : "iPhone: Not supported.\nFullscreen API absent on iPhone.\niPad only feature.", unavailable: !isIPad)
+                CapabilityItem(label: "Fullscreen", supported: info.supportsFullscreen, info: isIPad ? "iPad: Full support.\nAny element can go fullscreen.\nVideos, games, presentations." : "iPhone: Not supported.\nOnly videos can go fullscreen.\niPad has full API support.", unavailable: !isIPad)
             ]),
             CapabilitySection(name: "Storage", items: [
-                CapabilityItem(label: "Cookies", supported: info.cookiesEnabled, info: "HTTP cookies enabled.\nControlled by WKWebsiteDataStore.\nPrivate mode disables persistence."),
-                CapabilityItem(label: "LocalStorage", supported: info.supportsLocalStorage, info: "Persistent key-value storage.\n~5MB limit per origin.\nNeeds valid baseURL for access."),
+                CapabilityItem(label: "Cookies", supported: info.cookiesEnabled, info: "Website cookies enabled.\nStores login sessions, preferences.\nPrivate mode clears on exit."),
+                CapabilityItem(label: "LocalStorage", supported: info.supportsLocalStorage, info: "Persistent key-value storage.\n~5MB limit per website.\nSurvives browser restart."),
                 CapabilityItem(label: "SessionStorage", supported: info.supportsSessionStorage, info: "Tab-scoped storage.\nCleared when tab closes.\nSame origin policy applies."),
                 CapabilityItem(label: "IndexedDB", supported: info.supportsIndexedDB, info: "Client-side database.\nData may clear after 7 days idle.\nLarger storage than LocalStorage."),
                 CapabilityItem(label: "Cache API", supported: info.supportsCacheAPI, info: "Service Worker cache storage.\nData may clear after 7 days idle.\nGood for offline resources.")
@@ -602,19 +602,19 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "Event Source", supported: info.supportsEventSource, info: "Server-Sent Events (SSE).\nOne-way server → client.\nAuto-reconnection built-in.")
             ]),
             CapabilitySection(name: "Device APIs", items: [
-                CapabilityItem(label: "Geolocation", supported: info.supportsGeolocation, info: "GPS/network location.\nNeeds NSLocationWhenInUseUsageDescription.\nUser permission required."),
+                CapabilityItem(label: "Geolocation", supported: info.supportsGeolocation, info: "GPS/network location access.\nRequires user permission.\nUsed for maps, local search."),
                 CapabilityItem(label: "Device Orientation", supported: info.supportsDeviceOrientation, info: "Gyroscope data access.\nalpha/beta/gamma rotation.\niOS 13+: User permission needed."),
                 CapabilityItem(label: "Device Motion", supported: info.supportsDeviceMotion, info: "Accelerometer data access.\naccelerationIncludingGravity.\niOS 13+: User permission needed."),
-                CapabilityItem(label: "Vibration", supported: info.supportsVibration, info: "iOS: Never supported.\nWebKit privacy policy.\nUse native API instead.", unavailable: true),
-                CapabilityItem(label: "Battery", supported: info.supportsBattery, info: "iOS: Never supported.\nFingerprinting concern.\nWebKit privacy policy.", unavailable: true),
-                CapabilityItem(label: "Bluetooth", supported: info.supportsBluetooth, info: "Web Bluetooth API.\niOS: Not implemented.\nUse CoreBluetooth native API.", unavailable: true),
-                CapabilityItem(label: "USB", supported: info.supportsUSB, info: "WebUSB API.\niOS: Not implemented.\nUse native USB framework.", unavailable: true),
-                CapabilityItem(label: "NFC", supported: info.supportsNFC, info: "Web NFC API.\niOS: Not implemented.\nUse CoreNFC native API.", unavailable: true)
+                CapabilityItem(label: "Vibration", supported: info.supportsVibration, info: "Haptic feedback from websites.\niOS: Not supported for privacy.\nNative apps can use haptics.", unavailable: true),
+                CapabilityItem(label: "Battery", supported: info.supportsBattery, info: "Battery level info for websites.\niOS: Not supported for privacy.\nPrevents device fingerprinting.", unavailable: true),
+                CapabilityItem(label: "Bluetooth", supported: info.supportsBluetooth, info: "Connect Bluetooth devices.\niOS: Not supported in browsers.\nUse native apps instead.", unavailable: true),
+                CapabilityItem(label: "USB", supported: info.supportsUSB, info: "Connect USB devices.\niOS: Not supported in browsers.\nUse native apps instead.", unavailable: true),
+                CapabilityItem(label: "NFC", supported: info.supportsNFC, info: "Read/write NFC tags.\niOS: Not supported in browsers.\nUse native apps instead.", unavailable: true)
             ]),
             CapabilitySection(name: "UI & Interaction", items: [
                 CapabilityItem(label: "Clipboard", supported: info.supportsClipboard, info: "Async clipboard API.\nNeeds user gesture to write.\nRead may need permission."),
-                CapabilityItem(label: "Web Share", supported: info.supportsWebShare, info: "Native share sheet API.\nSafari only, not WKWebView.\nNeeds HTTPS + user gesture.", unavailable: true),
-                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Push notifications.\nSafari/PWA only (iOS 16.4+).\nWKWebView: Not supported.", unavailable: true),
+                CapabilityItem(label: "Web Share", supported: info.supportsWebShare, info: "Native iOS share sheet.\nOnly in Safari browser.\nShare links, text, files.", unavailable: true),
+                CapabilityItem(label: "Notifications", supported: info.supportsNotifications, info: "Push notifications from websites.\nOnly in Safari or home screen apps.\niOS 16.4+ required.", unavailable: true),
                 CapabilityItem(label: "Pointer Events", supported: info.supportsPointerEvents, info: "Unified input events.\nMouse, touch, pen combined.\nModern event handling."),
                 CapabilityItem(label: "Touch Events", supported: info.supportsTouchEvents, info: "Multi-touch support.\ntouchstart/move/end events.\niOS native touch handling."),
                 CapabilityItem(label: "Gamepad", supported: info.supportsGamepad, info: "Game controller input.\nMFi controllers supported.\nPS/Xbox may work too."),
@@ -988,12 +988,7 @@ private struct WebViewInfo: Sendable {
         // Load blank HTML and wait for actual load completion
         // Use a real URL as baseURL to enable localStorage/sessionStorage access
         onStatusUpdate("Initializing WebView...")
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                continuation.resume()
-            }
-        }
+        await webView.loadHTMLStringAsync("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
 
         // Get browser info
         onStatusUpdate("Detecting browser info...")
@@ -1249,6 +1244,36 @@ extension WKWebView {
             }
         }
     }
+
+    @MainActor
+    func loadHTMLStringAsync(_ string: String, baseURL: URL?) async {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            let delegate = WebViewLoadDelegate {
+                continuation.resume()
+            }
+            // Store delegate to prevent deallocation
+            objc_setAssociatedObject(self, &WebViewLoadDelegate.associatedKey, delegate, .OBJC_ASSOCIATION_RETAIN)
+            self.navigationDelegate = delegate
+            self.loadHTMLString(string, baseURL: baseURL)
+        }
+    }
+}
+
+private class WebViewLoadDelegate: NSObject, WKNavigationDelegate {
+    static var associatedKey: UInt8 = 0
+    private let completion: () -> Void
+
+    init(completion: @escaping () -> Void) {
+        self.completion = completion
+    }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        completion()
+    }
+
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        completion()
+    }
 }
 
 // MARK: - Media Codecs
@@ -1404,12 +1429,7 @@ private struct MediaCodecInfo: Sendable {
         let webView = WKWebView(frame: .zero, configuration: config)
 
         onStatusUpdate("Initializing WebView...")
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                continuation.resume()
-            }
-        }
+        await webView.loadHTMLStringAsync("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
 
         onStatusUpdate("Detecting media codecs...")
         let script = """
@@ -1678,12 +1698,7 @@ private struct PerformanceInfo: Sendable {
         let webView = WKWebView(frame: .zero, configuration: config)
 
         onStatusUpdate("Initializing WebView...")
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body><div id='test'></div></body></html>", baseURL: nil)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                continuation.resume()
-            }
-        }
+        await webView.loadHTMLStringAsync("<html><body><div id='test'></div></body></html>", baseURL: nil)
 
         onStatusUpdate("Running benchmarks...")
         let script = """
@@ -2039,12 +2054,7 @@ private struct DisplayInfo: Sendable {
         let webView = WKWebView(frame: .zero, configuration: config)
 
         onStatusUpdate("Initializing WebView...")
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                continuation.resume()
-            }
-        }
+        await webView.loadHTMLStringAsync("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
 
         onStatusUpdate("Detecting display features...")
         let script = """
@@ -2205,12 +2215,7 @@ private struct AccessibilityInfo: Sendable {
         let webView = WKWebView(frame: .zero, configuration: config)
 
         onStatusUpdate("Initializing WebView...")
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            webView.loadHTMLString("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                continuation.resume()
-            }
-        }
+        await webView.loadHTMLStringAsync("<html><body></body></html>", baseURL: URL(string: "https://example.com"))
 
         onStatusUpdate("Detecting accessibility preferences...")
         let script = """
@@ -2362,40 +2367,40 @@ struct ActiveSettingsView: View {
             .listSectionSpacing(0)
 
             Section("Core") {
-                ActiveSettingRow(label: "JavaScript", enabled: enableJavaScript, info: "WKPreferences.javaScriptEnabled.\nDisables ALL JavaScript execution.\nBreaks most modern websites.")
-                ActiveSettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript, info: "WKWebpagePreferences property.\nBlocks page scripts only.\nApp-injected JS still runs.")
-                ActiveSettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom, info: "ignoresViewportScaleLimits.\nOverrides meta viewport.\nForces pinch-to-zoom enabled.")
-                InfoRow(label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt", info: "minimumFontSize property.\nEnforces readable text.\n0 = no minimum.")
+                ActiveSettingRow(label: "JavaScript", enabled: enableJavaScript, info: "Master switch for JavaScript.\nOff = No scripts run at all.\nMost websites won't work.")
+                ActiveSettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript, info: "Scripts from web pages.\nOff = Block page scripts only.\nApp features still work.")
+                ActiveSettingRow(label: "Ignore Viewport Scale Limits", enabled: allowZoom, info: "Force pinch-to-zoom.\nOverrides pages that disable zoom.\nBetter accessibility.")
+                InfoRow(label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt", info: "Minimum text size.\nMakes small text readable.\n0 = Use page's font sizes.")
             }
 
             Section("Media") {
-                ActiveSettingRow(label: "Auto-play Media", enabled: mediaAutoplay, info: "mediaTypesRequiringUserAction.\nOff = autoplay blocked.\nBattery/data saving.")
-                ActiveSettingRow(label: "Inline Playback", enabled: inlineMediaPlayback, info: "allowsInlineMediaPlayback.\nOff = fullscreen only.\nNeeded for background video.")
-                ActiveSettingRow(label: "AirPlay", enabled: allowsAirPlay, info: "allowsAirPlayForMediaPlayback.\nStream to Apple TV.\nOff blocks AirPlay button.")
-                ActiveSettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture, info: "allowsPictureInPictureMediaPlayback.\nFloating video window.\niOS 9+ supported.")
+                ActiveSettingRow(label: "Auto-play Media", enabled: mediaAutoplay, info: "Videos play automatically.\nOff = Tap to play videos.\nSaves battery and data.")
+                ActiveSettingRow(label: "Inline Playback", enabled: inlineMediaPlayback, info: "Play videos in page.\nOff = Always fullscreen.\nNeeded for background videos.")
+                ActiveSettingRow(label: "AirPlay", enabled: allowsAirPlay, info: "Stream to Apple TV.\nOff = Hide AirPlay button.\nFor local-only playback.")
+                ActiveSettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture, info: "Floating video window.\nWatch while using other apps.\nSwipe up or tap button.")
             }
 
             Section("Navigation") {
-                ActiveSettingRow(label: "Back/Forward Gestures", enabled: allowsBackForwardGestures, info: "allowsBackForwardNavigationGestures.\nEdge swipe to navigate.\nConflicts with app gestures.")
-                ActiveSettingRow(label: "Link Preview", enabled: allowsLinkPreview, info: "allowsLinkPreview.\n3D Touch / long-press preview.\nShows page peek.")
-                InfoRow(label: "Content Mode", value: contentModeText, info: "defaultWebpagePreferences.\nRecommended: Auto-detect.\nMobile/Desktop override.")
+                ActiveSettingRow(label: "Back/Forward Gestures", enabled: allowsBackForwardGestures, info: "Swipe to go back/forward.\nOff = Use buttons only.\nAvoids conflicts with page gestures.")
+                ActiveSettingRow(label: "Link Preview", enabled: allowsLinkPreview, info: "Preview links before opening.\nLong-press or 3D Touch.\nSee page without leaving.")
+                InfoRow(label: "Content Mode", value: contentModeText, info: "Mobile or desktop sites.\nRecommended: Auto-detect.\nDesktop useful on iPad.")
             }
 
             Section("Behavior") {
-                ActiveSettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows, info: "javaScriptCanOpenWindowsAutomatically.\nAllows window.open().\nOff = popup blocker.")
-                ActiveSettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning, info: "isFraudulentWebsiteWarningEnabled.\nApple Safe Browsing.\nPhishing/malware protection.")
-                ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "isTextInteractionEnabled.\nText selection & copy.\nOff = no text selection.")
-                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: isIPad ? "isElementFullscreenEnabled.\niPad: Full element support.\nWorks with any HTML element." : "isElementFullscreenEnabled.\niPhone: Video elements only.\nFull API not available.", unavailable: !isIPad)
-                ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "suppressesIncrementalRendering.\nOn = wait for full load.\nCleaner but feels slower.")
+                ActiveSettingRow(label: "JS Can Open Windows", enabled: javaScriptCanOpenWindows, info: "Allow popup windows.\nOff = Block popups.\nSome sites need this on.")
+                ActiveSettingRow(label: "Fraudulent Website Warning", enabled: fraudulentWebsiteWarning, info: "Warn about dangerous sites.\nPhishing and malware alerts.\nKeep on for safety.")
+                ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "Select and copy text.\nOff = No text selection.\nDisable for game-like pages.")
+                ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: isIPad ? "iPad: Full fullscreen support.\nAny element can go fullscreen.\nVideos, games, presentations." : "iPhone: Video fullscreen only.\nFull API on iPad only.\nVideos still work normally.", unavailable: !isIPad)
+                ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "Wait for full page load.\nCleaner appearance.\nFeels slower to load.")
             }
 
             Section("Data Detectors") {
-                InfoRow(label: "Active", value: activeDataDetectors, info: "WKDataDetectorTypes.\nAuto-link phone, address, etc.\nTappable detected content.")
+                InfoRow(label: "Active", value: activeDataDetectors, info: "Auto-link special content.\nPhone numbers, addresses, dates.\nTap to call, map, or add event.")
             }
 
             Section("Privacy & Security") {
-                ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "nonPersistentDataStore.\nNo data persists after session.\nCookies, cache, history cleared.")
-                ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "upgradeKnownHostsToHTTPS.\nAuto HTTP→HTTPS upgrade.\niOS 14.5+ feature.")
+                ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "No history saved.\nCookies cleared on exit.\nLike incognito mode.")
+                ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "Auto-secure connections.\nHTTP → HTTPS upgrade.\nProtects your data.")
             }
 
             Section("User-Agent") {
