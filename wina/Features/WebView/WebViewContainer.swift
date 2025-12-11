@@ -14,6 +14,10 @@ struct WebViewContainer: View {
     let useSafari: Bool
     @Binding var webViewID: UUID
 
+    // Loading State
+    @State private var isLoading: Bool = true
+    @State private var loadingProgress: Double = 0.0
+
     // Core Settings
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
     @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
@@ -87,12 +91,35 @@ struct WebViewContainer: View {
                 } else {
                     WKWebViewRepresentable(
                         urlString: normalizedURL,
-                        configuration: webViewConfiguration
+                        configuration: webViewConfiguration,
+                        isLoading: $isLoading,
+                        loadingProgress: $loadingProgress
                     )
                     .id(webViewID)
                     .frame(width: webViewWidth, height: webViewHeight)
                     .clipShape(RoundedRectangle(cornerRadius: isFullSize ? 0 : 12))
                     .shadow(color: .black.opacity(isFullSize ? 0 : 0.15), radius: 8, y: 2)
+                    .overlay {
+                        // Loading overlay
+                        if isLoading {
+                            ZStack {
+                                Color(uiColor: .systemBackground)
+                                    .opacity(0.9)
+
+                                VStack(spacing: 16) {
+                                    ProgressView()
+                                        .scaleEffect(1.5)
+
+                                    if loadingProgress > 0 {
+                                        ProgressView(value: loadingProgress)
+                                            .frame(width: 120)
+                                            .tint(.accentColor)
+                                    }
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: isFullSize ? 0 : 12))
+                        }
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -170,6 +197,8 @@ struct WebViewContainer: View {
 struct WKWebViewRepresentable: UIViewRepresentable {
     let urlString: String
     let configuration: WKWebViewConfiguration
+    @Binding var isLoading: Bool
+    @Binding var loadingProgress: Double
 
     // Navigation & Gestures
     @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
@@ -188,7 +217,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(isLoading: $isLoading, loadingProgress: $loadingProgress)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -218,6 +247,9 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         if !customUserAgent.isEmpty {
             webView.customUserAgent = customUserAgent
         }
+
+        // Set up KVO for loading progress
+        context.coordinator.observeWebView(webView)
 
         if let url = URL(string: urlString) {
             webView.load(URLRequest(url: url))
@@ -255,6 +287,31 @@ struct WKWebViewRepresentable: UIViewRepresentable {
     // MARK: - Coordinator
 
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+        @Binding var isLoading: Bool
+        @Binding var loadingProgress: Double
+
+        private var progressObservation: NSKeyValueObservation?
+        private var loadingObservation: NSKeyValueObservation?
+
+        init(isLoading: Binding<Bool>, loadingProgress: Binding<Double>) {
+            _isLoading = isLoading
+            _loadingProgress = loadingProgress
+        }
+
+        func observeWebView(_ webView: WKWebView) {
+            progressObservation = webView.observe(\.estimatedProgress, options: .new) { [weak self] webView, _ in
+                DispatchQueue.main.async {
+                    self?.loadingProgress = webView.estimatedProgress
+                }
+            }
+
+            loadingObservation = webView.observe(\.isLoading, options: .new) { [weak self] webView, _ in
+                DispatchQueue.main.async {
+                    self?.isLoading = webView.isLoading
+                }
+            }
+        }
+
         // Handle navigation actions (link clicks)
         func webView(
             _ webView: WKWebView,
@@ -307,6 +364,11 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             completionHandler: @escaping (String?) -> Void
         ) {
             completionHandler(defaultText)
+        }
+
+        deinit {
+            progressObservation?.invalidate()
+            loadingObservation?.invalidate()
         }
     }
 }
