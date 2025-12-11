@@ -15,45 +15,6 @@ import CoreLocation
 struct StaticSettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
-    // Core Settings
-    @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
-    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
-    @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
-
-    // Media Settings
-    @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
-    @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
-    @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
-    @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
-
-    // Content Settings
-    @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
-    @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
-    @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
-    @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
-
-    // Data Detectors
-    @AppStorage("detectPhoneNumbers") private var detectPhoneNumbers: Bool = false
-    @AppStorage("detectLinks") private var detectLinks: Bool = false
-    @AppStorage("detectAddresses") private var detectAddresses: Bool = false
-    @AppStorage("detectCalendarEvents") private var detectCalendarEvents: Bool = false
-
-    // Privacy & Security
-    @AppStorage("privateBrowsing") private var privateBrowsing: Bool = false
-    @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
-
-    // Content Mode
-    @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
-
-    @State private var cameraStatus: AVAuthorizationStatus = .notDetermined
-    @State private var microphoneStatus: AVAuthorizationStatus = .notDetermined
-    @State private var locationStatus: CLAuthorizationStatus = .notDetermined
-    @StateObject private var locationDelegate = LocationManagerDelegate()
-
-    private var isIPad: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
-    }
-
     var body: some View {
         NavigationStack {
             List {
@@ -64,171 +25,83 @@ struct StaticSettingsView: View {
                 }
 
                 Section {
-                    SettingToggleRow(
-                        title: "JavaScript",
-                        isOn: $enableJavaScript,
-                        info: "Master switch for all JavaScript execution in WebView."
-                    )
-                    SettingToggleRow(
-                        title: "Content JavaScript",
-                        isOn: $allowsContentJavaScript,
-                        info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
-                    )
-                    HStack {
-                        Text("Minimum Font Size")
-                        Spacer()
-                        TextField("0", value: $minimumFontSize, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        Text("pt")
-                            .foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text("Core")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Auto-play Media",
-                        isOn: $mediaAutoplay,
-                        info: "Allows videos with autoplay attribute to start without user interaction."
-                    )
-                    SettingToggleRow(
-                        title: "Inline Playback",
-                        isOn: $inlineMediaPlayback,
-                        info: "Plays videos inline instead of fullscreen. Required for background video effects."
-                    )
-                    SettingToggleRow(
-                        title: "AirPlay",
-                        isOn: $allowsAirPlay,
-                        info: "Enables streaming media to Apple TV and other AirPlay devices."
-                    )
-                    SettingToggleRow(
-                        title: "Picture in Picture",
-                        isOn: $allowsPictureInPicture,
-                        info: "Allows videos to continue playing in a floating window."
-                    )
-                } header: {
-                    Text("Media")
-                }
-
-                Section {
-                    Picker("Content Mode", selection: $preferredContentMode) {
-                        Text("Recommended").tag(0)
-                        Text("Mobile").tag(1)
-                        Text("Desktop").tag(2)
-                    }
-                } header: {
-                    Text("Content Mode")
-                } footer: {
-                    Text("Mobile: optimized for small screens. Desktop: requests full website.")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "JS Can Open Windows",
-                        isOn: $javaScriptCanOpenWindows,
-                        info: "Allows window.open() without user gesture. Disable to block pop-ups."
-                    )
-                    SettingToggleRow(
-                        title: "Fraudulent Website Warning",
-                        isOn: $fraudulentWebsiteWarning,
-                        info: "Shows warning for suspected phishing or malware sites."
-                    )
-                    SettingToggleRow(
-                        title: "Element Fullscreen API",
-                        isOn: $elementFullscreenEnabled,
-                        info: isIPad ? "iPad: Full element fullscreen support.\nWorks with any HTML element.\nVideo, div, canvas, etc." : "iPhone: Limited to video elements only.\nFull API not available.\niPad recommended for full support.",
-                        disabled: !isIPad
-                    )
-                    SettingToggleRow(
-                        title: "Suppress Incremental Rendering",
-                        isOn: $suppressesIncrementalRendering,
-                        info: "Waits for full page load before displaying. May feel slower but cleaner."
-                    )
-                } header: {
-                    Text("Behavior")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Phone Numbers",
-                        isOn: $detectPhoneNumbers,
-                        info: "Makes phone numbers tappable to call."
-                    )
-                    SettingToggleRow(
-                        title: "Links",
-                        isOn: $detectLinks,
-                        info: "Converts URL-like text to tappable links."
-                    )
-                    SettingToggleRow(
-                        title: "Addresses",
-                        isOn: $detectAddresses,
-                        info: "Makes addresses tappable to open in Maps."
-                    )
-                    SettingToggleRow(
-                        title: "Calendar Events",
-                        isOn: $detectCalendarEvents,
-                        info: "Detects dates and times, allowing to add to Calendar."
-                    )
-                } header: {
-                    Text("Data Detectors")
-                } footer: {
-                    Text("Automatically detect and link specific content types")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Private Browsing",
-                        isOn: $privateBrowsing,
-                        info: "Uses non-persistent data store. No cookies or cache saved after session."
-                    )
-                    SettingToggleRow(
-                        title: "Upgrade to HTTPS",
-                        isOn: $upgradeToHTTPS,
-                        info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
-                    )
-                } header: {
-                    Text("Privacy & Security")
-                }
-
-                Section {
-                    PermissionRow(
-                        title: "Camera",
-                        status: permissionText(for: cameraStatus),
-                        granted: cameraStatus == .authorized
-                    ) {
-                        requestCameraPermission()
+                    NavigationLink {
+                        CoreSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "gearshape",
+                            title: "Core",
+                            description: "JavaScript, Font Size"
+                        )
                     }
 
-                    PermissionRow(
-                        title: "Microphone",
-                        status: permissionText(for: microphoneStatus),
-                        granted: microphoneStatus == .authorized
-                    ) {
-                        requestMicrophonePermission()
+                    NavigationLink {
+                        MediaSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "play.rectangle",
+                            title: "Media",
+                            description: "Autoplay, AirPlay, PiP"
+                        )
                     }
 
-                    PermissionRow(
-                        title: "Location",
-                        status: permissionText(for: locationStatus),
-                        granted: locationStatus == .authorizedWhenInUse || locationStatus == .authorizedAlways
-                    ) {
-                        requestLocationPermission()
+                    NavigationLink {
+                        ContentModeSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "iphone.and.arrow.forward",
+                            title: "Content Mode",
+                            description: "Mobile, Desktop"
+                        )
                     }
-                } header: {
-                    Text("Permissions")
-                } footer: {
-                    Text("Required for WebRTC, Media Devices, and Geolocation APIs")
+
+                    NavigationLink {
+                        BehaviorSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "hand.tap",
+                            title: "Behavior",
+                            description: "Pop-ups, Fullscreen, Rendering"
+                        )
+                    }
+
+                    NavigationLink {
+                        DataDetectorsSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "text.magnifyingglass",
+                            title: "Data Detectors",
+                            description: "Phone, Links, Addresses"
+                        )
+                    }
+
+                    NavigationLink {
+                        PrivacySecuritySettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "lock.shield",
+                            title: "Privacy & Security",
+                            description: "Private Browsing, HTTPS"
+                        )
+                    }
+
+                    NavigationLink {
+                        PermissionsSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "hand.raised",
+                            title: "Permissions",
+                            description: "Camera, Mic, Location"
+                        )
+                    }
                 }
             }
             .navigationTitle("Configuration")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset") {
-                        resetToDefaults()
+                    Button("Reset All") {
+                        resetAllToDefaults()
                     }
                     .foregroundStyle(.red)
                 }
@@ -238,9 +111,322 @@ struct StaticSettingsView: View {
                     }
                 }
             }
-            .onAppear {
-                updatePermissionStatuses()
+        }
+    }
+
+    private func resetAllToDefaults() {
+        // Core
+        UserDefaults.standard.set(true, forKey: "enableJavaScript")
+        UserDefaults.standard.set(true, forKey: "allowsContentJavaScript")
+        UserDefaults.standard.set(0.0, forKey: "minimumFontSize")
+
+        // Media
+        UserDefaults.standard.set(false, forKey: "mediaAutoplay")
+        UserDefaults.standard.set(true, forKey: "inlineMediaPlayback")
+        UserDefaults.standard.set(true, forKey: "allowsAirPlay")
+        UserDefaults.standard.set(true, forKey: "allowsPictureInPicture")
+
+        // Content
+        UserDefaults.standard.set(false, forKey: "suppressesIncrementalRendering")
+        UserDefaults.standard.set(false, forKey: "javaScriptCanOpenWindows")
+        UserDefaults.standard.set(true, forKey: "fraudulentWebsiteWarning")
+        UserDefaults.standard.set(false, forKey: "elementFullscreenEnabled")
+
+        // Data Detectors
+        UserDefaults.standard.set(false, forKey: "detectPhoneNumbers")
+        UserDefaults.standard.set(false, forKey: "detectLinks")
+        UserDefaults.standard.set(false, forKey: "detectAddresses")
+        UserDefaults.standard.set(false, forKey: "detectCalendarEvents")
+
+        // Privacy & Security
+        UserDefaults.standard.set(false, forKey: "privateBrowsing")
+        UserDefaults.standard.set(true, forKey: "upgradeToHTTPS")
+
+        // Content Mode
+        UserDefaults.standard.set(0, forKey: "preferredContentMode")
+    }
+}
+
+// MARK: - Settings Category Row
+
+private struct SettingsCategoryRow: View {
+    let icon: String
+    let title: String
+    let description: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(Color.accentColor)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Core Settings
+
+private struct CoreSettingsView: View {
+    @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
+    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
+    @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "JavaScript",
+                    isOn: $enableJavaScript,
+                    info: "Master switch for all JavaScript execution in WebView."
+                )
+                SettingToggleRow(
+                    title: "Content JavaScript",
+                    isOn: $allowsContentJavaScript,
+                    info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
+                )
+                HStack {
+                    Text("Minimum Font Size")
+                    Spacer()
+                    TextField("0", value: $minimumFontSize, format: .number)
+                        .keyboardType(.decimalPad)
+                        .multilineTextAlignment(.trailing)
+                        .frame(width: 60)
+                    Text("pt")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .navigationTitle("Core")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Media Settings
+
+private struct MediaSettingsView: View {
+    @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
+    @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
+    @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
+    @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "Auto-play Media",
+                    isOn: $mediaAutoplay,
+                    info: "Allows videos with autoplay attribute to start without user interaction."
+                )
+                SettingToggleRow(
+                    title: "Inline Playback",
+                    isOn: $inlineMediaPlayback,
+                    info: "Plays videos inline instead of fullscreen. Required for background video effects."
+                )
+                SettingToggleRow(
+                    title: "AirPlay",
+                    isOn: $allowsAirPlay,
+                    info: "Enables streaming media to Apple TV and other AirPlay devices."
+                )
+                SettingToggleRow(
+                    title: "Picture in Picture",
+                    isOn: $allowsPictureInPicture,
+                    info: "Allows videos to continue playing in a floating window."
+                )
+            }
+        }
+        .navigationTitle("Media")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Content Mode Settings
+
+private struct ContentModeSettingsView: View {
+    @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
+
+    var body: some View {
+        List {
+            Section {
+                Picker("Content Mode", selection: $preferredContentMode) {
+                    Text("Recommended").tag(0)
+                    Text("Mobile").tag(1)
+                    Text("Desktop").tag(2)
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } footer: {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("• Recommended: System decides based on device")
+                    Text("• Mobile: Optimized for small screens")
+                    Text("• Desktop: Requests full website version")
+                }
+                .font(.caption)
+            }
+        }
+        .navigationTitle("Content Mode")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Behavior Settings
+
+private struct BehaviorSettingsView: View {
+    @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
+    @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
+    @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
+    @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
+
+    private var isIPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "JS Can Open Windows",
+                    isOn: $javaScriptCanOpenWindows,
+                    info: "Allows window.open() without user gesture. Disable to block pop-ups."
+                )
+                SettingToggleRow(
+                    title: "Fraudulent Website Warning",
+                    isOn: $fraudulentWebsiteWarning,
+                    info: "Shows warning for suspected phishing or malware sites."
+                )
+                SettingToggleRow(
+                    title: "Element Fullscreen API",
+                    isOn: $elementFullscreenEnabled,
+                    info: isIPad ? "iPad: Full element fullscreen support.\nWorks with any HTML element.\nVideo, div, canvas, etc." : "iPhone: Limited to video elements only.\nFull API not available.\niPad recommended for full support.",
+                    disabled: !isIPad
+                )
+                SettingToggleRow(
+                    title: "Suppress Incremental Rendering",
+                    isOn: $suppressesIncrementalRendering,
+                    info: "Waits for full page load before displaying. May feel slower but cleaner."
+                )
+            }
+        }
+        .navigationTitle("Behavior")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Data Detectors Settings
+
+private struct DataDetectorsSettingsView: View {
+    @AppStorage("detectPhoneNumbers") private var detectPhoneNumbers: Bool = false
+    @AppStorage("detectLinks") private var detectLinks: Bool = false
+    @AppStorage("detectAddresses") private var detectAddresses: Bool = false
+    @AppStorage("detectCalendarEvents") private var detectCalendarEvents: Bool = false
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "Phone Numbers",
+                    isOn: $detectPhoneNumbers,
+                    info: "Makes phone numbers tappable to call."
+                )
+                SettingToggleRow(
+                    title: "Links",
+                    isOn: $detectLinks,
+                    info: "Converts URL-like text to tappable links."
+                )
+                SettingToggleRow(
+                    title: "Addresses",
+                    isOn: $detectAddresses,
+                    info: "Makes addresses tappable to open in Maps."
+                )
+                SettingToggleRow(
+                    title: "Calendar Events",
+                    isOn: $detectCalendarEvents,
+                    info: "Detects dates and times, allowing to add to Calendar."
+                )
+            } footer: {
+                Text("Automatically detect and convert specific content types into interactive links")
+            }
+        }
+        .navigationTitle("Data Detectors")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Privacy & Security Settings
+
+private struct PrivacySecuritySettingsView: View {
+    @AppStorage("privateBrowsing") private var privateBrowsing: Bool = false
+    @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "Private Browsing",
+                    isOn: $privateBrowsing,
+                    info: "Uses non-persistent data store. No cookies or cache saved after session."
+                )
+                SettingToggleRow(
+                    title: "Upgrade to HTTPS",
+                    isOn: $upgradeToHTTPS,
+                    info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
+                )
+            }
+        }
+        .navigationTitle("Privacy & Security")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - Permissions Settings
+
+private struct PermissionsSettingsView: View {
+    @State private var cameraStatus: AVAuthorizationStatus = .notDetermined
+    @State private var microphoneStatus: AVAuthorizationStatus = .notDetermined
+    @State private var locationStatus: CLAuthorizationStatus = .notDetermined
+    @StateObject private var locationDelegate = LocationManagerDelegate()
+
+    var body: some View {
+        List {
+            Section {
+                PermissionRow(
+                    title: "Camera",
+                    status: permissionText(for: cameraStatus),
+                    granted: cameraStatus == .authorized
+                ) {
+                    requestCameraPermission()
+                }
+
+                PermissionRow(
+                    title: "Microphone",
+                    status: permissionText(for: microphoneStatus),
+                    granted: microphoneStatus == .authorized
+                ) {
+                    requestMicrophonePermission()
+                }
+
+                PermissionRow(
+                    title: "Location",
+                    status: permissionText(for: locationStatus),
+                    granted: locationStatus == .authorizedWhenInUse || locationStatus == .authorizedAlways
+                ) {
+                    requestLocationPermission()
+                }
+            } footer: {
+                Text("Required for WebRTC, Media Devices, and Geolocation APIs")
+            }
+        }
+        .navigationTitle("Permissions")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            updatePermissionStatuses()
         }
     }
 
@@ -309,38 +495,6 @@ struct StaticSettingsView: View {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
-    }
-
-    private func resetToDefaults() {
-        // Core
-        enableJavaScript = true
-        allowsContentJavaScript = true
-        minimumFontSize = 0
-
-        // Media
-        mediaAutoplay = false
-        inlineMediaPlayback = true
-        allowsAirPlay = true
-        allowsPictureInPicture = true
-
-        // Content
-        suppressesIncrementalRendering = false
-        javaScriptCanOpenWindows = false
-        fraudulentWebsiteWarning = true
-        elementFullscreenEnabled = false
-
-        // Data Detectors
-        detectPhoneNumbers = false
-        detectLinks = false
-        detectAddresses = false
-        detectCalendarEvents = false
-
-        // Privacy & Security
-        privateBrowsing = false
-        upgradeToHTTPS = true
-
-        // Content Mode
-        preferredContentMode = 0
     }
 }
 
@@ -566,216 +720,130 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    SettingToggleRow(
-                        title: "JavaScript",
-                        isOn: $enableJavaScript,
-                        info: "Master switch for all JavaScript execution in WebView."
-                    )
-                    SettingToggleRow(
-                        title: "Content JavaScript",
-                        isOn: $allowsContentJavaScript,
-                        info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
-                    )
-                    SettingToggleRow(
-                        title: "Ignore Viewport Scale Limits",
-                        isOn: $allowZoom,
-                        info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
-                    )
-                    HStack {
-                        Text("Minimum Font Size")
-                        Spacer()
-                        TextField("0", value: $minimumFontSize, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        Text("pt")
-                            .foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text("Core")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Auto-play Media",
-                        isOn: $mediaAutoplay,
-                        info: "Allows videos with autoplay attribute to start without user interaction."
-                    )
-                    SettingToggleRow(
-                        title: "Inline Playback",
-                        isOn: $inlineMediaPlayback,
-                        info: "Plays videos inline instead of fullscreen. Required for background video effects."
-                    )
-                    SettingToggleRow(
-                        title: "AirPlay",
-                        isOn: $allowsAirPlay,
-                        info: "Enables streaming media to Apple TV and other AirPlay devices."
-                    )
-                    SettingToggleRow(
-                        title: "Picture in Picture",
-                        isOn: $allowsPictureInPicture,
-                        info: "Allows videos to continue playing in a floating window."
-                    )
-                } header: {
-                    Text("Media")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Back/Forward Gestures",
-                        isOn: $allowsBackForwardGestures,
-                        info: "Enables swipe from edge to navigate history."
-                    )
-                    SettingToggleRow(
-                        title: "Link Preview",
-                        isOn: $allowsLinkPreview,
-                        info: "Shows page preview on long-press or 3D Touch on links."
-                    )
-                } header: {
-                    Text("Navigation")
-                }
-
-                Section {
-                    Picker("Content Mode", selection: $preferredContentMode) {
-                        Text("Recommended").tag(0)
-                        Text("Mobile").tag(1)
-                        Text("Desktop").tag(2)
-                    }
-                } header: {
-                    Text("Content Mode")
-                } footer: {
-                    Text("Mobile: optimized for small screens. Desktop: requests full website.")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "JS Can Open Windows",
-                        isOn: $javaScriptCanOpenWindows,
-                        info: "Allows window.open() without user gesture. Disable to block pop-ups."
-                    )
-                    SettingToggleRow(
-                        title: "Fraudulent Website Warning",
-                        isOn: $fraudulentWebsiteWarning,
-                        info: "Shows warning for suspected phishing or malware sites."
-                    )
-                    SettingToggleRow(
-                        title: "Text Interaction",
-                        isOn: $textInteractionEnabled,
-                        info: "Enables text selection, copy, and other text interactions."
-                    )
-                    SettingToggleRow(
-                        title: "Element Fullscreen API",
-                        isOn: $elementFullscreenEnabled,
-                        info: isIPad ? "iPad: Full element fullscreen support.\nWorks with any HTML element.\nVideo, div, canvas, etc." : "iPhone: Limited to video elements only.\nFull API not available.\niPad recommended for full support.",
-                        disabled: !isIPad
-                    )
-                    SettingToggleRow(
-                        title: "Suppress Incremental Rendering",
-                        isOn: $suppressesIncrementalRendering,
-                        info: "Waits for full page load before displaying. May feel slower but cleaner."
-                    )
-                } header: {
-                    Text("Behavior")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Phone Numbers",
-                        isOn: $detectPhoneNumbers,
-                        info: "Makes phone numbers tappable to call."
-                    )
-                    SettingToggleRow(
-                        title: "Links",
-                        isOn: $detectLinks,
-                        info: "Converts URL-like text to tappable links."
-                    )
-                    SettingToggleRow(
-                        title: "Addresses",
-                        isOn: $detectAddresses,
-                        info: "Makes addresses tappable to open in Maps."
-                    )
-                    SettingToggleRow(
-                        title: "Calendar Events",
-                        isOn: $detectCalendarEvents,
-                        info: "Detects dates and times, allowing to add to Calendar."
-                    )
-                } header: {
-                    Text("Data Detectors")
-                } footer: {
-                    Text("Automatically detect and link specific content types")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Private Browsing",
-                        isOn: $privateBrowsing,
-                        info: "Uses non-persistent data store. No cookies or cache saved after session."
-                    )
-                    SettingToggleRow(
-                        title: "Upgrade to HTTPS",
-                        isOn: $upgradeToHTTPS,
-                        info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
-                    )
-                } header: {
-                    Text("Privacy & Security")
-                }
-
-                Section {
-                    TextField("Custom User-Agent", text: $customUserAgent, axis: .vertical)
-                        .lineLimit(2...4)
-                        .font(.system(size: 14, design: .monospaced))
-                } header: {
-                    Text("User-Agent")
-                } footer: {
-                    Text("Override the default browser identification string")
-                }
-
-                Section {
-                    WebViewSizeControl(
-                        widthRatio: $webViewWidthRatio,
-                        heightRatio: $webViewHeightRatio
-                    )
-                } header: {
-                    Text("WebView Size")
-                } footer: {
-                    Text("Resize WebView for responsive testing. Maximum is device screen size.")
-                }
-
-                Section {
-                    PermissionRow(
-                        title: "Camera",
-                        status: permissionText(for: cameraStatus),
-                        granted: cameraStatus == .authorized
-                    ) {
-                        requestCameraPermission()
+                    NavigationLink {
+                        CoreSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "gearshape",
+                            title: "Core",
+                            description: "JavaScript, Font Size"
+                        )
                     }
 
-                    PermissionRow(
-                        title: "Microphone",
-                        status: permissionText(for: microphoneStatus),
-                        granted: microphoneStatus == .authorized
-                    ) {
-                        requestMicrophonePermission()
+                    NavigationLink {
+                        MediaSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "play.rectangle",
+                            title: "Media",
+                            description: "Autoplay, AirPlay, PiP"
+                        )
                     }
 
-                    PermissionRow(
-                        title: "Location",
-                        status: permissionText(for: locationStatus),
-                        granted: locationStatus == .authorizedWhenInUse || locationStatus == .authorizedAlways
-                    ) {
-                        requestLocationPermission()
+                    NavigationLink {
+                        ContentModeSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "iphone.and.arrow.forward",
+                            title: "Content Mode",
+                            description: "Mobile, Desktop"
+                        )
+                    }
+
+                    NavigationLink {
+                        BehaviorSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "hand.tap",
+                            title: "Behavior",
+                            description: "Pop-ups, Fullscreen, Rendering"
+                        )
+                    }
+
+                    NavigationLink {
+                        DataDetectorsSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "text.magnifyingglass",
+                            title: "Data Detectors",
+                            description: "Phone, Links, Addresses"
+                        )
+                    }
+
+                    NavigationLink {
+                        PrivacySecuritySettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "lock.shield",
+                            title: "Privacy & Security",
+                            description: "Private Browsing, HTTPS"
+                        )
                     }
                 } header: {
-                    Text("Permissions")
-                } footer: {
-                    Text("Required for WebRTC, Media Devices, and Geolocation APIs")
+                    Text("Configuration")
+                }
+
+                Section {
+                    NavigationLink {
+                        NavigationInteractionSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "hand.draw",
+                            title: "Navigation & Interaction",
+                            description: "Gestures, Zoom, Text Selection"
+                        )
+                    }
+
+                    NavigationLink {
+                        DisplaySettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "textformat.size",
+                            title: "Display",
+                            description: "Page Zoom, Background Color"
+                        )
+                    }
+
+                    NavigationLink {
+                        UserAgentSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "person.badge.key",
+                            title: "User-Agent",
+                            description: "Custom browser identification"
+                        )
+                    }
+
+                    NavigationLink {
+                        WebViewSizeSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "rectangle.dashed",
+                            title: "WebView Size",
+                            description: "Responsive testing"
+                        )
+                    }
+                } header: {
+                    Text("Live Settings")
+                }
+
+                Section {
+                    NavigationLink {
+                        PermissionsSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "hand.raised",
+                            title: "Permissions",
+                            description: "Camera, Mic, Location"
+                        )
+                    }
                 }
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset") {
+                    Button("Reset All") {
                         resetAllToDefaults()
                     }
                     .foregroundStyle(.red)
@@ -786,16 +854,7 @@ struct SettingsView: View {
                     }
                 }
             }
-            .onAppear {
-                updatePermissionStatuses()
-            }
         }
-    }
-
-    private func updatePermissionStatuses() {
-        cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
-        microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
-        locationStatus = locationDelegate.locationManager.authorizationStatus
     }
 
     private func resetAllToDefaults() {
@@ -842,66 +901,142 @@ struct SettingsView: View {
         webViewWidthRatio = 1.0
         webViewHeightRatio = 0.82
     }
+}
 
-    private func permissionText(for status: AVAuthorizationStatus) -> String {
-        switch status {
-        case .notDetermined: return "Not Requested"
-        case .restricted: return "Restricted"
-        case .denied: return "Denied"
-        case .authorized: return "Granted"
-        @unknown default: return "Unknown"
+// MARK: - Navigation & Interaction Settings
+
+private struct NavigationInteractionSettingsView: View {
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
+    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
+    @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
+    @AppStorage("findInteractionEnabled") private var findInteractionEnabled: Bool = false
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "Back/Forward Gestures",
+                    isOn: $allowsBackForwardGestures,
+                    info: "Enables swipe from edge to navigate history."
+                )
+                SettingToggleRow(
+                    title: "Link Preview",
+                    isOn: $allowsLinkPreview,
+                    info: "Shows page preview on long-press or 3D Touch on links."
+                )
+                SettingToggleRow(
+                    title: "Ignore Viewport Scale Limits",
+                    isOn: $allowZoom,
+                    info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
+                )
+                SettingToggleRow(
+                    title: "Text Interaction",
+                    isOn: $textInteractionEnabled,
+                    info: "Enables text selection, copy, and other text interactions."
+                )
+                SettingToggleRow(
+                    title: "Find Interaction",
+                    isOn: $findInteractionEnabled,
+                    info: "Enables the system find panel (Cmd+F on iPad with keyboard)."
+                )
+            }
         }
+        .navigationTitle("Navigation & Interaction")
+        .navigationBarTitleDisplayMode(.inline)
     }
+}
 
-    private func permissionText(for status: CLAuthorizationStatus) -> String {
-        switch status {
-        case .notDetermined: return "Not Requested"
-        case .restricted: return "Restricted"
-        case .denied: return "Denied"
-        case .authorizedAlways: return "Always"
-        case .authorizedWhenInUse: return "When In Use"
-        @unknown default: return "Unknown"
-        }
-    }
+// MARK: - Display Settings
 
-    private func requestCameraPermission() {
-        if cameraStatus == .notDetermined {
-            AVCaptureDevice.requestAccess(for: .video) { _ in
-                DispatchQueue.main.async {
-                    cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+private struct DisplaySettingsView: View {
+    @AppStorage("pageZoom") private var pageZoom: Double = 1.0
+    @AppStorage("underPageBackgroundColor") private var underPageBackgroundColorHex: String = ""
+
+    var body: some View {
+        List {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Page Zoom")
+                        Spacer()
+                        Text("\(Int(pageZoom * 100))%")
+                            .foregroundStyle(.secondary)
+                    }
+                    Slider(value: $pageZoom, in: 0.5...3.0, step: 0.1)
+                    HStack {
+                        Text("50%")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                        Spacer()
+                        Text("300%")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
             }
-        } else {
-            openSettings()
-        }
-    }
 
-    private func requestMicrophonePermission() {
-        if microphoneStatus == .notDetermined {
-            AVCaptureDevice.requestAccess(for: .audio) { _ in
-                DispatchQueue.main.async {
-                    microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+            Section {
+                ColorPickerRow(
+                    title: "Under Page Background",
+                    colorHex: $underPageBackgroundColorHex,
+                    info: "Background color shown when scrolling beyond page bounds."
+                )
+            }
+        }
+        .navigationTitle("Display")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+// MARK: - User Agent Settings
+
+private struct UserAgentSettingsView: View {
+    @AppStorage("customUserAgent") private var customUserAgent: String = ""
+
+    var body: some View {
+        List {
+            Section {
+                TextField("Custom User-Agent", text: $customUserAgent, axis: .vertical)
+                    .lineLimit(2...6)
+                    .font(.system(size: 14, design: .monospaced))
+            } footer: {
+                Text("Override the default browser identification string. Leave empty to use default.")
+            }
+
+            if !customUserAgent.isEmpty {
+                Section {
+                    Button("Clear User-Agent") {
+                        customUserAgent = ""
+                    }
+                    .foregroundStyle(.red)
                 }
             }
-        } else {
-            openSettings()
         }
+        .navigationTitle("User-Agent")
+        .navigationBarTitleDisplayMode(.inline)
     }
+}
 
-    private func requestLocationPermission() {
-        if locationStatus == .notDetermined {
-            locationDelegate.requestPermission { status in
-                locationStatus = status
+// MARK: - WebView Size Settings
+
+private struct WebViewSizeSettingsView: View {
+    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
+    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
+
+    var body: some View {
+        List {
+            Section {
+                WebViewSizeControl(
+                    widthRatio: $webViewWidthRatio,
+                    heightRatio: $webViewHeightRatio
+                )
+            } footer: {
+                Text("Resize WebView for responsive testing.\n⚠️ Changing size will recreate the WebView.")
             }
-        } else {
-            openSettings()
         }
-    }
-
-    private func openSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) {
-            UIApplication.shared.open(url)
-        }
+        .navigationTitle("WebView Size")
+        .navigationBarTitleDisplayMode(.inline)
     }
 }
 
