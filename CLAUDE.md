@@ -11,7 +11,10 @@ WKWebView의 다양한 설정 옵션을 실시간으로 테스트하고 검증�
 ### 주요 기능
 - WKWebView 설정 옵션 토글 (JavaScript, 쿠키, 줌, 미디어 자동재생 등)
 - User-Agent 커스터마이징
-- URL 입력 및 웹페이지 로딩 테스트
+- URL 입력 (실시간 유효성 검사) 및 웹페이지 로딩 테스트
+- WKWebView / Safari (SFSafariViewController) 선택 가능
+- 북마크 저장 및 관리
+- WebView 크기 조절 (반응형 테스트용)
 - WKWebView Info: Device, Browser, API Capabilities (46개+), Media Codecs, Performance, Display, Accessibility
 - Info 전체 검색: 모든 카테고리에서 통합 검색 가능
 - 기기별 UI: iPad/iPhone에 따라 unavailable 플래그 및 info 텍스트 동적 변경
@@ -38,15 +41,16 @@ SwiftUI 기반 단일 타겟 iOS 앱. 최소 지원 버전: iOS 26.1 (Tahoe)
 ```
 wina/
 ├── winaApp.swift              # App entry point (@main), 다크모드 상태 관리
-├── ContentView.swift          # Root view, URL 입력 + 최근 URL 기록
+├── ContentView.swift          # Root view, URL 입력 + 유효성 검사 + 북마크 + 최근 URL 기록
 ├── SettingsView.swift         # WebView 설정 (20개 항목) + 권한 관리 (Camera, Mic, Location)
 ├── Features/
 │   ├── AppBar/                # 상단 바 버튼들
 │   │   ├── ThemeToggleButton.swift
 │   │   ├── SettingsButton.swift
-│   │   └── InfoButton.swift
+│   │   ├── InfoButton.swift
+│   │   └── BookmarkButton.swift
 │   └── Info/                  # WKWebView 정보 표시 (8개 서브메뉴 + 전체 검색)
-│       └── InfoView.swift     # 단일 파일에 모든 Info 뷰/모델 포함 (~2400줄)
+│       └── InfoView.swift     # 단일 파일에 모든 Info 뷰/모델 포함 (~2500줄)
 ├── Shared/Components/         # 재사용 컴포넌트
 │   ├── GlassIconButton.swift  # 원형 glass effect 버튼
 │   ├── ChipButton.swift       # 탭 가능한 칩 버튼
@@ -187,6 +191,7 @@ SettingsView에서 관리하는 모든 WKWebView 설정 (20개):
 | Data Detectors | Phone Numbers, Links, Addresses, Calendar Events |
 | Privacy & Security | Private Browsing, Upgrade to HTTPS |
 | User-Agent | Custom User-Agent string |
+| WebView Size | Width/Height ratio sliders (25%~100%), presets (100%, 75%, 50%) |
 | Permissions | Camera, Microphone, Location |
 
 모든 설정은 `@AppStorage`로 UserDefaults에 영속화됨.

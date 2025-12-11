@@ -52,6 +52,10 @@ struct SettingsView: View {
     // User Agent
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
+    // WebView Size
+    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
+    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 1.0
+
     @State private var cameraStatus: AVAuthorizationStatus = .notDetermined
     @State private var microphoneStatus: AVAuthorizationStatus = .notDetermined
     @State private var locationStatus: CLAuthorizationStatus = .notDetermined
@@ -230,6 +234,17 @@ struct SettingsView: View {
                 }
 
                 Section {
+                    WebViewSizeControl(
+                        widthRatio: $webViewWidthRatio,
+                        heightRatio: $webViewHeightRatio
+                    )
+                } header: {
+                    Text("WebView Size")
+                } footer: {
+                    Text("Resize WebView for responsive testing. Maximum is device screen size.")
+                }
+
+                Section {
                     PermissionRow(
                         title: "Camera",
                         status: permissionText(for: cameraStatus),
@@ -388,6 +403,109 @@ private struct SettingToggleRow: View {
             }
         }
         .disabled(disabled)
+    }
+}
+
+// MARK: - WebView Size Control
+
+private struct WebViewSizeControl: View {
+    @Binding var widthRatio: Double
+    @Binding var heightRatio: Double
+
+    private var screenSize: CGSize {
+        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+            return CGSize(width: 393, height: 852)
+        }
+        return scene.screen.bounds.size
+    }
+
+    private var currentWidth: Int {
+        Int(screenSize.width * widthRatio)
+    }
+
+    private var currentHeight: Int {
+        Int(screenSize.height * heightRatio)
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            // Preset buttons
+            HStack(spacing: 8) {
+                PresetButton(label: "100%", isSelected: widthRatio == 1.0 && heightRatio == 1.0) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        widthRatio = 1.0
+                        heightRatio = 1.0
+                    }
+                }
+                PresetButton(label: "75%", isSelected: widthRatio == 0.75 && heightRatio == 0.75) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        widthRatio = 0.75
+                        heightRatio = 0.75
+                    }
+                }
+                PresetButton(label: "50%", isSelected: widthRatio == 0.5 && heightRatio == 0.5) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        widthRatio = 0.5
+                        heightRatio = 0.5
+                    }
+                }
+            }
+
+            // Width slider
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Width")
+                        .font(.subheadline)
+                    Spacer()
+                    Text("\(currentWidth)pt")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $widthRatio, in: 0.25...1.0, step: 0.01)
+            }
+
+            // Height slider
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Height")
+                        .font(.subheadline)
+                    Spacer()
+                    Text("\(currentHeight)pt")
+                        .font(.subheadline.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $heightRatio, in: 0.25...1.0, step: 0.01)
+            }
+
+            // Current size display
+            HStack {
+                Spacer()
+                Text("\(currentWidth) × \(currentHeight)")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.tertiary)
+                Spacer()
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+private struct PresetButton: View {
+    let label: String
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.subheadline.weight(.medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color.accentColor : Color.secondary.opacity(0.2))
+                .foregroundStyle(isSelected ? .white : .primary)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
     }
 }
 
