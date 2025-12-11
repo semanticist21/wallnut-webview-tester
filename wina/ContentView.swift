@@ -361,14 +361,24 @@ struct ContentView: View {
             urlString = "https://" + urlString
         }
 
+        guard let url = URL(string: urlString), let host = url.host else {
+            return false
+        }
+
         // Special handling for localhost
-        if let url = URL(string: urlString), url.host == "localhost" {
+        if host == "localhost" {
             return true
         }
 
         // Special handling for IP addresses
-        if let url = URL(string: urlString), let host = url.host, isValidIPAddress(host) {
+        if isValidIPAddress(host) {
             return true
+        }
+
+        // Host must contain at least one dot (for TLD)
+        // This rejects "www.naver" but allows "www.naver.com"
+        guard host.contains(".") else {
+            return false
         }
 
         // URL validation using NSDataDetector (Apple's link detection engine)
