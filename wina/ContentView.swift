@@ -284,7 +284,7 @@ struct ContentView: View {
 
                 HStack(spacing: 12) {
                     if !showWebView {
-                        InfoButton()
+                        InfoButton(useSafariVC: useSafariWebView)
                     }
                     SettingsButton(showSettings: $showSettings)
                 }

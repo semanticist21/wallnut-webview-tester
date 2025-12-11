@@ -6,6 +6,7 @@
 import SwiftUI
 
 struct InfoButton: View {
+    var useSafariVC: Bool = false
     @State private var showInfo = false
 
     var body: some View {
@@ -13,7 +14,11 @@ struct InfoButton: View {
             showInfo = true
         }
         .sheet(isPresented: $showInfo) {
-            InfoView()
+            if useSafariVC {
+                SafariVCInfoView()
+            } else {
+                InfoView()
+            }
         }
     }
 }
