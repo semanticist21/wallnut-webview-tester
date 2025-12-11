@@ -226,6 +226,12 @@ struct StaticSettingsView: View {
             .navigationTitle("Configuration")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset") {
+                        resetToDefaults()
+                    }
+                    .foregroundStyle(.red)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
@@ -303,6 +309,38 @@ struct StaticSettingsView: View {
         if let url = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(url)
         }
+    }
+
+    private func resetToDefaults() {
+        // Core
+        enableJavaScript = true
+        allowsContentJavaScript = true
+        minimumFontSize = 0
+
+        // Media
+        mediaAutoplay = false
+        inlineMediaPlayback = true
+        allowsAirPlay = true
+        allowsPictureInPicture = true
+
+        // Content
+        suppressesIncrementalRendering = false
+        javaScriptCanOpenWindows = false
+        fraudulentWebsiteWarning = true
+        elementFullscreenEnabled = false
+
+        // Data Detectors
+        detectPhoneNumbers = false
+        detectLinks = false
+        detectAddresses = false
+        detectCalendarEvents = false
+
+        // Privacy & Security
+        privateBrowsing = false
+        upgradeToHTTPS = true
+
+        // Content Mode
+        preferredContentMode = 0
     }
 }
 
@@ -429,6 +467,12 @@ struct DynamicSettingsView: View {
             .navigationTitle("Live Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset") {
+                        resetToDefaults()
+                    }
+                    .foregroundStyle(.red)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
@@ -436,6 +480,28 @@ struct DynamicSettingsView: View {
                 }
             }
         }
+    }
+
+    private func resetToDefaults() {
+        // Navigation & Gestures
+        allowsBackForwardGestures = true
+        allowsLinkPreview = true
+        allowZoom = true
+        textInteractionEnabled = true
+
+        // Display
+        pageZoom = 1.0
+        underPageBackgroundColorHex = ""
+
+        // Features
+        findInteractionEnabled = false
+
+        // User Agent
+        customUserAgent = ""
+
+        // WebView Size (App preset)
+        webViewWidthRatio = 1.0
+        webViewHeightRatio = 0.82
     }
 }
 
@@ -708,6 +774,12 @@ struct SettingsView: View {
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Reset") {
+                        resetAllToDefaults()
+                    }
+                    .foregroundStyle(.red)
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
@@ -724,6 +796,51 @@ struct SettingsView: View {
         cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
         microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
         locationStatus = locationDelegate.locationManager.authorizationStatus
+    }
+
+    private func resetAllToDefaults() {
+        // Core
+        enableJavaScript = true
+        allowsContentJavaScript = true
+        allowZoom = true
+        minimumFontSize = 0
+
+        // Media
+        mediaAutoplay = false
+        inlineMediaPlayback = true
+        allowsAirPlay = true
+        allowsPictureInPicture = true
+
+        // Navigation & Gestures
+        allowsBackForwardGestures = true
+        allowsLinkPreview = true
+
+        // Content
+        suppressesIncrementalRendering = false
+        javaScriptCanOpenWindows = false
+        fraudulentWebsiteWarning = true
+        textInteractionEnabled = true
+        elementFullscreenEnabled = false
+
+        // Data Detectors
+        detectPhoneNumbers = false
+        detectLinks = false
+        detectAddresses = false
+        detectCalendarEvents = false
+
+        // Privacy & Security
+        privateBrowsing = false
+        upgradeToHTTPS = true
+
+        // Content Mode
+        preferredContentMode = 0
+
+        // User Agent
+        customUserAgent = ""
+
+        // WebView Size (App preset)
+        webViewWidthRatio = 1.0
+        webViewHeightRatio = 0.82
     }
 
     private func permissionText(for status: AVAuthorizationStatus) -> String {

@@ -92,14 +92,13 @@ struct ContentView: View {
                 bookmarkedURLs: bookmarkedURLs,
                 onSelect: { url in
                     urlText = url
-                    submitURL()
                 },
                 onDelete: { url in
                     removeBookmark(url)
                 },
-                onAddCurrent: !urlText.isEmpty ? {
-                    addBookmark(urlText)
-                } : nil,
+                onAdd: { url in
+                    addBookmark(url)
+                },
                 currentURL: urlText
             )
         }
@@ -207,7 +206,6 @@ struct ContentView: View {
                                     urlText = url
                                     isFocused = false
                                     textFieldFocused = false
-                                    submitURL()
                                 } label: {
                                     HStack {
                                         Image(systemName: "clock.arrow.circlepath")
@@ -411,52 +409,72 @@ private struct BookmarksSheet: View {
     let bookmarkedURLs: [String]
     let onSelect: (String) -> Void
     let onDelete: (String) -> Void
-    let onAddCurrent: (() -> Void)?
+    let onAdd: (String) -> Void
     let currentURL: String
+
     @Environment(\.dismiss) private var dismiss
+    @State private var newURL: String = ""
+    @FocusState private var isInputFocused: Bool
 
     var body: some View {
         NavigationStack {
             List {
-                if let onAddCurrent, !currentURL.isEmpty, !bookmarkedURLs.contains(currentURL) {
-                    Section {
-                        Button {
-                            onAddCurrent()
-                        } label: {
-                            HStack {
+                // Add new bookmark section
+                Section {
+                    HStack {
+                        TextField("URL", text: $newURL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.URL)
+                            .focused($isInputFocused)
+
+                        if !newURL.isEmpty {
+                            Button {
+                                onAdd(newURL)
+                                newURL = ""
+                            } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .foregroundStyle(.blue)
-                                Text("Add Current URL to Bookmarks")
-                                Spacer()
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+
+                    // Quick add current URL
+                    if !currentURL.isEmpty && !bookmarkedURLs.contains(currentURL) {
+                        Button {
+                            onAdd(currentURL)
+                        } label: {
+                            HStack {
+                                Text("Add")
+                                    .foregroundStyle(.blue)
                                 Text(currentURL)
-                                    .font(.caption)
                                     .foregroundStyle(.secondary)
                                     .lineLimit(1)
                             }
+                            .font(.subheadline)
                         }
                     }
+                } header: {
+                    Text("Add")
                 }
 
+                // Bookmarks list
                 if bookmarkedURLs.isEmpty {
                     Section {
-                        Text("No saved bookmarks")
+                        Text("No bookmarks")
                             .foregroundStyle(.secondary)
                     }
                 } else {
-                    Section("Bookmarks") {
+                    Section {
                         ForEach(bookmarkedURLs, id: \.self) { url in
                             Button {
                                 onSelect(url)
                                 dismiss()
                             } label: {
-                                HStack {
-                                    Image(systemName: "bookmark.fill")
-                                        .foregroundStyle(.orange)
-                                    Text(url)
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(1)
-                                    Spacer()
-                                }
+                                Text(url)
+                                    .foregroundStyle(.primary)
+                                    .lineLimit(1)
                             }
                             .swipeActions(edge: .trailing) {
                                 Button(role: .destructive) {
@@ -466,6 +484,8 @@ private struct BookmarksSheet: View {
                                 }
                             }
                         }
+                    } header: {
+                        Text("Saved")
                     }
                 }
             }
