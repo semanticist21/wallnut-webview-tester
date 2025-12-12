@@ -21,6 +21,10 @@ struct ContentView: View {
     @AppStorage("recentURLs") private var recentURLsData: Data = Data()
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData: Data = Data()
 
+    // Safari configuration settings (for onChange detection)
+    @AppStorage("safariEntersReaderIfAvailable") private var safariEntersReaderIfAvailable = false
+    @AppStorage("safariBarCollapsingEnabled") private var safariBarCollapsingEnabled = true
+
     private enum URLValidationState {
         case empty
         case valid
@@ -82,11 +86,17 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showSettings) {
             if useSafariWebView {
-                SafariVCSettingsView()
-            } else if showWebView {
-                DynamicSettingsView(webViewID: $webViewID)
+                if showWebView {
+                    SafariVCLoadedSettingsView(webViewID: $webViewID)
+                } else {
+                    SafariVCSettingsView()
+                }
             } else {
-                SettingsView()
+                if showWebView {
+                    LoadedSettingsView(webViewID: $webViewID)
+                } else {
+                    SettingsView()
+                }
             }
         }
         .sheet(isPresented: $showBookmarks) {
@@ -103,6 +113,17 @@ struct ContentView: View {
                 },
                 currentURL: urlText
             )
+        }
+        // Recreate SafariVC when configuration settings change
+        .onChange(of: safariEntersReaderIfAvailable) { _, _ in
+            if useSafariWebView && showWebView {
+                webViewID = UUID()
+            }
+        }
+        .onChange(of: safariBarCollapsingEnabled) { _, _ in
+            if useSafariWebView && showWebView {
+                webViewID = UUID()
+            }
         }
     }
 

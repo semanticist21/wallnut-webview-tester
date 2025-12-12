@@ -22,13 +22,13 @@ struct InfoView: View {
     // Instance Settings from AppStorage
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
     @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
-    @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("allowZoom") private var allowZoom: Bool = false
     @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
     @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
     @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
     @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
     @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
-    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = false
     @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
     @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
     @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
@@ -43,6 +43,11 @@ struct InfoView: View {
     @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
     @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
+    @AppStorage("findInteractionEnabled") private var findInteractionEnabled: Bool = false
+    @AppStorage("pageZoom") private var pageZoom: Double = 1.0
+    @AppStorage("underPageBackgroundColor") private var underPageBackgroundColorHex: String = ""
+    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
+    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
 
     private var contentModeText: String {
         switch preferredContentMode {
@@ -85,7 +90,12 @@ struct InfoView: View {
             InfoSearchItem(category: "Active Settings", label: "Data Detectors", value: activeDataDetectors),
             InfoSearchItem(category: "Active Settings", label: "Private Browsing", value: privateBrowsing ? "Enabled" : "Disabled"),
             InfoSearchItem(category: "Active Settings", label: "Upgrade to HTTPS", value: upgradeToHTTPS ? "Enabled" : "Disabled"),
-            InfoSearchItem(category: "Active Settings", label: "Custom User-Agent", value: customUserAgent.isEmpty ? "Default" : "Custom")
+            InfoSearchItem(category: "Active Settings", label: "Custom User-Agent", value: customUserAgent.isEmpty ? "Default" : "Custom"),
+            InfoSearchItem(category: "Active Settings", label: "Find Interaction", value: findInteractionEnabled ? "Enabled" : "Disabled"),
+            InfoSearchItem(category: "Active Settings", label: "Page Zoom", value: "\(Int(pageZoom * 100))%"),
+            InfoSearchItem(category: "Active Settings", label: "Under Page Background", value: underPageBackgroundColorHex.isEmpty ? "Default" : underPageBackgroundColorHex),
+            InfoSearchItem(category: "Active Settings", label: "WebView Width", value: "\(Int(webViewWidthRatio * 100))%"),
+            InfoSearchItem(category: "Active Settings", label: "WebView Height", value: "\(Int(webViewHeightRatio * 100))%")
         ])
 
         // Device items

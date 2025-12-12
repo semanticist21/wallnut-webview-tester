@@ -387,19 +387,56 @@ private struct CheckerboardPattern: View {
 struct SafariWebView: UIViewControllerRepresentable {
     let urlString: String
 
+    // Configuration settings (require recreation)
+    @AppStorage("safariEntersReaderIfAvailable") var entersReaderIfAvailable = false
+    @AppStorage("safariBarCollapsingEnabled") var barCollapsingEnabled = true
+
+    // Runtime-changeable settings
+    @AppStorage("safariDismissButtonStyle") var dismissButtonStyle = 0
+    @AppStorage("safariControlTintColorHex") var controlTintColorHex = ""
+    @AppStorage("safariBarTintColorHex") var barTintColorHex = ""
+
     func makeUIViewController(context: Context) -> SFSafariViewController {
         guard let url = URL(string: urlString) else {
             return SFSafariViewController(url: URL(string: "about:blank")!)
         }
         let config = SFSafariViewController.Configuration()
-        config.entersReaderIfAvailable = false
-        config.barCollapsingEnabled = true
+        config.entersReaderIfAvailable = entersReaderIfAvailable
+        config.barCollapsingEnabled = barCollapsingEnabled
         let vc = SFSafariViewController(url: url, configuration: config)
+
+        // Apply runtime settings
+        applyRuntimeSettings(to: vc)
+
         return vc
     }
 
     func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {
-        // Safari VC doesn't support URL updates
+        // Only runtime-changeable properties can be updated
+        applyRuntimeSettings(to: uiViewController)
+    }
+
+    private func applyRuntimeSettings(to vc: SFSafariViewController) {
+        // Dismiss button style
+        switch dismissButtonStyle {
+        case 1: vc.dismissButtonStyle = .close
+        case 2: vc.dismissButtonStyle = .cancel
+        default: vc.dismissButtonStyle = .done
+        }
+
+        // Control tint color
+        if !controlTintColorHex.isEmpty {
+            vc.preferredControlTintColor = UIColor(hex: controlTintColorHex)
+        } else {
+            vc.preferredControlTintColor = nil
+        }
+
+        // Bar tint color
+        if !barTintColorHex.isEmpty {
+            vc.preferredBarTintColor = UIColor(hex: barTintColorHex)
+        } else {
+            vc.preferredBarTintColor = nil
+        }
     }
 }
 

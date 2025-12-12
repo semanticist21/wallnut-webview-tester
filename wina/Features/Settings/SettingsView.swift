@@ -10,10 +10,18 @@ import AVFoundation
 import Combine
 import CoreLocation
 
-// MARK: - Static Settings View (Requires WebView Reload)
+// MARK: - Configuration Settings View (Requires WebView Reload)
 
-struct StaticSettingsView: View {
+struct ConfigurationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Binding var webViewID: UUID
+
+    // Store initial values for change detection
+    @State private var initialValues: [String: AnyHashable] = [:]
+
+    private var hasChanges: Bool {
+        initialValues != currentValues
+    }
 
     // Core Settings
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
@@ -49,153 +57,212 @@ struct StaticSettingsView: View {
         UIDevice.current.userInterfaceIdiom == .pad
     }
 
+    private var currentValues: [String: AnyHashable] {
+        [
+            "enableJavaScript": enableJavaScript,
+            "allowsContentJavaScript": allowsContentJavaScript,
+            "minimumFontSize": minimumFontSize,
+            "mediaAutoplay": mediaAutoplay,
+            "inlineMediaPlayback": inlineMediaPlayback,
+            "allowsAirPlay": allowsAirPlay,
+            "allowsPictureInPicture": allowsPictureInPicture,
+            "preferredContentMode": preferredContentMode,
+            "javaScriptCanOpenWindows": javaScriptCanOpenWindows,
+            "fraudulentWebsiteWarning": fraudulentWebsiteWarning,
+            "elementFullscreenEnabled": elementFullscreenEnabled,
+            "suppressesIncrementalRendering": suppressesIncrementalRendering,
+            "detectPhoneNumbers": detectPhoneNumbers,
+            "detectLinks": detectLinks,
+            "detectAddresses": detectAddresses,
+            "detectCalendarEvents": detectCalendarEvents,
+            "privateBrowsing": privateBrowsing,
+            "upgradeToHTTPS": upgradeToHTTPS
+        ]
+    }
+
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    SettingToggleRow(
-                        title: "JavaScript",
-                        isOn: $enableJavaScript,
-                        info: "Master switch for all JavaScript execution in WebView."
-                    )
-                    SettingToggleRow(
-                        title: "Content JavaScript",
-                        isOn: $allowsContentJavaScript,
-                        info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
-                    )
-                    HStack {
-                        Text("Minimum Font Size")
-                        Spacer()
-                        TextField("0", value: $minimumFontSize, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        Text("pt")
-                            .foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text("Core")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Auto-play Media",
-                        isOn: $mediaAutoplay,
-                        info: "Allows videos with autoplay attribute to start without user interaction."
-                    )
-                    SettingToggleRow(
-                        title: "Inline Playback",
-                        isOn: $inlineMediaPlayback,
-                        info: "Plays videos inline instead of fullscreen. Required for background video effects."
-                    )
-                    SettingToggleRow(
-                        title: "AirPlay",
-                        isOn: $allowsAirPlay,
-                        info: "Enables streaming media to Apple TV and other AirPlay devices."
-                    )
-                    SettingToggleRow(
-                        title: "Picture in Picture",
-                        isOn: $allowsPictureInPicture,
-                        info: "Allows videos to continue playing in a floating window."
-                    )
-                } header: {
-                    Text("Media")
-                }
-
-                Section {
-                    Picker("Content Mode", selection: $preferredContentMode) {
-                        Text("Recommended").tag(0)
-                        Text("Mobile").tag(1)
-                        Text("Desktop").tag(2)
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                } header: {
-                    Text("Content Mode")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "JS Can Open Windows",
-                        isOn: $javaScriptCanOpenWindows,
-                        info: "Allows window.open() without user gesture. Disable to block pop-ups."
-                    )
-                    SettingToggleRow(
-                        title: "Fraudulent Website Warning",
-                        isOn: $fraudulentWebsiteWarning,
-                        info: "Shows warning for suspected phishing or malware sites."
-                    )
-                    SettingToggleRow(
-                        title: "Element Fullscreen API",
-                        isOn: $elementFullscreenEnabled,
-                        info: isIPad ? "iPad: Full element fullscreen support." : "iPhone: Limited to video elements only.",
-                        disabled: !isIPad,
-                        disabledLabel: "(iPad only)"
-                    )
-                    SettingToggleRow(
-                        title: "Suppress Incremental Rendering",
-                        isOn: $suppressesIncrementalRendering,
-                        info: "Waits for full page load before displaying. May feel slower but cleaner."
-                    )
-                } header: {
-                    Text("Behavior")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Phone Numbers",
-                        isOn: $detectPhoneNumbers,
-                        info: "Makes phone numbers tappable to call."
-                    )
-                    SettingToggleRow(
-                        title: "Links",
-                        isOn: $detectLinks,
-                        info: "Converts URL-like text to tappable links."
-                    )
-                    SettingToggleRow(
-                        title: "Addresses",
-                        isOn: $detectAddresses,
-                        info: "Makes addresses tappable to open in Maps."
-                    )
-                    SettingToggleRow(
-                        title: "Calendar Events",
-                        isOn: $detectCalendarEvents,
-                        info: "Detects dates and times, allowing to add to Calendar."
-                    )
-                } header: {
-                    Text("Data Detectors")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Private Browsing",
-                        isOn: $privateBrowsing,
-                        info: "Uses non-persistent data store. No cookies or cache saved after session."
-                    )
-                    SettingToggleRow(
-                        title: "Upgrade to HTTPS",
-                        isOn: $upgradeToHTTPS,
-                        info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
-                    )
-                } header: {
-                    Text("Privacy & Security")
-                }
-            }
-            .navigationTitle("Configuration")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset All") {
-                        resetAllToDefaults()
-                    }
+        List {
+            changesWarningSection
+            configCoreSection
+            configMediaSection
+            configContentModeSection
+            configBehaviorSection
+            configDataDetectorsSection
+            configPrivacySection
+        }
+        .navigationTitle("Configuration")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Reset") { resetAllToDefaults() }
                     .foregroundStyle(.red)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
+            }
+        }
+        .onAppear { initialValues = currentValues }
+        .onDisappear { if hasChanges { webViewID = UUID() } }
+    }
+
+    // MARK: - Configuration Sections
+
+    @ViewBuilder
+    private var changesWarningSection: some View {
+        if hasChanges {
+            Section {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text("Changes will reload WebView")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var configCoreSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "JavaScript",
+                isOn: $enableJavaScript,
+                info: "Master switch for all JavaScript execution in WebView."
+            )
+            SettingToggleRow(
+                title: "Content JavaScript",
+                isOn: $allowsContentJavaScript,
+                info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
+            )
+            HStack {
+                Text("Minimum Font Size")
+                Spacer()
+                TextField("0", value: $minimumFontSize, format: .number)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 60)
+                Text("pt")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Core")
+        }
+    }
+
+    @ViewBuilder
+    private var configMediaSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Auto-play Media",
+                isOn: $mediaAutoplay,
+                info: "Allows videos with autoplay attribute to start without user interaction."
+            )
+            SettingToggleRow(
+                title: "Inline Playback",
+                isOn: $inlineMediaPlayback,
+                info: "Plays videos inline instead of fullscreen. Required for background video effects."
+            )
+            SettingToggleRow(
+                title: "AirPlay",
+                isOn: $allowsAirPlay,
+                info: "Enables streaming media to Apple TV and other AirPlay devices."
+            )
+            SettingToggleRow(
+                title: "Picture in Picture",
+                isOn: $allowsPictureInPicture,
+                info: "Allows videos to continue playing in a floating window."
+            )
+        } header: {
+            Text("Media")
+        }
+    }
+
+    @ViewBuilder
+    private var configContentModeSection: some View {
+        Section {
+            Picker("Content Mode", selection: $preferredContentMode) {
+                Text("Recommended").tag(0)
+                Text("Mobile").tag(1)
+                Text("Desktop").tag(2)
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        } header: {
+            Text("Content Mode")
+        }
+    }
+
+    @ViewBuilder
+    private var configBehaviorSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "JS Can Open Windows",
+                isOn: $javaScriptCanOpenWindows,
+                info: "Allows window.open() without user gesture. Disable to block pop-ups."
+            )
+            SettingToggleRow(
+                title: "Fraudulent Website Warning",
+                isOn: $fraudulentWebsiteWarning,
+                info: "Shows warning for suspected phishing or malware sites."
+            )
+            SettingToggleRow(
+                title: "Element Fullscreen API",
+                isOn: $elementFullscreenEnabled,
+                info: isIPad ? "iPad: Full element fullscreen support." : "iPhone: Limited to video elements only.",
+                disabled: !isIPad,
+                disabledLabel: "(iPad only)"
+            )
+            SettingToggleRow(
+                title: "Suppress Incremental Rendering",
+                isOn: $suppressesIncrementalRendering,
+                info: "Waits for full page load before displaying. May feel slower but cleaner."
+            )
+        } header: {
+            Text("Behavior")
+        }
+    }
+
+    @ViewBuilder
+    private var configDataDetectorsSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Phone Numbers",
+                isOn: $detectPhoneNumbers,
+                info: "Makes phone numbers tappable to call."
+            )
+            SettingToggleRow(
+                title: "Links",
+                isOn: $detectLinks,
+                info: "Converts URL-like text to tappable links."
+            )
+            SettingToggleRow(
+                title: "Addresses",
+                isOn: $detectAddresses,
+                info: "Makes addresses tappable to open in Maps."
+            )
+            SettingToggleRow(
+                title: "Calendar Events",
+                isOn: $detectCalendarEvents,
+                info: "Detects dates and times, allowing to add to Calendar."
+            )
+        } header: {
+            Text("Data Detectors")
+        }
+    }
+
+    @ViewBuilder
+    private var configPrivacySection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Private Browsing",
+                isOn: $privateBrowsing,
+                info: "Uses non-persistent data store. No cookies or cache saved after session."
+            )
+            SettingToggleRow(
+                title: "Upgrade to HTTPS",
+                isOn: $upgradeToHTTPS,
+                info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
+            )
+        } header: {
+            Text("Privacy & Security")
         }
     }
 
@@ -232,9 +299,143 @@ struct StaticSettingsView: View {
     }
 }
 
+// MARK: - Live Settings View (Instant Apply)
+
+struct LiveSettingsView: View {
+    // Navigation & Gestures (Dynamic)
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = false
+    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
+    @AppStorage("allowZoom") private var allowZoom: Bool = false
+    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
+
+    // Display (Dynamic)
+    @AppStorage("pageZoom") private var pageZoom: Double = 1.0
+    @AppStorage("underPageBackgroundColor") private var underPageBackgroundColorHex: String = ""
+
+    // Features (Dynamic)
+    @AppStorage("findInteractionEnabled") private var findInteractionEnabled: Bool = false
+
+    // User Agent (Dynamic)
+    @AppStorage("customUserAgent") private var customUserAgent: String = ""
+
+    // WebView Size
+    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
+    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
+
+    var body: some View {
+        List {
+            Section {
+                SettingToggleRow(
+                    title: "Back/Forward Gestures",
+                    isOn: $allowsBackForwardGestures,
+                    info: "Enables swipe from edge to navigate history."
+                )
+                SettingToggleRow(
+                    title: "Link Preview",
+                    isOn: $allowsLinkPreview,
+                    info: "Shows page preview on long-press or 3D Touch on links."
+                )
+                SettingToggleRow(
+                    title: "Ignore Viewport Scale Limits",
+                    isOn: $allowZoom,
+                    info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
+                )
+                SettingToggleRow(
+                    title: "Text Interaction",
+                    isOn: $textInteractionEnabled,
+                    info: "Enables text selection, copy, and other text interactions."
+                )
+                SettingToggleRow(
+                    title: "Find Interaction",
+                    isOn: $findInteractionEnabled,
+                    info: "Enables the system find panel (Cmd+F on iPad with keyboard)."
+                )
+            } header: {
+                Text("Navigation & Interaction")
+            }
+
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Text("Page Zoom")
+                        Spacer()
+                        Text("\(Int(pageZoom * 100))%")
+                            .foregroundStyle(.secondary)
+                    }
+                    Slider(value: $pageZoom, in: 0.5...3.0, step: 0.1)
+                }
+
+                ColorPickerRow(
+                    title: "Under Page Background",
+                    colorHex: $underPageBackgroundColorHex,
+                    info: "Background color shown when scrolling beyond page bounds."
+                )
+            } header: {
+                Text("Display")
+            }
+
+            Section {
+                TextField("Custom User-Agent", text: $customUserAgent, axis: .vertical)
+                    .lineLimit(2...6)
+                    .font(.system(size: 14, design: .monospaced))
+
+                if !customUserAgent.isEmpty {
+                    Button("Clear User-Agent") {
+                        customUserAgent = ""
+                    }
+                    .foregroundStyle(.red)
+                }
+            } header: {
+                Text("User-Agent")
+            }
+
+            Section {
+                WebViewSizeControl(
+                    widthRatio: $webViewWidthRatio,
+                    heightRatio: $webViewHeightRatio
+                )
+            } header: {
+                Text("WebView Size")
+            }
+        }
+        .navigationTitle("Live Settings")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Reset") {
+                    resetToDefaults()
+                }
+                .foregroundStyle(.red)
+            }
+        }
+    }
+
+    private func resetToDefaults() {
+        // Navigation & Gestures
+        allowsBackForwardGestures = false
+        allowsLinkPreview = true
+        allowZoom = false
+        textInteractionEnabled = true
+
+        // Display
+        pageZoom = 1.0
+        underPageBackgroundColorHex = ""
+
+        // Features
+        findInteractionEnabled = false
+
+        // User Agent
+        customUserAgent = ""
+
+        // WebView Size (App preset)
+        webViewWidthRatio = 1.0
+        webViewHeightRatio = 0.82
+    }
+}
+
 // MARK: - Permissions Settings
 
-private struct PermissionsSettingsView: View {
+struct PermissionsSettingsView: View {
     @State private var cameraStatus: AVAuthorizationStatus = .notDetermined
     @State private var microphoneStatus: AVAuthorizationStatus = .notDetermined
     @State private var locationStatus: CLAuthorizationStatus = .notDetermined
@@ -343,118 +544,55 @@ private struct PermissionsSettingsView: View {
     }
 }
 
-// MARK: - Dynamic Settings View (Live Updates)
+// MARK: - Loaded Settings View (WebView Active - Menu Style)
 
-struct DynamicSettingsView: View {
+struct LoadedSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var webViewID: UUID
-
-    // Navigation & Gestures (Dynamic)
-    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
-    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
-    @AppStorage("allowZoom") private var allowZoom: Bool = true
-    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
-
-    // Display (Dynamic)
-    @AppStorage("pageZoom") private var pageZoom: Double = 1.0
-    @AppStorage("underPageBackgroundColor") private var underPageBackgroundColorHex: String = ""
-
-    // Features (Dynamic)
-    @AppStorage("findInteractionEnabled") private var findInteractionEnabled: Bool = false
-
-    // User Agent (Dynamic)
-    @AppStorage("customUserAgent") private var customUserAgent: String = ""
-
-    // WebView Size (Triggers Reload)
-    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
-    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
-                    SettingToggleRow(
-                        title: "Back/Forward Gestures",
-                        isOn: $allowsBackForwardGestures,
-                        info: "Enables swipe from edge to navigate history."
-                    )
-                    SettingToggleRow(
-                        title: "Link Preview",
-                        isOn: $allowsLinkPreview,
-                        info: "Shows page preview on long-press or 3D Touch on links."
-                    )
-                    SettingToggleRow(
-                        title: "Ignore Viewport Scale Limits",
-                        isOn: $allowZoom,
-                        info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
-                    )
-                    SettingToggleRow(
-                        title: "Text Interaction",
-                        isOn: $textInteractionEnabled,
-                        info: "Enables text selection, copy, and other text interactions."
-                    )
-                    SettingToggleRow(
-                        title: "Find Interaction",
-                        isOn: $findInteractionEnabled,
-                        info: "Enables the system find panel (Cmd+F on iPad with keyboard)."
-                    )
-                } header: {
-                    Text("Navigation & Interaction")
-                }
-
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Page Zoom")
-                            Spacer()
-                            Text("\(Int(pageZoom * 100))%")
-                                .foregroundStyle(.secondary)
-                        }
-                        Slider(value: $pageZoom, in: 0.5...3.0, step: 0.1)
+                    NavigationLink {
+                        LiveSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "bolt.fill",
+                            iconColor: .green,
+                            title: "Live Settings",
+                            description: "Changes apply instantly"
+                        )
                     }
 
-                    ColorPickerRow(
-                        title: "Under Page Background",
-                        colorHex: $underPageBackgroundColorHex,
-                        info: "Background color shown when scrolling beyond page bounds."
-                    )
-                } header: {
-                    Text("Display")
-                }
-
-                Section {
-                    TextField("Custom User-Agent", text: $customUserAgent, axis: .vertical)
-                        .lineLimit(2...6)
-                        .font(.system(size: 14, design: .monospaced))
-
-                    if !customUserAgent.isEmpty {
-                        Button("Clear User-Agent") {
-                            customUserAgent = ""
-                        }
-                        .foregroundStyle(.red)
+                    NavigationLink {
+                        ConfigurationSettingsView(webViewID: $webViewID)
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "gearshape.fill",
+                            iconColor: .orange,
+                            title: "Configuration",
+                            description: "Changes reload WebView"
+                        )
                     }
-                } header: {
-                    Text("User-Agent")
                 }
 
                 Section {
-                    WebViewSizeControl(
-                        widthRatio: $webViewWidthRatio,
-                        heightRatio: $webViewHeightRatio
-                    )
-                } header: {
-                    Text("WebView Size")
+                    NavigationLink {
+                        PermissionsSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "lock.shield.fill",
+                            iconColor: .blue,
+                            title: "Permissions",
+                            description: "Camera, Microphone, Location"
+                        )
+                    }
                 }
             }
-            .navigationTitle("Live Settings")
+            .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset") {
-                        resetToDefaults()
-                    }
-                    .foregroundStyle(.red)
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
@@ -463,27 +601,32 @@ struct DynamicSettingsView: View {
             }
         }
     }
+}
 
-    private func resetToDefaults() {
-        // Navigation & Gestures
-        allowsBackForwardGestures = true
-        allowsLinkPreview = true
-        allowZoom = true
-        textInteractionEnabled = true
+// MARK: - Settings Category Row
 
-        // Display
-        pageZoom = 1.0
-        underPageBackgroundColorHex = ""
+private struct SettingsCategoryRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let description: String
 
-        // Features
-        findInteractionEnabled = false
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(iconColor)
+                .frame(width: 28)
 
-        // User Agent
-        customUserAgent = ""
-
-        // WebView Size (App preset)
-        webViewWidthRatio = 1.0
-        webViewHeightRatio = 0.82
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body)
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 
@@ -495,7 +638,7 @@ struct SettingsView: View {
     // Core Settings
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
     @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
-    @AppStorage("allowZoom") private var allowZoom: Bool = true
+    @AppStorage("allowZoom") private var allowZoom: Bool = false
     @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
 
     // Media Settings
@@ -505,7 +648,7 @@ struct SettingsView: View {
     @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
 
     // Navigation & Gestures
-    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
+    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = false
     @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
     @AppStorage("findInteractionEnabled") private var findInteractionEnabled: Bool = false
 
@@ -547,212 +690,16 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
-                // MARK: - Static Settings (Requires Reload)
-
-                Section {
-                    SettingToggleRow(
-                        title: "JavaScript",
-                        isOn: $enableJavaScript,
-                        info: "Master switch for all JavaScript execution in WebView."
-                    )
-                    SettingToggleRow(
-                        title: "Content JavaScript",
-                        isOn: $allowsContentJavaScript,
-                        info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
-                    )
-                    HStack {
-                        Text("Minimum Font Size")
-                        Spacer()
-                        TextField("0", value: $minimumFontSize, format: .number)
-                            .keyboardType(.decimalPad)
-                            .multilineTextAlignment(.trailing)
-                            .frame(width: 60)
-                        Text("pt")
-                            .foregroundStyle(.secondary)
-                    }
-                } header: {
-                    Text("Core")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Auto-play Media",
-                        isOn: $mediaAutoplay,
-                        info: "Allows videos with autoplay attribute to start without user interaction."
-                    )
-                    SettingToggleRow(
-                        title: "Inline Playback",
-                        isOn: $inlineMediaPlayback,
-                        info: "Plays videos inline instead of fullscreen. Required for background video effects."
-                    )
-                    SettingToggleRow(
-                        title: "AirPlay",
-                        isOn: $allowsAirPlay,
-                        info: "Enables streaming media to Apple TV and other AirPlay devices."
-                    )
-                    SettingToggleRow(
-                        title: "Picture in Picture",
-                        isOn: $allowsPictureInPicture,
-                        info: "Allows videos to continue playing in a floating window."
-                    )
-                } header: {
-                    Text("Media")
-                }
-
-                Section {
-                    Picker("Content Mode", selection: $preferredContentMode) {
-                        Text("Recommended").tag(0)
-                        Text("Mobile").tag(1)
-                        Text("Desktop").tag(2)
-                    }
-                    .pickerStyle(.inline)
-                    .labelsHidden()
-                } header: {
-                    Text("Content Mode")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "JS Can Open Windows",
-                        isOn: $javaScriptCanOpenWindows,
-                        info: "Allows window.open() without user gesture. Disable to block pop-ups."
-                    )
-                    SettingToggleRow(
-                        title: "Fraudulent Website Warning",
-                        isOn: $fraudulentWebsiteWarning,
-                        info: "Shows warning for suspected phishing or malware sites."
-                    )
-                    SettingToggleRow(
-                        title: "Element Fullscreen API",
-                        isOn: $elementFullscreenEnabled,
-                        info: isIPad ? "iPad: Full element fullscreen support." : "iPhone: Limited to video elements only.",
-                        disabled: !isIPad,
-                        disabledLabel: "(iPad only)"
-                    )
-                    SettingToggleRow(
-                        title: "Suppress Incremental Rendering",
-                        isOn: $suppressesIncrementalRendering,
-                        info: "Waits for full page load before displaying. May feel slower but cleaner."
-                    )
-                } header: {
-                    Text("Behavior")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Phone Numbers",
-                        isOn: $detectPhoneNumbers,
-                        info: "Makes phone numbers tappable to call."
-                    )
-                    SettingToggleRow(
-                        title: "Links",
-                        isOn: $detectLinks,
-                        info: "Converts URL-like text to tappable links."
-                    )
-                    SettingToggleRow(
-                        title: "Addresses",
-                        isOn: $detectAddresses,
-                        info: "Makes addresses tappable to open in Maps."
-                    )
-                    SettingToggleRow(
-                        title: "Calendar Events",
-                        isOn: $detectCalendarEvents,
-                        info: "Detects dates and times, allowing to add to Calendar."
-                    )
-                } header: {
-                    Text("Data Detectors")
-                }
-
-                Section {
-                    SettingToggleRow(
-                        title: "Private Browsing",
-                        isOn: $privateBrowsing,
-                        info: "Uses non-persistent data store. No cookies or cache saved after session."
-                    )
-                    SettingToggleRow(
-                        title: "Upgrade to HTTPS",
-                        isOn: $upgradeToHTTPS,
-                        info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
-                    )
-                } header: {
-                    Text("Privacy & Security")
-                }
-
-                // MARK: - Live Settings (Instant Apply)
-
-                Section {
-                    SettingToggleRow(
-                        title: "Back/Forward Gestures",
-                        isOn: $allowsBackForwardGestures,
-                        info: "Enables swipe from edge to navigate history."
-                    )
-                    SettingToggleRow(
-                        title: "Link Preview",
-                        isOn: $allowsLinkPreview,
-                        info: "Shows page preview on long-press or 3D Touch on links."
-                    )
-                    SettingToggleRow(
-                        title: "Ignore Viewport Scale Limits",
-                        isOn: $allowZoom,
-                        info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
-                    )
-                    SettingToggleRow(
-                        title: "Text Interaction",
-                        isOn: $textInteractionEnabled,
-                        info: "Enables text selection, copy, and other text interactions."
-                    )
-                    SettingToggleRow(
-                        title: "Find Interaction",
-                        isOn: $findInteractionEnabled,
-                        info: "Enables the system find panel (Cmd+F on iPad with keyboard)."
-                    )
-                } header: {
-                    Text("Navigation & Interaction")
-                }
-
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Page Zoom")
-                            Spacer()
-                            Text("\(Int(pageZoom * 100))%")
-                                .foregroundStyle(.secondary)
-                        }
-                        Slider(value: $pageZoom, in: 0.5...3.0, step: 0.1)
-                    }
-
-                    ColorPickerRow(
-                        title: "Under Page Background",
-                        colorHex: $underPageBackgroundColorHex,
-                        info: "Background color shown when scrolling beyond page bounds."
-                    )
-                } header: {
-                    Text("Display")
-                }
-
-                Section {
-                    TextField("Custom User-Agent", text: $customUserAgent, axis: .vertical)
-                        .lineLimit(2...6)
-                        .font(.system(size: 14, design: .monospaced))
-
-                    if !customUserAgent.isEmpty {
-                        Button("Clear User-Agent") {
-                            customUserAgent = ""
-                        }
-                        .foregroundStyle(.red)
-                    }
-                } header: {
-                    Text("User-Agent")
-                }
-
-                Section {
-                    WebViewSizeControl(
-                        widthRatio: $webViewWidthRatio,
-                        heightRatio: $webViewHeightRatio
-                    )
-                } header: {
-                    Text("WebView Size")
-                }
+                coreSection
+                mediaSection
+                contentModeSection
+                behaviorSection
+                dataDetectorsSection
+                privacySection
+                navigationSection
+                displaySection
+                userAgentSection
+                webViewSizeSection
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
@@ -772,11 +719,246 @@ struct SettingsView: View {
         }
     }
 
+    // MARK: - Sections
+
+    @ViewBuilder
+    private var coreSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "JavaScript",
+                isOn: $enableJavaScript,
+                info: "Master switch for all JavaScript execution in WebView."
+            )
+            SettingToggleRow(
+                title: "Content JavaScript",
+                isOn: $allowsContentJavaScript,
+                info: "Controls scripts from web pages only. App-injected scripts still work when disabled."
+            )
+            HStack {
+                Text("Minimum Font Size")
+                Spacer()
+                TextField("0", value: $minimumFontSize, format: .number)
+                    .keyboardType(.decimalPad)
+                    .multilineTextAlignment(.trailing)
+                    .frame(width: 60)
+                Text("pt")
+                    .foregroundStyle(.secondary)
+            }
+        } header: {
+            Text("Core")
+        }
+    }
+
+    @ViewBuilder
+    private var mediaSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Auto-play Media",
+                isOn: $mediaAutoplay,
+                info: "Allows videos with autoplay attribute to start without user interaction."
+            )
+            SettingToggleRow(
+                title: "Inline Playback",
+                isOn: $inlineMediaPlayback,
+                info: "Plays videos inline instead of fullscreen. Required for background video effects."
+            )
+            SettingToggleRow(
+                title: "AirPlay",
+                isOn: $allowsAirPlay,
+                info: "Enables streaming media to Apple TV and other AirPlay devices."
+            )
+            SettingToggleRow(
+                title: "Picture in Picture",
+                isOn: $allowsPictureInPicture,
+                info: "Allows videos to continue playing in a floating window."
+            )
+        } header: {
+            Text("Media")
+        }
+    }
+
+    @ViewBuilder
+    private var contentModeSection: some View {
+        Section {
+            Picker("Content Mode", selection: $preferredContentMode) {
+                Text("Recommended").tag(0)
+                Text("Mobile").tag(1)
+                Text("Desktop").tag(2)
+            }
+            .pickerStyle(.inline)
+            .labelsHidden()
+        } header: {
+            Text("Content Mode")
+        }
+    }
+
+    @ViewBuilder
+    private var behaviorSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "JS Can Open Windows",
+                isOn: $javaScriptCanOpenWindows,
+                info: "Allows window.open() without user gesture. Disable to block pop-ups."
+            )
+            SettingToggleRow(
+                title: "Fraudulent Website Warning",
+                isOn: $fraudulentWebsiteWarning,
+                info: "Shows warning for suspected phishing or malware sites."
+            )
+            SettingToggleRow(
+                title: "Element Fullscreen API",
+                isOn: $elementFullscreenEnabled,
+                info: isIPad ? "iPad: Full element fullscreen support." : "iPhone: Limited to video elements only.",
+                disabled: !isIPad,
+                disabledLabel: "(iPad only)"
+            )
+            SettingToggleRow(
+                title: "Suppress Incremental Rendering",
+                isOn: $suppressesIncrementalRendering,
+                info: "Waits for full page load before displaying. May feel slower but cleaner."
+            )
+        } header: {
+            Text("Behavior")
+        }
+    }
+
+    @ViewBuilder
+    private var dataDetectorsSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Phone Numbers",
+                isOn: $detectPhoneNumbers,
+                info: "Makes phone numbers tappable to call."
+            )
+            SettingToggleRow(
+                title: "Links",
+                isOn: $detectLinks,
+                info: "Converts URL-like text to tappable links."
+            )
+            SettingToggleRow(
+                title: "Addresses",
+                isOn: $detectAddresses,
+                info: "Makes addresses tappable to open in Maps."
+            )
+            SettingToggleRow(
+                title: "Calendar Events",
+                isOn: $detectCalendarEvents,
+                info: "Detects dates and times, allowing to add to Calendar."
+            )
+        } header: {
+            Text("Data Detectors")
+        }
+    }
+
+    @ViewBuilder
+    private var privacySection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Private Browsing",
+                isOn: $privateBrowsing,
+                info: "Uses non-persistent data store. No cookies or cache saved after session."
+            )
+            SettingToggleRow(
+                title: "Upgrade to HTTPS",
+                isOn: $upgradeToHTTPS,
+                info: "Automatically upgrades HTTP requests to HTTPS for known secure hosts."
+            )
+        } header: {
+            Text("Privacy & Security")
+        }
+    }
+
+    @ViewBuilder
+    private var navigationSection: some View {
+        Section {
+            SettingToggleRow(
+                title: "Back/Forward Gestures",
+                isOn: $allowsBackForwardGestures,
+                info: "Enables swipe from edge to navigate history."
+            )
+            SettingToggleRow(
+                title: "Link Preview",
+                isOn: $allowsLinkPreview,
+                info: "Shows page preview on long-press or 3D Touch on links."
+            )
+            SettingToggleRow(
+                title: "Ignore Viewport Scale Limits",
+                isOn: $allowZoom,
+                info: "Allows pinch-to-zoom even when the page disables it via viewport meta tag."
+            )
+            SettingToggleRow(
+                title: "Text Interaction",
+                isOn: $textInteractionEnabled,
+                info: "Enables text selection, copy, and other text interactions."
+            )
+            SettingToggleRow(
+                title: "Find Interaction",
+                isOn: $findInteractionEnabled,
+                info: "Enables the system find panel (Cmd+F on iPad with keyboard)."
+            )
+        } header: {
+            Text("Navigation & Interaction")
+        }
+    }
+
+    @ViewBuilder
+    private var displaySection: some View {
+        Section {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Page Zoom")
+                    Spacer()
+                    Text("\(Int(pageZoom * 100))%")
+                        .foregroundStyle(.secondary)
+                }
+                Slider(value: $pageZoom, in: 0.5...3.0, step: 0.1)
+            }
+
+            ColorPickerRow(
+                title: "Under Page Background",
+                colorHex: $underPageBackgroundColorHex,
+                info: "Background color shown when scrolling beyond page bounds."
+            )
+        } header: {
+            Text("Display")
+        }
+    }
+
+    @ViewBuilder
+    private var userAgentSection: some View {
+        Section {
+            TextField("Custom User-Agent", text: $customUserAgent, axis: .vertical)
+                .lineLimit(2...6)
+                .font(.system(size: 14, design: .monospaced))
+
+            if !customUserAgent.isEmpty {
+                Button("Clear User-Agent") {
+                    customUserAgent = ""
+                }
+                .foregroundStyle(.red)
+            }
+        } header: {
+            Text("User-Agent")
+        }
+    }
+
+    @ViewBuilder
+    private var webViewSizeSection: some View {
+        Section {
+            WebViewSizeControl(
+                widthRatio: $webViewWidthRatio,
+                heightRatio: $webViewHeightRatio
+            )
+        } header: {
+            Text("WebView Size")
+        }
+    }
+
     private func resetAllToDefaults() {
         // Core
         enableJavaScript = true
         allowsContentJavaScript = true
-        allowZoom = true
+        allowZoom = false
         minimumFontSize = 0
 
         // Media
@@ -786,7 +968,7 @@ struct SettingsView: View {
         allowsPictureInPicture = true
 
         // Navigation & Gestures
-        allowsBackForwardGestures = true
+        allowsBackForwardGestures = false
         allowsLinkPreview = true
         findInteractionEnabled = false
 
@@ -980,11 +1162,20 @@ private class LocationManagerDelegate: NSObject, ObservableObject, CLLocationMan
     SettingsView()
 }
 
-#Preview("Static Settings") {
-    StaticSettingsView()
+#Preview("Loaded Settings") {
+    @Previewable @State var id = UUID()
+    LoadedSettingsView(webViewID: $id)
 }
 
-#Preview("Dynamic Settings") {
+#Preview("Configuration Settings") {
     @Previewable @State var id = UUID()
-    DynamicSettingsView(webViewID: $id)
+    NavigationStack {
+        ConfigurationSettingsView(webViewID: $id)
+    }
+}
+
+#Preview("Live Settings") {
+    NavigationStack {
+        LiveSettingsView()
+    }
 }
