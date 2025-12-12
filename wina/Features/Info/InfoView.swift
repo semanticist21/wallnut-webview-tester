@@ -2726,11 +2726,7 @@ struct ActiveSettingsView: View {
                 InfoRow(label: "Page Zoom", value: "\(Int(pageZoom * 100))%", info: "Scale of page content.\n100% = Default size.\nUseful for small text.")
                 InfoRow(label: "Under Page Background", value: underPageBackgroundColorHex.isEmpty ? "Default" : underPageBackgroundColorHex, info: "Background color shown when scrolling beyond page bounds.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "rectangle.on.rectangle")
-                        .foregroundStyle(.blue)
-                    Text("Display")
-                }
+                Text("Display")
             }
 
             Section {
@@ -2746,11 +2742,7 @@ struct ActiveSettingsView: View {
                     }
                 }
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "safari")
-                        .foregroundStyle(.cyan)
-                    Text("User-Agent")
-                }
+                Text("Identity")
             }
 
             Section {
@@ -2758,11 +2750,7 @@ struct ActiveSettingsView: View {
                 InfoRow(label: "Height", value: "\(Int(webViewHeightRatio * 100))%", info: "WebView height ratio.\n100% = Full screen height.")
                 InfoRow(label: "Dimensions", value: webViewSizeText, info: "Current WebView size in points.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "aspectratio")
-                        .foregroundStyle(.purple)
-                    Text("WebView Size")
-                }
+                Text("WebView Size")
             }
 
             // MARK: - Configuration Settings
@@ -2786,21 +2774,13 @@ struct ActiveSettingsView: View {
                 ActiveSettingRow(label: "AirPlay", enabled: allowsAirPlay, info: "Stream to Apple TV.\nOff = Hide AirPlay button.\nFor local-only playback.")
                 ActiveSettingRow(label: "Picture in Picture", enabled: allowsPictureInPicture, info: "Floating video window.\nWatch while using other apps.\nSwipe up or tap button.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "play.rectangle.fill")
-                        .foregroundStyle(.pink)
-                    Text("Media")
-                }
+                Text("Media")
             }
 
             Section {
                 InfoRow(label: "Mode", value: contentModeText, info: "Mobile or desktop sites.\nRecommended: Auto-detect.\nDesktop useful on iPad.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "iphone.and.arrow.forward")
-                        .foregroundStyle(.indigo)
-                    Text("Content Mode")
-                }
+                Text("Content Mode")
             }
 
             Section {
@@ -2809,32 +2789,20 @@ struct ActiveSettingsView: View {
                 ActiveSettingRow(label: "Element Fullscreen API", enabled: elementFullscreenEnabled, info: isIPad ? "iPad: Full fullscreen support.\nAny element can go fullscreen.\nVideos, games, presentations." : "iPhone: Video fullscreen only.\nFull API on iPad only.\nVideos still work normally.", unavailable: !isIPad)
                 ActiveSettingRow(label: "Suppress Incremental Rendering", enabled: suppressesIncrementalRendering, info: "Wait for full page load.\nCleaner appearance.\nFeels slower to load.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "hand.tap.fill")
-                        .foregroundStyle(.teal)
-                    Text("Behavior")
-                }
+                Text("Behavior")
             }
 
             Section {
                 InfoRow(label: "Active", value: activeDataDetectors, info: "Auto-link special content.\nPhone numbers, addresses, dates.\nTap to call, map, or add event.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "link")
-                        .foregroundStyle(.mint)
-                    Text("Data Detectors")
-                }
+                Text("Data Detectors")
             }
 
             Section {
                 ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "No history saved.\nCookies cleared on exit.\nLike incognito mode.")
                 ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "Auto-secure connections.\nHTTP → HTTPS upgrade.\nProtects your data.")
             } header: {
-                HStack(spacing: 6) {
-                    Image(systemName: "lock.shield.fill")
-                        .foregroundStyle(.red)
-                    Text("Privacy & Security")
-                }
+                Text("Privacy & Security")
             }
         }
         .navigationTitle("Active Settings")
