@@ -2612,9 +2612,15 @@ struct ActiveSettingsView: View {
                 }
             }
 
-            Section("Privacy & Security") {
+            Section {
                 ActiveSettingRow(label: "Private Browsing", enabled: privateBrowsing, info: "No history saved.\nCookies cleared on exit.\nLike incognito mode.")
                 ActiveSettingRow(label: "Upgrade to HTTPS", enabled: upgradeToHTTPS, info: "Auto-secure connections.\nHTTP → HTTPS upgrade.\nProtects your data.")
+            } header: {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.shield.fill")
+                        .foregroundStyle(.red)
+                    Text("Privacy & Security")
+                }
             }
         }
         .navigationTitle("Active Settings")
