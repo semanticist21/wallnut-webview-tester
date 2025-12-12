@@ -2486,7 +2486,11 @@ struct ActiveSettingsView: View {
                 ActiveSettingRow(label: "Text Interaction", enabled: textInteractionEnabled, info: "Select and copy text.\nOff = No text selection.\nDisable for game-like pages.")
                 ActiveSettingRow(label: "Find Interaction", enabled: findInteractionEnabled, info: "System find panel.\nCmd+F on iPad with keyboard.\nSearch text in page.")
             } header: {
-                Label("Live Settings", systemImage: "bolt.fill")
+                HStack(spacing: 6) {
+                    Image(systemName: "bolt.fill")
+                        .foregroundStyle(.green)
+                    Text("Live Settings")
+                }
             } footer: {
                 Text("Changes apply instantly without reload")
             }
@@ -2522,7 +2526,11 @@ struct ActiveSettingsView: View {
                 ActiveSettingRow(label: "Content JavaScript", enabled: allowsContentJavaScript, info: "Scripts from web pages.\nOff = Block page scripts only.\nApp features still work.")
                 InfoRow(label: "Minimum Font Size", value: minimumFontSize == 0 ? "Default" : "\(Int(minimumFontSize)) pt", info: "Minimum text size.\nMakes small text readable.\n0 = Use page's font sizes.")
             } header: {
-                Label("Configuration", systemImage: "gearshape.fill")
+                HStack(spacing: 6) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundStyle(.orange)
+                    Text("Configuration")
+                }
             } footer: {
                 Text("Changes require WebView reload")
             }

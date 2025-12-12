@@ -303,7 +303,11 @@ private struct SafariActiveSettingsDetailView: View {
                     info: "Navigation bar collapses when scrolling down."
                 )
             } header: {
-                Label("Configuration", systemImage: "gearshape.fill")
+                HStack(spacing: 6) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundStyle(.orange)
+                    Text("Configuration")
+                }
             } footer: {
                 Text("All changes require SafariVC reload")
             }
