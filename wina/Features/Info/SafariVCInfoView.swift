@@ -18,14 +18,6 @@ struct SafariVCInfoView: View {
     @AppStorage("safariControlTintColorHex") private var controlTintColorHex: String = ""
     @AppStorage("safariBarTintColorHex") private var barTintColorHex: String = ""
 
-    private var dismissButtonStyleText: String {
-        switch dismissButtonStyle {
-        case 1: return "Close"
-        case 2: return "Cancel"
-        default: return "Done"
-        }
-    }
-
     private var allItems: [SafariInfoSearchItem] {
         var items: [SafariInfoSearchItem] = []
 
@@ -33,7 +25,7 @@ struct SafariVCInfoView: View {
         items.append(contentsOf: [
             SafariInfoSearchItem(category: "Active Settings", label: "Reader Mode", value: entersReaderIfAvailable ? "Enabled" : "Disabled"),
             SafariInfoSearchItem(category: "Active Settings", label: "Bar Collapsing", value: barCollapsingEnabled ? "Enabled" : "Disabled"),
-            SafariInfoSearchItem(category: "Active Settings", label: "Dismiss Button", value: dismissButtonStyleText),
+            SafariInfoSearchItem(category: "Active Settings", label: "Dismiss Button", value: SettingsFormatter.dismissButtonStyleText(dismissButtonStyle)),
             SafariInfoSearchItem(category: "Active Settings", label: "Control Tint", value: controlTintColorHex.isEmpty ? "System" : controlTintColorHex),
             SafariInfoSearchItem(category: "Active Settings", label: "Bar Tint", value: barTintColorHex.isEmpty ? "System" : barTintColorHex)
         ])
@@ -265,14 +257,6 @@ private struct SafariActiveSettingsDetailView: View {
     @AppStorage("safariControlTintColorHex") private var controlTintColorHex: String = ""
     @AppStorage("safariBarTintColorHex") private var barTintColorHex: String = ""
 
-    private var dismissButtonStyleText: String {
-        switch dismissButtonStyle {
-        case 1: return "Close"
-        case 2: return "Cancel"
-        default: return "Done"
-        }
-    }
-
     var body: some View {
         List {
             Section {
@@ -315,7 +299,7 @@ private struct SafariActiveSettingsDetailView: View {
             Section("UI Style") {
                 SafariInfoRow(
                     label: "Dismiss Button",
-                    value: dismissButtonStyleText,
+                    value: SettingsFormatter.dismissButtonStyleText(dismissButtonStyle),
                     info: "Button style shown in top-left corner."
                 )
             }
@@ -345,26 +329,11 @@ private struct SafariActiveSettingRow: View {
     let enabled: Bool
     var info: String? = nil
 
-    @State private var showingInfo = false
-
     var body: some View {
         HStack {
             Text(label)
             if let info {
-                Button {
-                    showingInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.secondary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showingInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info)
             }
             Spacer()
             Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
@@ -593,26 +562,11 @@ private struct SafariInfoRow: View {
     var valueColor: Color = .secondary
     var info: String?
 
-    @State private var showInfo = false
-
     var body: some View {
         HStack {
             Text(label)
             if let info {
-                Button {
-                    showInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.secondary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info)
             }
             Spacer()
             Text(value)
@@ -627,8 +581,6 @@ private struct SafariCapabilityRow: View {
     var availability: String?
     var info: String?
 
-    @State private var showInfo = false
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
@@ -637,20 +589,7 @@ private struct SafariCapabilityRow: View {
             Text(label)
 
             if let info {
-                Button {
-                    showInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.secondary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info)
             }
 
             Spacer()
@@ -669,8 +608,6 @@ private struct SafariAPIRow: View {
     let description: String
     let minVersion: String
 
-    @State private var showInfo = false
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
@@ -679,20 +616,7 @@ private struct SafariAPIRow: View {
             Text(api)
                 .font(.subheadline.monospaced())
 
-            Button {
-                showInfo = true
-            } label: {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(.secondary)
-                    .font(.footnote)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showInfo) {
-                Text(description)
-                    .font(.footnote)
-                    .padding()
-                    .presentationCompactAdaptation(.popover)
-            }
+            InfoPopoverButton(text: description)
 
             Spacer()
 
@@ -708,8 +632,6 @@ private struct SafariPrivacyRow: View {
     let description: String
     let since: String
 
-    @State private var showInfo = false
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "lock.shield.fill")
@@ -717,20 +639,7 @@ private struct SafariPrivacyRow: View {
 
             Text(title)
 
-            Button {
-                showInfo = true
-            } label: {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(.secondary)
-                    .font(.footnote)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showInfo) {
-                Text(description)
-                    .font(.footnote)
-                    .padding()
-                    .presentationCompactAdaptation(.popover)
-            }
+            InfoPopoverButton(text: description)
 
             Spacer()
 
@@ -745,8 +654,6 @@ private struct SafariDelegateRow: View {
     let method: String
     let description: String
 
-    @State private var showInfo = false
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "function")
@@ -756,20 +663,7 @@ private struct SafariDelegateRow: View {
                 .font(.caption.monospaced())
                 .lineLimit(1)
 
-            Button {
-                showInfo = true
-            } label: {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(.secondary)
-                    .font(.footnote)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showInfo) {
-                Text(description)
-                    .font(.footnote)
-                    .padding()
-                    .presentationCompactAdaptation(.popover)
-            }
+            InfoPopoverButton(text: description)
 
             Spacer()
         }
@@ -780,8 +674,6 @@ private struct SafariLimitationRow: View {
     let title: String
     let description: String
 
-    @State private var showInfo = false
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "xmark.circle.fill")
@@ -789,20 +681,7 @@ private struct SafariLimitationRow: View {
 
             Text(title)
 
-            Button {
-                showInfo = true
-            } label: {
-                Image(systemName: "info.circle")
-                    .foregroundStyle(.secondary)
-                    .font(.footnote)
-            }
-            .buttonStyle(.plain)
-            .popover(isPresented: $showInfo) {
-                Text(description)
-                    .font(.footnote)
-                    .padding()
-                    .presentationCompactAdaptation(.popover)
-            }
+            InfoPopoverButton(text: description)
 
             Spacer()
         }

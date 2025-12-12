@@ -110,20 +110,16 @@ struct InfoView: View {
     @AppStorage("cachedSystemUserAgent") private var cachedSystemUserAgent: String = ""
 
     private var contentModeText: String {
-        switch preferredContentMode {
-        case 1: return "Mobile"
-        case 2: return "Desktop"
-        default: return "Recommended"
-        }
+        SettingsFormatter.contentModeText(preferredContentMode)
     }
 
     private var activeDataDetectors: String {
-        var detectors: [String] = []
-        if detectPhoneNumbers { detectors.append("Phone") }
-        if detectLinks { detectors.append("Links") }
-        if detectAddresses { detectors.append("Address") }
-        if detectCalendarEvents { detectors.append("Calendar") }
-        return detectors.isEmpty ? "None" : detectors.joined(separator: ", ")
+        SettingsFormatter.activeDataDetectors(
+            phone: detectPhoneNumbers,
+            links: detectLinks,
+            address: detectAddresses,
+            calendar: detectCalendarEvents
+        )
     }
 
     private var allItems: [InfoSearchItem] {
@@ -740,7 +736,7 @@ struct APICapabilitiesView: View {
     @State private var loadingStatus = "Launching WebView process..."
 
     private var isIPad: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
+        UIDevice.current.isIPad
     }
 
     private var capabilities: [CapabilitySection] {
@@ -867,27 +863,12 @@ private struct InfoRow: View {
     let value: String
     var info: String? = nil
 
-    @State private var showingInfo = false
-
     var body: some View {
         HStack {
             Text(label)
                 .foregroundStyle(.secondary)
             if let info {
-                Button {
-                    showingInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.tertiary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showingInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info, iconColor: .tertiary)
             }
             Spacer()
             Text(value)
@@ -904,27 +885,12 @@ private struct CapabilityRow: View {
     var icon: String? = nil
     var iconColor: Color? = nil
 
-    @State private var showingInfo = false
-
     var body: some View {
         HStack {
             Text(label)
                 .foregroundStyle(unavailable ? .secondary : .primary)
             if let info {
-                Button {
-                    showingInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.secondary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showingInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info)
             }
             Spacer()
             if let icon, supported, !unavailable {
@@ -1865,26 +1831,11 @@ private struct BenchmarkRow: View {
     let ops: String
     var info: String? = nil
 
-    @State private var showingInfo = false
-
     var body: some View {
         HStack {
             Text(label)
             if let info {
-                Button {
-                    showingInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.tertiary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showingInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info, iconColor: .tertiary)
             }
             Spacer()
             Text(ops)
@@ -2655,31 +2606,24 @@ struct ActiveSettingsView: View {
     @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
 
     private var isIPad: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
+        UIDevice.current.isIPad
     }
 
     private var contentModeText: String {
-        switch preferredContentMode {
-        case 1: return "Mobile"
-        case 2: return "Desktop"
-        default: return "Recommended"
-        }
+        SettingsFormatter.contentModeText(preferredContentMode)
     }
 
     private var activeDataDetectors: String {
-        var detectors: [String] = []
-        if detectPhoneNumbers { detectors.append("Phone") }
-        if detectLinks { detectors.append("Links") }
-        if detectAddresses { detectors.append("Address") }
-        if detectCalendarEvents { detectors.append("Calendar") }
-        return detectors.isEmpty ? "None" : detectors.joined(separator: ", ")
+        SettingsFormatter.activeDataDetectors(
+            phone: detectPhoneNumbers,
+            links: detectLinks,
+            address: detectAddresses,
+            calendar: detectCalendarEvents
+        )
     }
 
     private var screenSize: CGSize {
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
-            return CGSize(width: 393, height: 852)
-        }
-        return scene.screen.bounds.size
+        ScreenUtility.screenSize
     }
 
     private var webViewSizeText: String {
@@ -2816,8 +2760,6 @@ private struct ActiveSettingRow: View {
     var info: String? = nil
     var unavailable: Bool = false
 
-    @State private var showingInfo = false
-
     var body: some View {
         HStack {
             Text(label)
@@ -2828,20 +2770,7 @@ private struct ActiveSettingRow: View {
                     .foregroundStyle(.tertiary)
             }
             if let info {
-                Button {
-                    showingInfo = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(.secondary)
-                        .font(.footnote)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showingInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info)
             }
             Spacer()
             if unavailable {

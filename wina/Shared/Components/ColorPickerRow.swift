@@ -15,8 +15,6 @@ struct ColorPickerRow: View {
     @Binding var colorHex: String
     var info: String?
 
-    @State private var showInfo: Bool = false
-
     private var selectedColor: Binding<Color> {
         Binding(
             get: { Color(hex: colorHex) ?? .accentColor },
@@ -30,20 +28,7 @@ struct ColorPickerRow: View {
         HStack {
             Text(title)
             if let info {
-                Button {
-                    showInfo.toggle()
-                } label: {
-                    Image(systemName: "info.circle")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .popover(isPresented: $showInfo) {
-                    Text(info)
-                        .font(.footnote)
-                        .padding()
-                        .presentationCompactAdaptation(.popover)
-                }
+                InfoPopoverButton(text: info)
             }
             Spacer()
             if !colorHex.isEmpty {

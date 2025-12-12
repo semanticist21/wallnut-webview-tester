@@ -54,7 +54,7 @@ struct ConfigurationSettingsView: View {
     @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
 
     private var isIPad: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
+        UIDevice.current.isIPad
     }
 
     private var currentValues: [String: AnyHashable] {
@@ -687,7 +687,7 @@ struct SettingsView: View {
     @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
 
     private var isIPad: Bool {
-        UIDevice.current.userInterfaceIdiom == .pad
+        UIDevice.current.isIPad
     }
 
     var body: some View {
@@ -1017,10 +1017,7 @@ private struct WebViewSizeControl: View {
     }
 
     private var screenSize: CGSize {
-        guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
-            return CGSize(width: 393, height: 852)
-        }
-        return scene.screen.bounds.size
+        ScreenUtility.screenSize
     }
 
     private var currentWidth: Int {

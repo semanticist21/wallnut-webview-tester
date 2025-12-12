@@ -62,10 +62,12 @@ wina/
 │   │   ├── GlassIconButton.swift      # 원형 glass effect 버튼
 │   │   ├── ChipButton.swift           # 탭 가능한 칩 버튼
 │   │   ├── FlowLayout.swift           # 자동 줄바꿈 Layout
-│   │   ├── SettingToggleRow.swift     # 설정 토글 (info popover 포함)
-│   │   └── ColorPickerRow.swift       # 색상 선택기 (info popover 포함)
+│   │   ├── InfoPopoverButton.swift    # info 버튼 + popover (Generic ShapeStyle)
+│   │   ├── SettingToggleRow.swift     # 설정 토글 (InfoPopoverButton 사용)
+│   │   └── ColorPickerRow.swift       # 색상 선택기 (InfoPopoverButton 사용)
 │   └── Extensions/            # 공유 확장
-│       └── ColorExtensions.swift      # Color/UIColor hex 변환
+│       ├── ColorExtensions.swift      # Color/UIColor hex 변환
+│       └── DeviceUtilities.swift      # UIDevice.isIPad, ScreenUtility, SettingsFormatter
 └── Resources/Icons/           # 앱 아이콘 원본
 ```
 
@@ -100,6 +102,7 @@ wina/
 |------|----------|--------|
 | 원형 아이콘 버튼 | `GlassIconButton` | AppBar 버튼들 |
 | 칩/태그 버튼 | `ChipButton` | 프리셋 선택, 태그 |
+| info 버튼 | `InfoPopoverButton` | 모든 info 버튼 (Generic ShapeStyle 지원) |
 | 설정 토글 | `SettingToggleRow` | SettingsView 전체 |
 | 색상 선택 | `ColorPickerRow` | 색상 설정 |
 | 자동 줄바꿈 | `FlowLayout` | 칩 그룹, 태그 목록 |

@@ -17,8 +17,6 @@ struct SettingToggleRow: View {
     var disabled: Bool = false
     var disabledLabel: String?
 
-    @State private var showInfo = false
-
     var body: some View {
         Toggle(isOn: $isOn) {
             HStack {
@@ -30,20 +28,7 @@ struct SettingToggleRow: View {
                         .foregroundStyle(.tertiary)
                 }
                 if let info {
-                    Button {
-                        showInfo = true
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .foregroundStyle(.secondary)
-                            .font(.footnote)
-                    }
-                    .buttonStyle(.plain)
-                    .popover(isPresented: $showInfo) {
-                        Text(info)
-                            .font(.footnote)
-                            .padding()
-                            .presentationCompactAdaptation(.popover)
-                    }
+                    InfoPopoverButton(text: info)
                 }
             }
         }
