@@ -331,6 +331,7 @@ private struct PresetDetailRow: View {
                     Text(preset.description)
                         .font(.caption)
                         .foregroundStyle(.tertiary)
+                        .lineLimit(1)
                 }
 
                 Spacer()
