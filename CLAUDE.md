@@ -90,6 +90,60 @@ wina/
 - 시스템 기본 배경 유지 (임의 배경색 X)
 - `.secondary`, `.primary` 등 시스템 색상 활용
 
+## UI 일관성 규칙
+
+**핵심 원칙**: 유사한 기능은 반드시 동일한 컴포넌트를 사용
+
+### 공유 컴포넌트 사용 필수 (`Shared/Components/`)
+
+| 용도 | 컴포넌트 | 사용처 |
+|------|----------|--------|
+| 원형 아이콘 버튼 | `GlassIconButton` | AppBar 버튼들 |
+| 칩/태그 버튼 | `ChipButton` | 프리셋 선택, 태그 |
+| 설정 토글 | `SettingToggleRow` | SettingsView 전체 |
+| 색상 선택 | `ColorPickerRow` | 색상 설정 |
+| 자동 줄바꿈 | `FlowLayout` | 칩 그룹, 태그 목록 |
+
+### Info 뷰 전용 컴포넌트 (`InfoView.swift` 내 private)
+
+| 용도 | 컴포넌트 | 패턴 |
+|------|----------|------|
+| 라벨-값 표시 | `InfoRow` | `label: String`, `value: String`, `info: String?` |
+| 지원 여부 | `CapabilityRow` | `supported: Bool`, `unavailable: Bool` (iPad only 등) |
+| 설정 상태 | `ActiveSettingRow` | `enabled: Bool`, checkmark/xmark 아이콘 |
+| 벤치마크 | `BenchmarkRow` | `ops: Double?`, ops/s 포맷 |
+| 코덱 | `CodecRow` | `CodecSupport` enum (probably/maybe/none) |
+
+### info 버튼 팝오버 통일 패턴
+
+새로운 info 버튼 추가 시 반드시 이 패턴 준수:
+
+```swift
+// ✅ 통일된 info 버튼 패턴
+@State private var showingInfo = false
+
+Button {
+    showingInfo = true
+} label: {
+    Image(systemName: "info.circle")
+        .foregroundStyle(.secondary)  // 또는 .tertiary
+        .font(.footnote)
+}
+.buttonStyle(.plain)
+.popover(isPresented: $showingInfo) {
+    Text(infoText)
+        .font(.footnote)
+        .padding()
+        .presentationCompactAdaptation(.popover)
+}
+```
+
+### 금지 사항
+- ❌ 유사 기능에 새로운 컴포넌트 생성 (기존 컴포넌트 확장할 것)
+- ❌ info 버튼에 다른 아이콘 사용 (`info.circle` 통일)
+- ❌ popover 스타일 변경 (`.footnote` + `.padding()` 통일)
+- ❌ unavailable 표시에 다른 패턴 사용 (`(iPad only)` + `.tertiary` 통일)
+
 ## Code Conventions
 
 | 대상 | 컨벤션 | 예시 |
@@ -106,6 +160,215 @@ wina/
 ### 작업 규칙
 - 끝나면 항상 문법검사 수행
 - 빌드 검증은 통합적인 작업 이후에만 확인 (시간 소요)
+
+## Swift 성능 최적화 (2025)
+
+### 메모리 관리 & ARC
+- 앱 크래시의 약 90%가 메모리 문제 관련
+- `deinit`에서 observers 명시적 제거
+- 클로저에서 `[weak self]` 사용하여 retain cycle 방지
+
+```swift
+// ✅ 올바른 패턴
+Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+    self?.updateUI()
+}
+```
+
+### Value Types 우선
+- `struct` > `class` (스택 할당으로 최대 50% 메모리 절감)
+- 단순 데이터 모델은 반드시 `struct` 사용
+- Generics 활용으로 타입 안전성 + 재사용성 확보
+
+```swift
+// ✅ 권장
+struct UserSettings {
+    var theme: Theme
+    var fontSize: Int
+}
+
+// ❌ 불필요한 class 사용
+class UserSettings { ... }
+```
+
+### Lazy Loading & 캐싱
+- `lazy var` 사용으로 초기 로드 시간 최대 30% 감소
+- 자주 접근하는 데이터는 캐싱
+- 불필요한 계산 최소화
+
+```swift
+// ✅ 필요할 때만 초기화
+lazy var expensiveObject = ExpensiveClass()
+```
+
+### 컬렉션 최적화
+- 정렬된 데이터: `Array` (O(1) 접근)
+- 키-값 조회: `Dictionary` (O(1) 조회)
+- 중복 제거: `Set`
+- 시간 복잡도 항상 고려
+
+### 반복문 최적화
+```swift
+// ✅ stride 사용
+for i in stride(from: 0, to: 100, by: 2) { }
+
+// ✅ 반복문 밖에서 계산
+let count = array.count
+for i in 0..<count { }
+
+// ❌ 반복문 내 불필요한 계산
+for i in 0..<array.count { }
+```
+
+### SwiftUI 렌더링 최적화
+- 불필요한 렌더링 방지를 위해 `@State`, `@Binding` 범위 최소화
+- 1000개 이상 항목은 `LazyVStack`, `LazyHStack` 사용
+- `Equatable` 준수로 불필요한 뷰 업데이트 방지
+
+```swift
+// ✅ 필요한 범위만 업데이트
+struct ItemView: View, Equatable {
+    let item: Item
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.item.id == rhs.item.id
+    }
+}
+```
+
+### 피해야 할 것
+- ❌ Reflection (런타임 오버헤드)
+- ❌ 강제 언래핑 (`!`) - `if let`, `guard let` 사용
+- ❌ 동기 네트워크 호출 - `async/await` 사용
+
+## Swift 코드 스타일 가이드 (2025)
+
+### 기본 원칙 (Apple API Design Guidelines)
+- **명확성 우선**: 간결함보다 명확성이 중요
+- **사용 시점의 명확성**: 선언이 아닌 사용처에서 이해하기 쉽게
+
+### 네이밍
+```swift
+// ✅ 올바른 네이밍
+func removeItem(at index: Int)           // 명확한 파라미터 레이블
+var isEnabled: Bool                       // Bool은 is/has/can 접두사
+struct UserProfile { }                    // 타입은 UpperCamelCase
+let maximumRetryCount = 3                // 상수도 lowerCamelCase
+
+// ❌ 피해야 할 네이밍
+func remove(_ i: Int)                     // 불명확한 축약
+var enabled: Bool                         // is 접두사 누락
+```
+
+### self 사용
+```swift
+// ✅ self 생략 (Swift 기본)
+func updateUI() {
+    titleLabel.text = title
+}
+
+// ✅ self 필수 (escaping closure, 초기화 시 구분)
+init(name: String) {
+    self.name = name
+}
+
+Timer.scheduledTimer { [weak self] _ in
+    self?.refresh()
+}
+```
+
+### let vs var
+```swift
+// ✅ 항상 let으로 시작, 필요 시 var로 변경
+let configuration = URLSessionConfiguration.default
+configuration.timeoutInterval = 30  // 컴파일러가 var 필요 시 알려줌
+```
+
+### 코드 구성
+- Extension으로 프로토콜 준수 분리
+- `// MARK: -` 로 섹션 구분
+- 관련 기능을 논리적으로 그룹화
+
+```swift
+// MARK: - View
+struct ContentView: View {
+    var body: some View { ... }
+}
+
+// MARK: - Private Methods
+private extension ContentView {
+    func loadData() { ... }
+}
+```
+
+### Protocol-Oriented Programming
+```swift
+// ✅ 프로토콜 + 기본 구현
+protocol Loadable {
+    func load()
+}
+
+extension Loadable {
+    func load() { /* 기본 구현 */ }
+}
+
+// ❌ 불필요한 상속 계층
+class BaseViewController: UIViewController { }
+class HomeViewController: BaseViewController { }
+```
+
+## 프로젝트 구조 가이드 (2025)
+
+### 이 프로젝트의 구조 원칙
+
+**Feature-Based Organization** 채택:
+```
+wina/
+├── winaApp.swift              # 진입점 (루트 유지)
+├── ContentView.swift          # 메인 뷰 (루트 유지)
+├── Features/                  # 기능별 그룹화
+│   ├── AppBar/
+│   ├── Settings/
+│   ├── Info/
+│   └── WebView/
+├── Shared/                    # 공유 컴포넌트
+│   ├── Components/
+│   └── Extensions/
+└── Resources/                 # 에셋, 아이콘
+```
+
+### 구조 원칙
+
+1. **Entry Point는 루트에 유지**
+   - `App.swift`, `ContentView.swift`는 최상위에 배치
+   - 빠른 진입을 위해 폴더 탐색 최소화
+
+2. **Feature 기반 그룹화**
+   - 기능별 폴더로 덤핑 그라운드 방지
+   - 관련 View, ViewModel, Model 같은 폴더에 배치
+
+3. **Shared는 2개 이상 사용 시에만**
+   - 단일 사용 컴포넌트는 해당 Feature 폴더에 유지
+   - Rule of Three: 3번 이상 사용되면 Shared로 이동
+
+4. **Xcode 구조 = 파일 시스템 구조**
+   - Xcode 그룹과 실제 폴더 구조 일치시킬 것
+
+### 파일 배치 규칙
+
+| 파일 유형 | 위치 | 예시 |
+|----------|------|------|
+| 앱 진입점 | 루트 | `winaApp.swift` |
+| 메인 뷰 | 루트 | `ContentView.swift` |
+| 기능별 뷰 | `Features/[Feature]/` | `Features/Settings/SettingsView.swift` |
+| 공유 컴포넌트 | `Shared/Components/` | `Shared/Components/ChipButton.swift` |
+| 확장 | `Shared/Extensions/` | `Shared/Extensions/ColorExtensions.swift` |
+| 에셋 | `Resources/` 또는 `Assets.xcassets/` | `Resources/Icons/app-icon.svg` |
+
+### 금지 사항
+- ❌ `Utilities/`, `Helpers/`, `Misc/` 같은 모호한 폴더명
+- ❌ 빈 폴더 유지
+- ❌ 단일 파일을 위한 폴더 생성
+- ❌ 깊은 중첩 (최대 3단계: `Features/Settings/Components/`)
 
 ## iOS 26 주의사항
 
