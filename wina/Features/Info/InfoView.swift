@@ -656,6 +656,20 @@ struct BrowserInfoView: View {
     @State private var webViewInfo: WebViewInfo?
     @State private var loadingStatus = "Launching WebView process..."
 
+    private func flagEmoji(for languageCode: String) -> String? {
+        let components = languageCode.split(separator: "-")
+        guard components.count >= 2,
+              let region = components.last,
+              region.count == 2 else { return nil }
+        let base: UInt32 = 127397
+        var flag = ""
+        for scalar in String(region).uppercased().unicodeScalars {
+            guard let unicode = UnicodeScalar(base + scalar.value) else { return nil }
+            flag.append(Character(unicode))
+        }
+        return flag
+    }
+
     var body: some View {
         List {
             if let info = webViewInfo {
@@ -663,7 +677,16 @@ struct BrowserInfoView: View {
                     InfoRow(label: "Type", value: info.browserType)
                     InfoRow(label: "Vendor", value: info.vendor)
                     InfoRow(label: "Platform", value: info.platform)
-                    InfoRow(label: "Language", value: info.language)
+                    HStack {
+                        Text("Language")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        if let flag = flagEmoji(for: info.language) {
+                            Text(flag)
+                        }
+                        Text(info.language)
+                            .textSelection(.enabled)
+                    }
                     InfoRow(label: "Languages", value: info.languages)
                 }
 
@@ -745,7 +768,7 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "Cache API", supported: info.supportsCacheAPI, info: "Service Worker cache storage.\nData may clear after 7 days idle.\nGood for offline resources.")
             ]),
             CapabilitySection(name: "Network", items: [
-                CapabilityItem(label: "Online", supported: info.isOnline, info: "navigator.onLine status.\nDevice network connectivity.\nMay not reflect actual internet."),
+                CapabilityItem(label: "Online", supported: info.isOnline, info: "navigator.onLine status.\nDevice network connectivity.\nMay not reflect actual internet.", icon: "wifi", iconColor: .blue),
                 CapabilityItem(label: "WebSocket", supported: info.supportsWebSocket, info: "Full-duplex communication.\nPersistent connection to server.\nGood for real-time apps."),
                 CapabilityItem(label: "WebRTC", supported: info.supportsWebRTC, info: "Peer-to-peer communication.\nNeeds camera/mic permissions.\nVideo calls, screen sharing."),
                 CapabilityItem(label: "Fetch", supported: info.supportsFetch, info: "Modern HTTP requests API.\nPromise-based, replaces XHR.\nSupports streaming."),
@@ -778,6 +801,7 @@ struct APICapabilitiesView: View {
                 CapabilityItem(label: "Performance Observer", supported: info.supportsPerformanceObserver, info: "Performance metrics.\nLCP, FID, CLS measurement.\nReal user monitoring.")
             ]),
             CapabilitySection(name: "Security & Payments", items: [
+                CapabilityItem(label: "Secure Context", supported: info.isSecureContext, info: "HTTPS or localhost origin.\nRequired for many modern APIs.\nProtects sensitive operations.", icon: "lock.fill", iconColor: .green),
                 CapabilityItem(label: "Crypto", supported: info.supportsCrypto, info: "Web Cryptography API.\nHashing, encryption, signing.\nHTTPS required for full API."),
                 CapabilityItem(label: "Credentials", supported: info.supportsCredentials, info: "Credential Management API.\nPasswords, federated login.\nLimited iOS support."),
                 CapabilityItem(label: "Payment Request", supported: info.supportsPaymentRequest, info: "Standardized checkout API.\nApple Pay integration.\nHTTPS + merchant setup needed.")
@@ -790,7 +814,7 @@ struct APICapabilitiesView: View {
             ForEach(capabilities) { section in
                 Section(section.name) {
                     ForEach(section.items) { item in
-                        CapabilityRow(label: item.label, supported: item.supported, info: item.info, unavailable: item.unavailable)
+                        CapabilityRow(label: item.label, supported: item.supported, info: item.info, unavailable: item.unavailable, icon: item.icon, iconColor: item.iconColor)
                     }
                 }
             }
@@ -829,6 +853,8 @@ private struct CapabilityItem: Identifiable {
     let supported: Bool
     var info: String?
     var unavailable: Bool = false
+    var icon: String? = nil
+    var iconColor: Color? = nil
 }
 
 // MARK: - Supporting Views
@@ -872,6 +898,8 @@ private struct CapabilityRow: View {
     let supported: Bool
     var info: String? = nil
     var unavailable: Bool = false  // WebKit policy: never supported
+    var icon: String? = nil
+    var iconColor: Color? = nil
 
     @State private var showingInfo = false
 
@@ -896,6 +924,10 @@ private struct CapabilityRow: View {
                 }
             }
             Spacer()
+            if let icon, supported, !unavailable {
+                Image(systemName: icon)
+                    .foregroundStyle(iconColor ?? .secondary)
+            }
             if unavailable {
                 Text("N/A")
                     .font(.caption)
@@ -1133,6 +1165,7 @@ fileprivate struct WebViewInfo: Sendable {
     let supportsPerformanceObserver: Bool
 
     // Security & Payments
+    let isSecureContext: Bool
     let supportsCrypto: Bool
     let supportsCredentials: Bool
     let supportsPaymentRequest: Bool
@@ -1161,7 +1194,7 @@ fileprivate struct WebViewInfo: Sendable {
         supportsDragDrop: false,
         supportsIntersectionObserver: false, supportsResizeObserver: false,
         supportsMutationObserver: false, supportsPerformanceObserver: false,
-        supportsCrypto: false, supportsCredentials: false, supportsPaymentRequest: false,
+        isSecureContext: false, supportsCrypto: false, supportsCredentials: false, supportsPaymentRequest: false,
         maxTouchPoints: "0"
     )
 
@@ -1316,6 +1349,7 @@ fileprivate struct WebViewInfo: Sendable {
                 performanceObserver: typeof PerformanceObserver !== 'undefined',
 
                 // Security & Payments (require secure context)
+                isSecureContext: isSecure,
                 crypto: isSecure && !!(window.crypto && window.crypto.subtle),
                 credentials: isSecure && 'credentials' in navigator,
                 paymentRequest: isSecure && typeof PaymentRequest !== 'undefined'
@@ -1411,6 +1445,7 @@ fileprivate struct WebViewInfo: Sendable {
             supportsMutationObserver: caps["mutationObserver"] ?? false,
             supportsPerformanceObserver: caps["performanceObserver"] ?? false,
             // Security & Payments
+            isSecureContext: caps["isSecureContext"] ?? false,
             supportsCrypto: caps["crypto"] ?? false,
             supportsCredentials: caps["credentials"] ?? false,
             supportsPaymentRequest: caps["paymentRequest"] ?? false,
@@ -2206,7 +2241,7 @@ struct DisplayFeaturesView: View {
                 }
 
                 Section("HDR") {
-                    CapabilityRow(label: "HDR Display", supported: info.supportsHDR, info: "High Dynamic Range display.\nBrighter highlights, deeper blacks.\niPhone 12+ supports HDR10/Dolby Vision.")
+                    CapabilityRow(label: "HDR Display", supported: info.supportsHDR, info: "High Dynamic Range display.\nBrighter highlights, deeper blacks.\niPhone 12+ supports HDR10/Dolby Vision.", icon: "sparkles", iconColor: .yellow)
                     InfoRow(label: "Dynamic Range", value: info.dynamicRange)
                 }
 
@@ -2406,7 +2441,14 @@ struct AccessibilityFeaturesView: View {
                     InfoRow(label: "Reduced Motion", value: info.reducedMotion)
                     InfoRow(label: "Reduced Transparency", value: info.reducedTransparency)
                     InfoRow(label: "Contrast", value: info.contrast)
-                    InfoRow(label: "Color Scheme", value: info.colorScheme)
+                    HStack {
+                        Text("Color Scheme")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Image(systemName: info.colorScheme == "Dark" ? "moon.fill" : "sun.max.fill")
+                            .foregroundStyle(info.colorScheme == "Dark" ? .indigo : .orange)
+                        Text(info.colorScheme)
+                    }
                 }
 
                 Section("Data & Power") {
