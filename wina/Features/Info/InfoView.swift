@@ -3,6 +3,8 @@
 //  wina
 //
 
+import AVFoundation
+import CoreLocation
 import Metal
 import SwiftUI
 import WebKit
@@ -513,7 +515,7 @@ struct InfoView: View {
             .navigationTitle("WKWebView Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }
@@ -2573,6 +2575,11 @@ fileprivate struct AccessibilityInfo: Sendable {
 struct ActiveSettingsView: View {
     @Binding var showSettings: Bool
 
+    // Permission status
+    @State private var cameraStatus: AVAuthorizationStatus = .notDetermined
+    @State private var microphoneStatus: AVAuthorizationStatus = .notDetermined
+    @State private var locationStatus: CLAuthorizationStatus = .notDetermined
+
     // Configuration Settings (require WebView reload)
     @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
     @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
@@ -2643,7 +2650,7 @@ struct ActiveSettingsView: View {
                         Label("Open Settings", systemImage: "gear")
                             .font(.subheadline)
                     }
-                    .buttonStyle(.bordered)
+                    .glassEffect(in: .capsule)
                     Spacer()
                 }
                 .listRowBackground(Color.clear)
@@ -2748,9 +2755,44 @@ struct ActiveSettingsView: View {
             } header: {
                 Text("Privacy & Security")
             }
+
+            Section {
+                PermissionStatusRow(
+                    label: "Camera",
+                    status: cameraStatus,
+                    info: "Required for Media Devices API.\nWebRTC video calls.\nQR code scanning."
+                )
+                PermissionStatusRow(
+                    label: "Microphone",
+                    status: microphoneStatus,
+                    info: "Required for Media Devices API.\nWebRTC audio calls.\nVoice recording."
+                )
+                PermissionStatusRow(
+                    label: "Location",
+                    status: locationStatus,
+                    info: "Required for Geolocation API.\nMaps and navigation.\nLocation-based services."
+                )
+            } header: {
+                HStack(spacing: 6) {
+                    Image(systemName: "lock.shield.fill")
+                        .foregroundStyle(.blue)
+                    Text("Permissions")
+                }
+            } footer: {
+                Text("Manage in Settings → Permissions")
+            }
         }
         .navigationTitle("Active Settings")
         .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            updatePermissionStatuses()
+        }
+    }
+
+    private func updatePermissionStatuses() {
+        cameraStatus = AVCaptureDevice.authorizationStatus(for: .video)
+        microphoneStatus = AVCaptureDevice.authorizationStatus(for: .audio)
+        locationStatus = CLLocationManager().authorizationStatus
     }
 }
 
@@ -2781,6 +2823,65 @@ private struct ActiveSettingRow: View {
                     .foregroundStyle(enabled ? .green : .secondary)
             }
         }
+    }
+}
+
+private struct PermissionStatusRow: View {
+    let label: String
+    let status: Any
+    var info: String? = nil
+
+    var body: some View {
+        HStack {
+            Text(label)
+            if let info {
+                InfoPopoverButton(text: info)
+            }
+            Spacer()
+            Text(statusText)
+                .foregroundStyle(statusColor)
+            Image(systemName: statusIcon)
+                .foregroundStyle(statusColor)
+        }
+    }
+
+    private var statusText: String {
+        if let avStatus = status as? AVAuthorizationStatus {
+            switch avStatus {
+            case .authorized: return "Granted"
+            case .denied: return "Denied"
+            case .restricted: return "Restricted"
+            case .notDetermined: return "Not Asked"
+            @unknown default: return "Unknown"
+            }
+        } else if let clStatus = status as? CLAuthorizationStatus {
+            switch clStatus {
+            case .authorizedWhenInUse, .authorizedAlways: return "Granted"
+            case .denied: return "Denied"
+            case .restricted: return "Restricted"
+            case .notDetermined: return "Not Asked"
+            @unknown default: return "Unknown"
+            }
+        }
+        return "Unknown"
+    }
+
+    private var statusColor: Color {
+        if let avStatus = status as? AVAuthorizationStatus {
+            return avStatus == .authorized ? .green : .secondary
+        } else if let clStatus = status as? CLAuthorizationStatus {
+            return (clStatus == .authorizedWhenInUse || clStatus == .authorizedAlways) ? .green : .secondary
+        }
+        return .secondary
+    }
+
+    private var statusIcon: String {
+        if let avStatus = status as? AVAuthorizationStatus {
+            return avStatus == .authorized ? "checkmark.circle.fill" : "xmark.circle.fill"
+        } else if let clStatus = status as? CLAuthorizationStatus {
+            return (clStatus == .authorizedWhenInUse || clStatus == .authorizedAlways) ? "checkmark.circle.fill" : "xmark.circle.fill"
+        }
+        return "questionmark.circle.fill"
     }
 }
 

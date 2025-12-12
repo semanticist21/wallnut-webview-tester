@@ -117,34 +117,40 @@ wina/
 | 벤치마크 | `BenchmarkRow` | `ops: Double?`, ops/s 포맷 |
 | 코덱 | `CodecRow` | `CodecSupport` enum (probably/maybe/none) |
 
-### info 버튼 팝오버 통일 패턴
+### info 버튼 사용법
 
-새로운 info 버튼 추가 시 반드시 이 패턴 준수:
+`InfoPopoverButton` 컴포넌트를 반드시 사용:
 
 ```swift
-// ✅ 통일된 info 버튼 패턴
-@State private var showingInfo = false
+// ✅ 기본 사용 (기본색: .secondary)
+InfoPopoverButton(text: "설명 텍스트")
 
-Button {
-    showingInfo = true
-} label: {
-    Image(systemName: "info.circle")
-        .foregroundStyle(.secondary)  // 또는 .tertiary
-        .font(.footnote)
-}
-.buttonStyle(.plain)
-.popover(isPresented: $showingInfo) {
-    Text(infoText)
-        .font(.footnote)
-        .padding()
-        .presentationCompactAdaptation(.popover)
-}
+// ✅ 색상 지정 (ShapeStyle 지원)
+InfoPopoverButton(text: "설명 텍스트", iconColor: .tertiary)
+InfoPopoverButton(text: "설명 텍스트", iconColor: Color.blue)
+```
+
+### 공유 유틸리티 (`DeviceUtilities.swift`)
+
+```swift
+// 디바이스 체크
+UIDevice.current.isIPad
+
+// 화면 크기 (iOS 26+ 대응)
+ScreenUtility.screenSize
+
+// 설정 값 포매터
+SettingsFormatter.contentModeText(mode)           // 0→"Recommended", 1→"Mobile", 2→"Desktop"
+SettingsFormatter.dismissButtonStyleText(style)   // 0→"Done", 1→"Close", 2→"Cancel"
+SettingsFormatter.activeDataDetectors(phone:links:address:calendar:)
+SettingsFormatter.enabledStatus(enabled)          // true→"Enabled", false→"Disabled"
 ```
 
 ### 금지 사항
+- ❌ info 버튼 직접 구현 (반드시 `InfoPopoverButton` 사용)
+- ❌ `UIDevice.userInterfaceIdiom` 직접 체크 (`UIDevice.current.isIPad` 사용)
+- ❌ `UIScreen.main.bounds` 사용 (`ScreenUtility.screenSize` 사용)
 - ❌ 유사 기능에 새로운 컴포넌트 생성 (기존 컴포넌트 확장할 것)
-- ❌ info 버튼에 다른 아이콘 사용 (`info.circle` 통일)
-- ❌ popover 스타일 변경 (`.footnote` + `.padding()` 통일)
 - ❌ unavailable 표시에 다른 패턴 사용 (`(iPad only)` + `.tertiary` 통일)
 
 ## Code Conventions
@@ -514,12 +520,9 @@ if useSafariWebView {
 
 ## Info 버튼 컴포넌트
 
-Info 뷰에서 사용되는 재사용 컴포넌트들:
+Info 뷰에서 사용되는 재사용 컴포넌트들 (모두 `InfoPopoverButton` 사용):
 - `InfoRow`: 라벨-값 쌍 표시, 선택적 info 버튼
 - `CapabilityRow`: 지원 여부 체크마크 표시, 선택적 info 버튼, unavailable 플래그
 - `ActiveSettingRow`: 설정 상태 표시 (enabled/disabled), 선택적 info 버튼
-- `BenchmarkRow`: 벤치마크 결과 표시 (ops/s), 선택적 info 버튼
+- `BenchmarkRow`: 벤치마크 결과 표시 (ops/s), 선택적 info 버튼 (`.tertiary` 색상)
 - `CodecRow`: 코덱 지원 상태 (probably/maybe/none)
-
-info 버튼 클릭 시 popover로 설명 표시 (통일된 스타일).
-- 빌드는 항상 확인할 필요 없음

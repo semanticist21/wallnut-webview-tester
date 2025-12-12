@@ -259,21 +259,6 @@ private struct SafariActiveSettingsDetailView: View {
 
     var body: some View {
         List {
-            Section {
-                HStack {
-                    Spacer()
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Label("Open Settings", systemImage: "gear")
-                            .font(.subheadline)
-                    }
-                    .buttonStyle(.bordered)
-                    Spacer()
-                }
-                .listRowBackground(Color.clear)
-            }
-
             // MARK: - Configuration (all SafariVC settings require reload)
             Section {
                 SafariActiveSettingRow(
@@ -291,6 +276,17 @@ private struct SafariActiveSettingsDetailView: View {
                     Image(systemName: "gearshape.fill")
                         .foregroundStyle(.orange)
                     Text("Configuration")
+                    Spacer()
+                    Button {
+                        showSettings = true
+                    } label: {
+                        HStack(spacing: 2) {
+                            Text("Settings")
+                            Image(systemName: "chevron.right")
+                        }
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    }
                 }
             } footer: {
                 Text("All changes require SafariVC reload")
