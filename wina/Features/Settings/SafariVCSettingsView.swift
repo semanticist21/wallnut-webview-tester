@@ -23,12 +23,6 @@ struct SafariVCSettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    Label("SFSafariViewController has limited configuration options compared to WKWebView.", systemImage: "info.circle.fill")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                }
-
-                Section {
                     SettingToggleRow(
                         title: "Reader Mode",
                         isOn: $entersReaderIfAvailable,
@@ -51,8 +45,6 @@ struct SafariVCSettingsView: View {
                     }
                 } header: {
                     Text("UI Style")
-                } footer: {
-                    Text("Style of the button used to dismiss SafariViewController")
                 }
 
                 Section {
@@ -68,22 +60,8 @@ struct SafariVCSettingsView: View {
                     )
                 } header: {
                     Text("Colors")
-                } footer: {
-                    Text("Leave empty to use system defaults")
                 }
 
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Features Not Available")
-                            .font(.subheadline.weight(.semibold))
-                        Text("JavaScript control, Custom User-Agent, Content Mode, Data Detectors, Privacy settings, and most other WKWebView options are not available in SafariViewController.")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.vertical, 4)
-                } header: {
-                    Text("Limitations")
-                }
             }
             .navigationTitle("SafariVC Settings")
             .navigationBarTitleDisplayMode(.inline)
