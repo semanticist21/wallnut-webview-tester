@@ -105,7 +105,7 @@ struct SafariVCInfoView: View {
             .navigationTitle("SafariVC Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") {
                         dismiss()
                     }
@@ -259,6 +259,24 @@ private struct SafariActiveSettingsDetailView: View {
 
     var body: some View {
         List {
+            Section {
+                HStack {
+                    Spacer()
+                    Button {
+                        showSettings = true
+                    } label: {
+                        Label("Open Settings", systemImage: "gear")
+                            .font(.subheadline)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(in: .capsule)
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+            }
+
             // MARK: - Configuration (all SafariVC settings require reload)
             Section {
                 SafariActiveSettingRow(
@@ -276,17 +294,6 @@ private struct SafariActiveSettingsDetailView: View {
                     Image(systemName: "gearshape.fill")
                         .foregroundStyle(.orange)
                     Text("Configuration")
-                    Spacer()
-                    Button {
-                        showSettings = true
-                    } label: {
-                        HStack(spacing: 2) {
-                            Text("Settings")
-                            Image(systemName: "chevron.right")
-                        }
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    }
                 }
             } footer: {
                 Text("All changes require SafariVC reload")
@@ -324,16 +331,28 @@ private struct SafariActiveSettingRow: View {
     let label: String
     let enabled: Bool
     var info: String? = nil
+    var unavailable: Bool = false
 
     var body: some View {
         HStack {
             Text(label)
+                .foregroundStyle(unavailable ? .secondary : .primary)
+            if unavailable {
+                Text("(iPad only)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            }
             if let info {
                 InfoPopoverButton(text: info)
             }
             Spacer()
-            Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundStyle(enabled ? .green : .secondary)
+            if unavailable {
+                Image(systemName: "minus.circle.fill")
+                    .foregroundStyle(.tertiary)
+            } else {
+                Image(systemName: enabled ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(enabled ? .green : .secondary)
+            }
         }
     }
 }
@@ -367,8 +386,8 @@ private struct SafariFeaturesDetailView: View {
                 SafariCapabilityRow(
                     label: "Safari Extensions",
                     supported: true,
-                    availability: "iOS 15.0+",
-                    info: "User's Safari web extensions are available."
+                    info: "User's Safari web extensions are available.",
+                    availability: "iOS 15.0+"
                 )
             }
         }
@@ -555,18 +574,18 @@ private struct SafariLimitationsDetailView: View {
 private struct SafariInfoRow: View {
     let label: String
     let value: String
-    var valueColor: Color = .secondary
-    var info: String?
+    var info: String? = nil
 
     var body: some View {
         HStack {
             Text(label)
+                .foregroundStyle(.secondary)
             if let info {
-                InfoPopoverButton(text: info)
+                InfoPopoverButton(text: info, iconColor: .tertiary)
             }
             Spacer()
             Text(value)
-                .foregroundStyle(valueColor)
+                .textSelection(.enabled)
         }
     }
 }
@@ -574,26 +593,30 @@ private struct SafariInfoRow: View {
 private struct SafariCapabilityRow: View {
     let label: String
     let supported: Bool
-    var availability: String?
-    var info: String?
+    var info: String? = nil
+    var unavailable: Bool = false
+    var availability: String? = nil
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .foregroundStyle(supported ? .green : .secondary)
-
+        HStack {
             Text(label)
-
+                .foregroundStyle(unavailable ? .secondary : .primary)
             if let info {
                 InfoPopoverButton(text: info)
             }
-
             Spacer()
-
             if let availability {
                 Text(availability)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+            if unavailable {
+                Text("(N/A)")
+                    .font(.caption)
+                    .foregroundStyle(.tertiary)
+            } else {
+                Image(systemName: supported ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundStyle(supported ? .green : .secondary)
             }
         }
     }
@@ -605,20 +628,16 @@ private struct SafariAPIRow: View {
     let minVersion: String
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-
+        HStack {
             Text(api)
                 .font(.subheadline.monospaced())
-
-            InfoPopoverButton(text: description)
-
+            InfoPopoverButton(text: description, iconColor: .tertiary)
             Spacer()
-
             Text(minVersion)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
         }
     }
 }
@@ -629,19 +648,15 @@ private struct SafariPrivacyRow: View {
     let since: String
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "lock.shield.fill")
-                .foregroundStyle(.blue)
-
+        HStack {
             Text(title)
-
-            InfoPopoverButton(text: description)
-
+            InfoPopoverButton(text: description, iconColor: .tertiary)
             Spacer()
-
             Text(since)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+            Image(systemName: "lock.shield.fill")
+                .foregroundStyle(.blue)
         }
     }
 }
@@ -651,17 +666,14 @@ private struct SafariDelegateRow: View {
     let description: String
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "function")
-                .foregroundStyle(.purple)
-
+        HStack {
             Text(method)
                 .font(.caption.monospaced())
                 .lineLimit(1)
-
-            InfoPopoverButton(text: description)
-
+            InfoPopoverButton(text: description, iconColor: .tertiary)
             Spacer()
+            Image(systemName: "function")
+                .foregroundStyle(.purple)
         }
     }
 }
@@ -671,15 +683,12 @@ private struct SafariLimitationRow: View {
     let description: String
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack {
+            Text(title)
+            InfoPopoverButton(text: description, iconColor: .tertiary)
+            Spacer()
             Image(systemName: "xmark.circle.fill")
                 .foregroundStyle(.red)
-
-            Text(title)
-
-            InfoPopoverButton(text: description)
-
-            Spacer()
         }
     }
 }

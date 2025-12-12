@@ -25,6 +25,8 @@ struct SafariVCSettingsView: View {
                         SafariVCConfigurationSettingsView(webViewID: $webViewID)
                     } label: {
                         SettingsCategoryRow(
+                            icon: "gearshape.fill",
+                            iconColor: .orange,
                             title: "Configuration",
                             description: "Behavior, Style, Colors"
                         )

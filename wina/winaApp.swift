@@ -11,6 +11,13 @@ import SwiftUI
 struct winaApp: App {
     @AppStorage("isDarkMode") private var isDarkMode = false
 
+    init() {
+        // Prewarm WebKit processes in background to reduce Info screen cold start
+        Task.detached(priority: .background) {
+            await prewarmInfoWebView()
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()

@@ -66,6 +66,14 @@ fileprivate final class SharedInfoWebView {
     }
 }
 
+// MARK: - Prewarm WebView
+
+/// Prewarm WebKit processes in background to reduce cold start latency
+@MainActor
+func prewarmInfoWebView() async {
+    await SharedInfoWebView.shared.initialize { _ in }
+}
+
 // MARK: - InfoView
 
 struct InfoView: View {
@@ -1186,23 +1194,148 @@ fileprivate struct WebViewInfo: Sendable {
             return WebViewInfo.empty
         }
 
-        // Get browser info
-        onStatusUpdate("Detecting browser info...")
-        let browserInfoScript = """
+        // Combined script: browser info + capabilities + WebGL + touch points (single IPC call)
+        onStatusUpdate("Detecting capabilities...")
+        let combinedScript = """
         (function() {
+            var isSecure = window.isSecureContext;
+
+            // WebGL info
+            var webGLInfo = { renderer: 'N/A', vendor: 'N/A', version: 'N/A' };
+            try {
+                var canvas = document.createElement('canvas');
+                var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                    webGLInfo = {
+                        renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
+                        vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
+                        version: gl.getParameter(gl.VERSION)
+                    };
+                }
+            } catch(e) {}
+
             return {
-                userAgent: navigator.userAgent,
-                vendor: navigator.vendor || 'Unknown',
-                platform: navigator.platform || 'Unknown',
-                language: navigator.language || 'Unknown',
-                languages: (navigator.languages || []).join(', ') || 'Unknown',
-                colorDepth: screen.colorDepth + ' bit',
-                isOnline: navigator.onLine
+                // Browser info
+                browser: {
+                    userAgent: navigator.userAgent,
+                    vendor: navigator.vendor || 'Unknown',
+                    platform: navigator.platform || 'Unknown',
+                    language: navigator.language || 'Unknown',
+                    languages: (navigator.languages || []).join(', ') || 'Unknown',
+                    colorDepth: screen.colorDepth + ' bit',
+                    isOnline: navigator.onLine,
+                    maxTouchPoints: navigator.maxTouchPoints || 0
+                },
+
+                // WebGL info
+                webGL: webGLInfo,
+
+                // Capabilities
+                caps: {
+                    // Core APIs
+                    javaScript: true,
+                    webAssembly: typeof WebAssembly !== 'undefined',
+                    webWorkers: (function() {
+                        try {
+                            var blob = new Blob([''], { type: 'application/javascript' });
+                            var url = URL.createObjectURL(blob);
+                            var worker = new Worker(url);
+                            worker.terminate();
+                            URL.revokeObjectURL(url);
+                            return true;
+                        } catch(e) { return false; }
+                    })(),
+                    serviceWorkers: 'serviceWorker' in navigator,
+                    sharedWorkers: typeof SharedWorker !== 'undefined',
+
+                    // Graphics & Media
+                    webGL: typeof WebGLRenderingContext !== 'undefined',
+                    webGL2: typeof WebGL2RenderingContext !== 'undefined',
+                    webAudio: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
+                    mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+                    mediaRecorder: typeof MediaRecorder !== 'undefined',
+                    mediaSource: typeof ManagedMediaSource !== 'undefined' || typeof MediaSource !== 'undefined',
+                    pictureInPicture: 'pictureInPictureEnabled' in document,
+                    fullscreen: !!document.documentElement.requestFullscreen || !!document.documentElement.webkitRequestFullscreen,
+
+                    // Storage - test actual read/write capability
+                    cookies: navigator.cookieEnabled,
+                    localStorage: (function() {
+                        try {
+                            var key = '__test__';
+                            localStorage.setItem(key, '1');
+                            localStorage.removeItem(key);
+                            return true;
+                        } catch(e) { return false; }
+                    })(),
+                    sessionStorage: (function() {
+                        try {
+                            var key = '__test__';
+                            sessionStorage.setItem(key, '1');
+                            sessionStorage.removeItem(key);
+                            return true;
+                        } catch(e) { return false; }
+                    })(),
+                    indexedDB: (function() {
+                        try {
+                            return typeof indexedDB !== 'undefined' && indexedDB !== null;
+                        } catch(e) { return false; }
+                    })(),
+                    cacheAPI: (function() {
+                        try {
+                            return 'caches' in window && typeof caches.open === 'function';
+                        } catch(e) { return false; }
+                    })(),
+
+                    // Network
+                    webSocket: typeof WebSocket !== 'undefined',
+                    webRTC: typeof RTCPeerConnection !== 'undefined',
+                    fetch: typeof fetch !== 'undefined',
+                    beacon: 'sendBeacon' in navigator,
+                    eventSource: typeof EventSource !== 'undefined',
+
+                    // Device APIs
+                    geolocation: 'geolocation' in navigator,
+                    deviceOrientation: 'DeviceOrientationEvent' in window,
+                    deviceMotion: 'DeviceMotionEvent' in window,
+                    vibration: 'vibrate' in navigator,
+                    battery: 'getBattery' in navigator,
+                    bluetooth: 'bluetooth' in navigator,
+                    usb: 'usb' in navigator,
+                    nfc: 'NDEFReader' in window,
+
+                    // UI & Interaction
+                    clipboard: (function() {
+                        if (navigator.clipboard && navigator.clipboard.writeText) return true;
+                        return document.queryCommandSupported && document.queryCommandSupported('copy');
+                    })(),
+                    webShare: 'share' in navigator,
+                    notifications: 'Notification' in window && Notification.permission !== 'denied',
+                    pointerEvents: 'PointerEvent' in window,
+                    touchEvents: 'ontouchstart' in window,
+                    gamepad: 'getGamepads' in navigator,
+                    dragDrop: 'draggable' in document.createElement('div'),
+
+                    // Observers
+                    intersectionObserver: typeof IntersectionObserver !== 'undefined',
+                    resizeObserver: typeof ResizeObserver !== 'undefined',
+                    mutationObserver: typeof MutationObserver !== 'undefined',
+                    performanceObserver: typeof PerformanceObserver !== 'undefined',
+
+                    // Security & Payments (require secure context)
+                    isSecureContext: isSecure,
+                    crypto: isSecure && !!(window.crypto && window.crypto.subtle),
+                    credentials: isSecure && 'credentials' in navigator,
+                    paymentRequest: isSecure && typeof PaymentRequest !== 'undefined'
+                }
             };
         })()
         """
-        let browserInfo = await webView.evaluateJavaScriptAsync(browserInfoScript) as? [String: Any] ?? [:]
+        let allData = await webView.evaluateJavaScriptAsync(combinedScript) as? [String: Any] ?? [:]
 
+        // Parse browser info
+        let browserInfo = allData["browser"] as? [String: Any] ?? [:]
         let userAgent = browserInfo["userAgent"] as? String ?? "Unknown"
         let vendor = browserInfo["vendor"] as? String ?? "Unknown"
         let platform = browserInfo["platform"] as? String ?? "Unknown"
@@ -1210,6 +1343,7 @@ fileprivate struct WebViewInfo: Sendable {
         let languages = browserInfo["languages"] as? String ?? "Unknown"
         let colorDepth = browserInfo["colorDepth"] as? String ?? "Unknown"
         let isOnline = browserInfo["isOnline"] as? Bool ?? false
+        let maxTouchPoints = browserInfo["maxTouchPoints"] as? Int ?? 0
 
         // Parse WebKit version from UA
         var webKitVersion = "Unknown"
@@ -1220,137 +1354,17 @@ fileprivate struct WebViewInfo: Sendable {
             }
         }
 
-        // Determine browser type
+        // Browser type
         let browserType = "WKWebView"
 
-        // Check all capabilities
-        onStatusUpdate("Checking capabilities...")
-        let capabilitiesScript = """
-        (function() {
-            var isSecure = window.isSecureContext;
-            return {
-                // Core APIs
-                javaScript: true,
-                webAssembly: typeof WebAssembly !== 'undefined',
-                webWorkers: (function() {
-                    try {
-                        var blob = new Blob([''], { type: 'application/javascript' });
-                        var url = URL.createObjectURL(blob);
-                        var worker = new Worker(url);
-                        worker.terminate();
-                        URL.revokeObjectURL(url);
-                        return true;
-                    } catch(e) { return false; }
-                })(),
-                serviceWorkers: 'serviceWorker' in navigator,
-                sharedWorkers: typeof SharedWorker !== 'undefined',
-
-                // Graphics & Media
-                webGL: typeof WebGLRenderingContext !== 'undefined',
-                webGL2: typeof WebGL2RenderingContext !== 'undefined',
-                webAudio: typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined',
-                mediaDevices: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
-                mediaRecorder: typeof MediaRecorder !== 'undefined',
-                mediaSource: typeof ManagedMediaSource !== 'undefined' || typeof MediaSource !== 'undefined',
-                pictureInPicture: 'pictureInPictureEnabled' in document,
-                fullscreen: !!document.documentElement.requestFullscreen || !!document.documentElement.webkitRequestFullscreen,
-
-                // Storage - test actual read/write capability
-                cookies: navigator.cookieEnabled,
-                localStorage: (function() {
-                    try {
-                        var key = '__test__';
-                        localStorage.setItem(key, '1');
-                        localStorage.removeItem(key);
-                        return true;
-                    } catch(e) { return false; }
-                })(),
-                sessionStorage: (function() {
-                    try {
-                        var key = '__test__';
-                        sessionStorage.setItem(key, '1');
-                        sessionStorage.removeItem(key);
-                        return true;
-                    } catch(e) { return false; }
-                })(),
-                indexedDB: (function() {
-                    try {
-                        return typeof indexedDB !== 'undefined' && indexedDB !== null;
-                    } catch(e) { return false; }
-                })(),
-                cacheAPI: (function() {
-                    try {
-                        return 'caches' in window && typeof caches.open === 'function';
-                    } catch(e) { return false; }
-                })(),
-
-                // Network
-                webSocket: typeof WebSocket !== 'undefined',
-                webRTC: typeof RTCPeerConnection !== 'undefined',
-                fetch: typeof fetch !== 'undefined',
-                beacon: 'sendBeacon' in navigator,
-                eventSource: typeof EventSource !== 'undefined',
-
-                // Device APIs
-                geolocation: 'geolocation' in navigator,
-                deviceOrientation: 'DeviceOrientationEvent' in window,
-                deviceMotion: 'DeviceMotionEvent' in window,
-                vibration: 'vibrate' in navigator,
-                battery: 'getBattery' in navigator,
-                bluetooth: 'bluetooth' in navigator,
-                usb: 'usb' in navigator,
-                nfc: 'NDEFReader' in window,
-
-                // UI & Interaction
-                clipboard: (function() {
-                    if (navigator.clipboard && navigator.clipboard.writeText) return true;
-                    return document.queryCommandSupported && document.queryCommandSupported('copy');
-                })(),
-                webShare: 'share' in navigator,
-                notifications: 'Notification' in window && Notification.permission !== 'denied',
-                pointerEvents: 'PointerEvent' in window,
-                touchEvents: 'ontouchstart' in window,
-                gamepad: 'getGamepads' in navigator,
-                dragDrop: 'draggable' in document.createElement('div'),
-
-                // Observers
-                intersectionObserver: typeof IntersectionObserver !== 'undefined',
-                resizeObserver: typeof ResizeObserver !== 'undefined',
-                mutationObserver: typeof MutationObserver !== 'undefined',
-                performanceObserver: typeof PerformanceObserver !== 'undefined',
-
-                // Security & Payments (require secure context)
-                isSecureContext: isSecure,
-                crypto: isSecure && !!(window.crypto && window.crypto.subtle),
-                credentials: isSecure && 'credentials' in navigator,
-                paymentRequest: isSecure && typeof PaymentRequest !== 'undefined'
-            };
-        })()
-        """
-        let caps = await webView.evaluateJavaScriptAsync(capabilitiesScript) as? [String: Bool] ?? [:]
-
-        // Get WebGL info
-        onStatusUpdate("Detecting WebGL renderer...")
-        let webGLScript = """
-        (function() {
-            var canvas = document.createElement('canvas');
-            var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-            if (!gl) return { renderer: 'N/A', vendor: 'N/A', version: 'N/A' };
-            var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-            return {
-                renderer: debugInfo ? gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER),
-                vendor: debugInfo ? gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) : gl.getParameter(gl.VENDOR),
-                version: gl.getParameter(gl.VERSION)
-            };
-        })()
-        """
-        let webGLInfo = await webView.evaluateJavaScriptAsync(webGLScript) as? [String: String] ?? [:]
+        // Parse WebGL info
+        let webGLInfo = allData["webGL"] as? [String: String] ?? [:]
         let webGLRenderer = webGLInfo["renderer"] ?? "N/A"
         let webGLVendor = webGLInfo["vendor"] ?? "N/A"
         let webGLVersion = webGLInfo["version"] ?? "N/A"
 
-        // Get touch points
-        let maxTouchPoints = await webView.evaluateJavaScriptAsync("navigator.maxTouchPoints") as? Int ?? 0
+        // Parse capabilities
+        let caps = allData["caps"] as? [String: Bool] ?? [:]
 
         let result = WebViewInfo(
             browserType: browserType,
@@ -2649,7 +2663,10 @@ struct ActiveSettingsView: View {
                     } label: {
                         Label("Open Settings", systemImage: "gear")
                             .font(.subheadline)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
                     }
+                    .buttonStyle(.plain)
                     .glassEffect(in: .capsule)
                     Spacer()
                 }
