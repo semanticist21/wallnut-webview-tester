@@ -206,20 +206,10 @@ struct WebViewContainer: View {
                     .frame(width: webViewWidth, height: webViewHeight)
                     .clipShape(RoundedRectangle(cornerRadius: isFullSize ? 0 : 12))
                     .shadow(color: .black.opacity(isFullSize ? 0 : 0.15), radius: 8, y: 2)
-                    .overlay {
-                        // Loading overlay
+                    .overlay(alignment: .top) {
+                        // Subtle top loading bar
                         if isLoading {
-                            ZStack {
-                                Color(uiColor: .systemBackground)
-
-                                VStack(spacing: 12) {
-                                    ProgressView()
-                                    Text("Loading WebView...")
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                }
-                            }
-                            .clipShape(RoundedRectangle(cornerRadius: isFullSize ? 0 : 12))
+                            LoadingProgressBar()
                         }
                     }
                 }
@@ -486,6 +476,35 @@ struct WKWebViewRepresentable: UIViewRepresentable {
 
         deinit {
             invalidateObservation()
+        }
+    }
+}
+
+// MARK: - Loading Progress Bar
+
+private struct LoadingProgressBar: View {
+    @State private var animationOffset: CGFloat = -1
+
+    var body: some View {
+        GeometryReader { geometry in
+            let barWidth = geometry.size.width * 0.3
+
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        colors: [.clear, .accentColor.opacity(0.8), .clear],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .frame(width: barWidth, height: 3)
+                .offset(x: animationOffset * (geometry.size.width + barWidth) - barWidth / 2)
+        }
+        .frame(height: 3)
+        .onAppear {
+            withAnimation(.linear(duration: 1.0).repeatForever(autoreverses: false)) {
+                animationOffset = 1
+            }
         }
     }
 }
