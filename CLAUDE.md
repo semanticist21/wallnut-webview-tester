@@ -127,6 +127,45 @@ wina/
 - WKWebView JavaScript 평가로 브라우저 capability 감지
 - 최근 URL 기록: 최대 20개 저장, dropdown에 4개 표시 + 스크롤
 
+### WebView 인스턴스 관리
+
+**WebViewNavigator** (`WebViewContainer.swift`): WKWebView의 외부 제어를 위한 @Observable 클래스
+
+```swift
+// KVO로 상태 관찰
+var canGoBack: Bool
+var canGoForward: Bool
+var currentURL: URL?
+
+// 네비게이션 제어
+func goBack() / goForward() / reload() / stopLoading()
+func loadURL(_ urlString: String)  // 같은 인스턴스에서 URL 로드 (히스토리 유지)
+func evaluateJavaScript(_ script: String) async -> Any?
+```
+
+**인스턴스 재생성 vs 유지**:
+- URL 변경: `navigator.loadURL()` 사용 → 히스토리 유지
+- Configuration 설정 변경: `webViewID = UUID()` → 새 인스턴스 생성 필요
+- SafariVC: 항상 새 인스턴스 생성 (프레임워크 제한)
+
+### Info WebView 모드
+
+**SharedInfoWebView** (`SharedInfoWebView.swift`): Info 시트의 capability 감지용 WebView 관리
+
+- **Test Mode** (기본): 내부 WebView로 example.com 테스트
+- **Live Mode**: 실제 로드된 페이지의 WebView 사용
+
+```swift
+// Live WebView 연결
+SharedInfoWebView.shared.setNavigator(navigator)
+
+// 모드 확인
+SharedInfoWebView.shared.isUsingLiveWebView  // true: 실제 페이지, false: 테스트
+SharedInfoWebView.shared.currentURL          // Live 모드에서 현재 URL
+```
+
+Info 시트 열 때 `navigator` 전달하면 실제 페이지 기준으로 capability 감지.
+
 ## Design System
 
 **Liquid Glass UI** - iOS 26 (Tahoe) 공식 Glass Effect
@@ -598,9 +637,11 @@ WebView 위에 드래그 가능한 오버레이를 만들 때, WebView가 터치
 // Dual-mode: isOverlayMode로 동작 분기
 struct OverlayMenuBars: View {
     let isOverlayMode: Bool  // true: pull-down drawer, false: fixed position
+    let onURLChange: (String) -> Void  // 하단 바에서 URL 변경 시 콜백
 
     // Fixed mode (App preset ≤82%): 바 항상 표시, 드래그 없음
     // Overlay mode (>82%/fullscreen): 상단에 6pt 핸들만 노출, 드래그로 펼침
+    // 하단 바: 현재 URL host 표시 + 탭 시 URL 변경 alert
 }
 ```
 
@@ -633,6 +674,22 @@ GeometryReader { geometry in
 **iOS Safe Area Insets 참고**:
 - 상단: 59-62pt (Dynamic Island/노치 기기), SwiftUI가 자동 처리
 - 하단: 0pt (홈 버튼), 34pt (Face ID 기기) → 동적 처리 필요
+
+### 로딩 인디케이터
+
+WKWebView 로딩 상태는 KVO로 관찰하여 상단에 얇은 progress bar로 표시:
+
+```swift
+// WebViewContainer.swift
+.overlay(alignment: .top) {
+    if isLoading {
+        LoadingProgressBar()  // 3px 애니메이션 그라데이션 바
+    }
+}
+```
+
+- 페이지 로드/네비게이션 시 자동 표시
+- 전체 화면 가리지 않아 로딩 중에도 콘텐츠 확인 가능
 
 ## iOS 26 주의사항
 
