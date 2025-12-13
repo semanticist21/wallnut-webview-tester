@@ -23,6 +23,8 @@ struct InfoPopoverButton<S: ShapeStyle>: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(iconColor)
                 .font(.footnote)
+                .padding(6)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .popover(isPresented: $showInfo) {
@@ -57,6 +59,8 @@ struct DeprecatedPopoverButton: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(.orange)
                 .font(.footnote)
+                .padding(6)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .popover(isPresented: $showInfo) {

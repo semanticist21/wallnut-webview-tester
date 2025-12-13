@@ -90,6 +90,8 @@ struct UserAgentPickerView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.title3)
                                 .foregroundStyle(.secondary)
+                                .padding(8)
+                                .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
                     } else {
@@ -356,6 +358,8 @@ private struct PresetDetailRow: View {
                     Image(systemName: "info.circle")
                         .foregroundStyle(.secondary)
                         .font(.body)
+                        .padding(6)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .popover(isPresented: $showingDetail) {
@@ -591,9 +595,10 @@ private struct CustomUserAgentEditor: View {
                     } label: {
                         Image(systemName: "xmark.circle.fill")
                             .foregroundStyle(.secondary)
+                            .padding(8)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .padding(8)
                 }
             }
         } header: {
