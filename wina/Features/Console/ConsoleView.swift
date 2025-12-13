@@ -296,6 +296,49 @@ private struct LogRow: View {
         log.message.count > 200 || log.message.filter { $0 == "\n" }.count >= 3
     }
 
+    // Extract JSON from message (returns original, formatted and minified versions)
+    private var extractedJSON: (original: String, formatted: String, minified: String)? {
+        let trimmed = log.message.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Check if entire message is JSON
+        if let data = trimmed.data(using: .utf8),
+           let json = try? JSONSerialization.jsonObject(with: data),
+           let formatted = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
+           let minified = try? JSONSerialization.data(withJSONObject: json),
+           let formattedStr = String(data: formatted, encoding: .utf8),
+           let minifiedStr = String(data: minified, encoding: .utf8) {
+            return (trimmed, formattedStr, minifiedStr)
+        }
+
+        // Try to find JSON object block in message
+        if let startRange = trimmed.range(of: "{"), let endRange = trimmed.range(of: "}", options: .backwards) {
+            let jsonPart = String(trimmed[startRange.lowerBound...endRange.upperBound])
+            if let data = jsonPart.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data),
+               let formatted = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
+               let minified = try? JSONSerialization.data(withJSONObject: json),
+               let formattedStr = String(data: formatted, encoding: .utf8),
+               let minifiedStr = String(data: minified, encoding: .utf8) {
+                return (jsonPart, formattedStr, minifiedStr)
+            }
+        }
+
+        // Try array JSON
+        if let startRange = trimmed.range(of: "["), let endRange = trimmed.range(of: "]", options: .backwards) {
+            let jsonPart = String(trimmed[startRange.lowerBound...endRange.upperBound])
+            if let data = jsonPart.data(using: .utf8),
+               let json = try? JSONSerialization.jsonObject(with: data),
+               let formatted = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
+               let minified = try? JSONSerialization.data(withJSONObject: json),
+               let formattedStr = String(data: formatted, encoding: .utf8),
+               let minifiedStr = String(data: minified, encoding: .utf8) {
+                return (jsonPart, formattedStr, minifiedStr)
+            }
+        }
+
+        return nil
+    }
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             // Expand indicator (only if expandable)
@@ -307,14 +350,38 @@ private struct LogRow: View {
                     .padding(.top, 4)
             }
 
-            // Message + Source
+            // Message + Source + JSON copy button
             VStack(alignment: .leading, spacing: 2) {
-                Text(log.message)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(log.type == .error ? .red : .primary)
-                    .lineLimit(isExpanded ? nil : 3)
-                    .textSelection(.enabled)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(alignment: .top, spacing: 4) {
+                    Text(log.message)
+                        .font(.system(size: 12, design: .monospaced))
+                        .foregroundStyle(log.type == .error ? .red : .primary)
+                        .lineLimit(isExpanded ? nil : 3)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    // JSON copy button (only if JSON detected)
+                    if let json = extractedJSON {
+                        Menu {
+                            Button {
+                                UIPasteboard.general.string = json.formatted
+                            } label: {
+                                Label("Copy Formatted", systemImage: "doc.on.doc")
+                            }
+                            Button {
+                                UIPasteboard.general.string = json.minified
+                            } label: {
+                                Label("Copy Minified", systemImage: "arrow.right.arrow.left")
+                            }
+                        } label: {
+                            Image(systemName: "curlybraces")
+                                .font(.system(size: 10))
+                                .foregroundStyle(.blue)
+                                .padding(4)
+                                .background(Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 4))
+                        }
+                    }
+                }
 
                 // Source location (if available)
                 if let source = log.source {
@@ -343,6 +410,33 @@ private struct LogRow: View {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     isExpanded.toggle()
                 }
+            }
+        }
+        .contextMenu {
+            Button {
+                UIPasteboard.general.string = log.message
+            } label: {
+                Label("Copy Message", systemImage: "doc.on.doc")
+            }
+
+            if let source = log.source {
+                Button {
+                    UIPasteboard.general.string = source
+                } label: {
+                    Label("Copy Source", systemImage: "link")
+                }
+            }
+
+            Divider()
+
+            Button {
+                var full = "[\(log.type.shortLabel)] \(log.message)"
+                if let source = log.source {
+                    full += " (\(source))"
+                }
+                UIPasteboard.general.string = full
+            } label: {
+                Label("Copy All", systemImage: "doc.on.clipboard")
             }
         }
         .overlay(alignment: .bottom) {
