@@ -32,9 +32,6 @@ struct ContentView: View {
     @AppStorage("cleanStart") private var cleanStart = true
     @AppStorage("privateBrowsing") private var privateBrowsing = false
 
-    // Cached NSDataDetector for URL validation (expensive to create)
-    private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
-
     // Safari configuration settings (for onChange detection)
     @AppStorage("safariEntersReaderIfAvailable") private var safariEntersReaderIfAvailable = false
     @AppStorage("safariBarCollapsingEnabled") private var safariBarCollapsingEnabled = true
@@ -530,68 +527,7 @@ struct ContentView: View {
             urlValidationState = .empty
             return
         }
-        urlValidationState = isValidURL(urlText) ? .valid : .invalid
-    }
-
-    private func isValidURL(_ string: String) -> Bool {
-        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
-
-        // Add https:// if no scheme present
-        var urlString = trimmed
-        if !urlString.lowercased().hasPrefix("http://") && !urlString.lowercased().hasPrefix("https://") {
-            urlString = "https://" + urlString
-        }
-
-        guard let url = URL(string: urlString), let host = url.host else {
-            return false
-        }
-
-        // Special handling for localhost
-        if host == "localhost" {
-            return true
-        }
-
-        // Special handling for IP addresses
-        if isValidIPAddress(host) {
-            return true
-        }
-
-        // Host must contain at least one dot (for TLD)
-        // This rejects "www.naver" but allows "www.naver.com"
-        guard host.contains(".") else {
-            return false
-        }
-
-        // URL validation using cached NSDataDetector (Apple's link detection engine)
-        guard let detector = Self.linkDetector else {
-            return false
-        }
-
-        let range = NSRange(urlString.startIndex..., in: urlString)
-        let matches = detector.matches(in: urlString, options: [], range: range)
-
-        // Exactly one match must cover the entire string
-        guard matches.count == 1,
-              let match = matches.first,
-              match.range.location == 0,
-              match.range.length == urlString.utf16.count else {
-            return false
-        }
-
-        return true
-    }
-
-    private func isValidIPAddress(_ string: String) -> Bool {
-        // IPv4 validation
-        let ipv4Parts = string.split(separator: ".")
-        if ipv4Parts.count == 4 {
-            return ipv4Parts.allSatisfy { part in
-                guard let num = Int(part) else { return false }
-                return num >= 0 && num <= 255
-            }
-        }
-        return false
+        urlValidationState = URLValidator.isValidURL(urlText) ? .valid : .invalid
     }
 }
 
