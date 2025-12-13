@@ -171,6 +171,35 @@ SettingsFormatter.enabledStatus(enabled)          // true→"Enabled", false→"
 - ❌ 유사 기능에 새로운 컴포넌트 생성 (기존 컴포넌트 확장할 것)
 - ❌ unavailable 표시에 다른 패턴 사용 (`(iPad only)` + `.tertiary` 통일)
 
+### SwiftUI 터치 영역 규칙
+
+아이콘만 있는 버튼은 터치 영역이 불명확해져 터치가 안 되는 버그 발생:
+
+```swift
+// ✅ 올바른 패턴
+Button {
+    action()
+} label: {
+    Image(systemName: "xmark.circle.fill")
+        .padding(8)                    // 터치 영역 확대
+        .contentShape(Rectangle())    // 터치 영역 명확화
+}
+.buttonStyle(.plain)
+
+// ❌ 터치 안 되는 패턴
+Button {
+    action()
+} label: {
+    Image(systemName: "xmark.circle.fill")
+}
+.buttonStyle(.plain)
+```
+
+**필수 적용 상황**:
+- `.buttonStyle(.plain)` 사용하는 아이콘 버튼
+- overlay/dropdown 내부 또는 근처 버튼
+- HStack/VStack 내 다른 터치 요소와 인접한 버튼
+
 ## Code Conventions
 
 | 대상 | 컨벤션 | 예시 |
@@ -396,6 +425,43 @@ wina/
 - ❌ 빈 폴더 유지
 - ❌ 단일 파일을 위한 폴더 생성
 - ❌ 깊은 중첩 (최대 3단계: `Features/Settings/Components/`)
+
+## SwiftUI 레이아웃 주의사항
+
+### ZStack Overlay에서 터치 이벤트 처리
+
+ZStack에서 상단 바 등 overlay 뷰를 만들 때, **VStack + Spacer 패턴은 터치를 가로챌 수 있음**:
+
+```swift
+// ❌ 문제: Spacer가 화면 전체를 덮어 터치 이벤트 가로챔
+private var topBar: some View {
+    VStack {
+        HStack { /* buttons */ }
+        Spacer()  // 아래 뷰의 터치를 방해할 수 있음
+    }
+}
+
+// ✅ 해결: HStack만 사용하고 frame으로 정렬
+private var topBar: some View {
+    HStack { /* buttons */ }
+    .padding(.horizontal, 16)
+    .padding(.top, 8)
+    .frame(maxHeight: .infinity, alignment: .top)
+}
+```
+
+**핵심**: `.frame(maxHeight: .infinity, alignment: .top)`으로 HStack의 실제 높이(버튼 44pt)만 터치 영역이 되고, 나머지는 아래 뷰로 pass-through됨.
+
+### contentShape와 터치 영역
+
+배경 탭으로 키보드/드롭다운을 닫을 때:
+
+```swift
+// Color.clear만으로는 터치 영역이 없음
+Color.clear
+    .contentShape(Rectangle())  // 터치 영역 명시
+    .onTapGesture { ... }
+```
 
 ## iOS 26 주의사항
 

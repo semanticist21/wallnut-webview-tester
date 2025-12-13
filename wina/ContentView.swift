@@ -209,9 +209,12 @@ struct ContentView: View {
                         if !urlText.isEmpty {
                             Button {
                                 urlText = ""
+                                textFieldFocused = false
                             } label: {
                                 Image(systemName: "xmark.circle.fill")
                                     .foregroundStyle(.secondary)
+                                    .padding(8)
+                                    .contentShape(Rectangle())
                             }
                             .buttonStyle(.plain)
                         }
@@ -307,35 +310,32 @@ struct ContentView: View {
     }
 
     private var topBar: some View {
-        VStack {
-            HStack {
-                HStack(spacing: 12) {
-                    if showWebView {
-                        BackButton {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                showWebView = false
-                            }
+        HStack {
+            HStack(spacing: 12) {
+                if showWebView {
+                    BackButton {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            showWebView = false
                         }
-                    } else {
-                        ThemeToggleButton()
-                        BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: !bookmarks.isEmpty)
                     }
-                }
-
-                Spacer()
-
-                HStack(spacing: 12) {
-                    if !showWebView {
-                        InfoButton(useSafariVC: useSafariWebView)
-                    }
-                    SettingsButton(showSettings: $showSettings)
+                } else {
+                    ThemeToggleButton()
+                    BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: !bookmarks.isEmpty)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 8)
 
             Spacer()
+
+            HStack(spacing: 12) {
+                if !showWebView {
+                    InfoButton(useSafariVC: useSafariWebView)
+                }
+                SettingsButton(showSettings: $showSettings)
+            }
         }
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func submitURL() {

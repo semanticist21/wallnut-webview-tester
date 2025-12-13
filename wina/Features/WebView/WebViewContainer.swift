@@ -437,19 +437,8 @@ struct SafariWebView: UIViewControllerRepresentable {
         default: vc.dismissButtonStyle = .done
         }
 
-        // Control tint color
-        if !controlTintColorHex.isEmpty {
-            vc.preferredControlTintColor = UIColor(hex: controlTintColorHex)
-        } else {
-            vc.preferredControlTintColor = nil
-        }
-
-        // Bar tint color
-        if !barTintColorHex.isEmpty {
-            vc.preferredBarTintColor = UIColor(hex: barTintColorHex)
-        } else {
-            vc.preferredBarTintColor = nil
-        }
+        // Note: preferredControlTintColor and preferredBarTintColor were deprecated in iOS 26.0
+        // as they interfere with Liquid Glass background effects that the system provides.
     }
 }
 
