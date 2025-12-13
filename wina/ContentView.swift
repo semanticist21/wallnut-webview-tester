@@ -15,14 +15,14 @@ struct ContentView: View {
     @State private var urlValidationState: URLValidationState = .empty
     @State private var useSafariWebView: Bool = false
     @State private var showWebView: Bool = false
-    @State private var loadedURL: String = ""
-    @State private var webViewID: UUID = UUID()
+    @State private var loadedURL = ""
+    @State private var webViewID = UUID()
     @State private var bookmarks: [String] = []
     @State private var cachedRecentURLs: [String] = []
     @State private var validationTask: Task<Void, Never>?
     @FocusState private var textFieldFocused: Bool
-    @AppStorage("recentURLs") private var recentURLsData: Data = Data()
-    @AppStorage("bookmarkedURLs") private var bookmarkedURLsData: Data = Data()
+    @AppStorage("recentURLs") private var recentURLsData = Data()
+    @AppStorage("bookmarkedURLs") private var bookmarkedURLsData = Data()
 
     // Cached NSDataDetector for URL validation (expensive to create)
     private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
@@ -238,6 +238,7 @@ struct ContentView: View {
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(.primary)
                                 .frame(width: 48, height: 48)
+                                .contentShape(Circle())
                                 .glassEffect(in: .circle)
                         }
                         .buttonStyle(.plain)

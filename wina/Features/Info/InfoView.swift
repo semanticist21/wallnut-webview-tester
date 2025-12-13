@@ -6,13 +6,14 @@
 import AVFoundation
 import CoreLocation
 import Metal
+import os
 import SwiftUI
 import WebKit
 
 // MARK: - Shared WebView Manager
 
 @MainActor
-fileprivate final class SharedInfoWebView {
+private final class SharedInfoWebView {
     static let shared = SharedInfoWebView()
 
     fileprivate var webView: WKWebView?
@@ -871,9 +872,9 @@ private struct CapabilityItem: Identifiable {
     let label: String
     let supported: Bool
     var info: String?
-    var unavailable: Bool = false
-    var icon: String? = nil
-    var iconColor: Color? = nil
+    var unavailable = false
+    var icon: String?
+    var iconColor: Color?
 }
 
 // MARK: - Supporting Views
@@ -881,7 +882,7 @@ private struct CapabilityItem: Identifiable {
 private struct InfoRow: View {
     let label: String
     let value: String
-    var info: String? = nil
+    var info: String?
 
     var body: some View {
         HStack {
@@ -900,10 +901,10 @@ private struct InfoRow: View {
 private struct CapabilityRow: View {
     let label: String
     let supported: Bool
-    var info: String? = nil
-    var unavailable: Bool = false  // WebKit policy: never supported
-    var icon: String? = nil
-    var iconColor: Color? = nil
+    var info: String?
+    var unavailable = false  // WebKit policy: never supported
+    var icon: String?
+    var iconColor: Color?
 
     var body: some View {
         HStack {
@@ -1057,9 +1058,9 @@ private struct DeviceInfo: Sendable {
         var systemInfo = utsname()
         uname(&systemInfo)
         let machineMirror = Mirror(reflecting: systemInfo.machine)
-        let identifier = machineMirror.children.reduce("") { identifier, element in
-            guard let value = element.value as? Int8, value != 0 else { return identifier }
-            return identifier + String(UnicodeScalar(UInt8(value)))
+        let identifier = machineMirror.children.reduce(into: "") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return }
+            identifier += String(UnicodeScalar(UInt8(value)))
         }
         return identifier
     }
@@ -1075,7 +1076,7 @@ private struct DeviceInfo: Sendable {
 
 // MARK: - WebView Info Model
 
-fileprivate struct WebViewInfo: Sendable {
+private struct WebViewInfo: Sendable {
     // Browser
     let browserType: String
     let vendor: String
@@ -1464,7 +1465,7 @@ extension WKWebView {
         await withCheckedContinuation { continuation in
             evaluateJavaScript(script) { result, error in
                 if let error = error {
-                    print("[WKWebView] JavaScript error: \(error.localizedDescription)")
+                    Logger().debug("[WKWebView] JavaScript error: \(error.localizedDescription)")
                 }
                 continuation.resume(returning: result)
             }
@@ -1618,7 +1619,7 @@ enum CodecSupport: String {
     }
 }
 
-fileprivate struct MediaCodecInfo: Sendable {
+private struct MediaCodecInfo: Sendable {
     // Video
     let h264: CodecSupport
     let hevc: CodecSupport
@@ -1855,7 +1856,7 @@ struct PerformanceView: View {
 private struct BenchmarkRow: View {
     let label: String
     let ops: String
-    var info: String? = nil
+    var info: String?
 
     var body: some View {
         HStack {
@@ -2250,7 +2251,7 @@ struct DisplayFeaturesView: View {
     }
 }
 
-fileprivate struct DisplayInfo: Sendable {
+private struct DisplayInfo: Sendable {
     // Screen
     let screenWidth: String
     let screenHeight: String
@@ -2469,7 +2470,7 @@ struct AccessibilityFeaturesView: View {
     }
 }
 
-fileprivate struct AccessibilityInfo: Sendable {
+private struct AccessibilityInfo: Sendable {
     // User Preferences
     let reducedMotion: String
     let reducedTransparency: String
@@ -2820,8 +2821,8 @@ struct ActiveSettingsView: View {
 private struct ActiveSettingRow: View {
     let label: String
     let enabled: Bool
-    var info: String? = nil
-    var unavailable: Bool = false
+    var info: String?
+    var unavailable = false
 
     var body: some View {
         HStack {
@@ -2850,7 +2851,7 @@ private struct ActiveSettingRow: View {
 private struct PermissionStatusRow: View {
     let label: String
     let status: Any
-    var info: String? = nil
+    var info: String?
 
     var body: some View {
         HStack {

@@ -371,8 +371,8 @@ private struct SafariActiveSettingsDetailView: View {
 private struct SafariActiveSettingRow: View {
     let label: String
     let enabled: Bool
-    var info: String? = nil
-    var unavailable: Bool = false
+    var info: String?
+    var unavailable = false
 
     var body: some View {
         HStack {
@@ -614,7 +614,7 @@ private struct SafariLimitationsDetailView: View {
 private struct SafariInfoRow: View {
     let label: String
     let value: String
-    var info: String? = nil
+    var info: String?
 
     var body: some View {
         HStack {
@@ -633,8 +633,8 @@ private struct SafariInfoRow: View {
 private struct SafariCapabilityRow: View {
     let label: String
     let supported: Bool
-    var info: String? = nil
-    var unavailable: Bool = false  // Safari policy: never supported
+    var info: String?
+    var unavailable = false  // Safari policy: never supported
 
     var body: some View {
         HStack {
@@ -704,7 +704,6 @@ private struct SafariDelegateRow: View {
         }
     }
 }
-
 
 // MARK: - Search Item Model
 

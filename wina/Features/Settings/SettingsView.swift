@@ -729,8 +729,8 @@ struct LoadedSettingsView: View {
 // MARK: - Settings Category Row (Shared)
 
 struct SettingsCategoryRow: View {
-    var icon: String? = nil
-    var iconColor: Color = .accentColor
+    var icon: String?
+    var iconColor = Color.accentColor
     let title: String
     let description: String
 

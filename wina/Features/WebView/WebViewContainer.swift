@@ -397,16 +397,14 @@ private struct CheckerboardPattern: View {
             let cols = Int(ceil(size.width / squareSize))
 
             for row in 0..<rows {
-                for col in 0..<cols {
-                    if (row + col).isMultiple(of: 2) {
-                        let rect = CGRect(
-                            x: CGFloat(col) * squareSize,
-                            y: CGFloat(row) * squareSize,
-                            width: squareSize,
-                            height: squareSize
-                        )
-                        context.fill(Path(rect), with: .color(.secondary.opacity(0.08)))
-                    }
+                for col in 0..<cols where (row + col).isMultiple(of: 2) {
+                    let rect = CGRect(
+                        x: CGFloat(col) * squareSize,
+                        y: CGFloat(row) * squareSize,
+                        width: squareSize,
+                        height: squareSize
+                    )
+                    context.fill(Path(rect), with: .color(.secondary.opacity(0.08)))
                 }
             }
         }
