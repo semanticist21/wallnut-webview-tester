@@ -74,6 +74,13 @@ class ConsoleManager {
 
     func addLog(type: String, message: String, source: String? = nil) {
         guard isCapturing else { return }
+
+        // Filter CORS "Script error" - uninformative due to cross-origin security
+        let msg = message.lowercased()
+        if msg.contains("script error") && (source == nil || source?.isEmpty == true) {
+            return
+        }
+
         let logType = ConsoleLog.LogType(rawValue: type) ?? .log
         let log = ConsoleLog(type: logType, message: message, source: source, timestamp: Date())
         DispatchQueue.main.async {

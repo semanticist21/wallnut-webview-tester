@@ -545,6 +545,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             decidePolicyFor navigationAction: WKNavigationAction,
             decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
         ) {
+            // Allow default WKWebView behavior (including universal links opening external apps)
             decisionHandler(.allow)
         }
 
