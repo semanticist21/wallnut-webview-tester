@@ -18,6 +18,7 @@ struct OverlayMenuBars: View {
     @Binding var showSettings: Bool
     @Binding var showBookmarks: Bool
     @Binding var showInfo: Bool
+    @Binding var showConsole: Bool
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
@@ -25,6 +26,7 @@ struct OverlayMenuBars: View {
     @State private var urlInputText: String = ""
     // WKWebView 내부 input 필드의 키보드 표시 상태를 추적한다
     @State private var isKeyboardVisible: Bool = false
+    @FocusState private var urlInputFocused: Bool
 
     private let topBarHeight: CGFloat = 64
     private let bottomBarHeight: CGFloat = 56
@@ -87,19 +89,11 @@ struct OverlayMenuBars: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             isKeyboardVisible = false
         }
-        // URL 변경 alert - bottomBar 조건부 렌더링과 독립적으로 유지
-        .alert("Change URL", isPresented: $showURLInput) {
-            TextField("Enter URL", text: $urlInputText)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-            Button("Cancel", role: .cancel) {}
-            Button("Go") {
-                if !urlInputText.isEmpty {
-                    onURLChange(urlInputText)
-                }
+        // URL 변경 overlay - bottomBar 조건부 렌더링과 독립적으로 유지
+        .overlay {
+            if showURLInput {
+                urlInputOverlay
             }
-        } message: {
-            Text("Enter a new URL to load")
         }
     }
 
@@ -158,28 +152,46 @@ struct OverlayMenuBars: View {
 
     private var bottomBar: some View {
         GeometryReader { geometry in
-            HStack(spacing: 16) {
+            HStack(spacing: 8) {
                 if showWebView {
-                    // Current URL display + change button
+                    // URL button
                     Button {
                         urlInputText = navigator?.currentURL?.absoluteString ?? ""
                         showURLInput = true
                     } label: {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             Image(systemName: "link")
-                                .font(.system(size: 14))
+                                .font(.system(size: 13))
                             Text(navigator?.currentURL?.host() ?? "URL")
                                 .font(.subheadline)
                                 .lineLimit(1)
                         }
                         .foregroundStyle(.primary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
                         .background(.ultraThinMaterial, in: Capsule())
                     }
                     .buttonStyle(.plain)
+
+                    // Console button (adjacent to URL, only for WKWebView)
+                    if !useSafariVC {
+                        Button {
+                            showConsole = true
+                        } label: {
+                            Image(systemName: "terminal")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.primary)
+                                .padding(8)
+                                .background(.ultraThinMaterial, in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    Spacer()
                 }
             }
+            .padding(.horizontal, 16)
             .frame(height: bottomBarHeight)
             .frame(maxWidth: .infinity)
             .glassEffect(in: .capsule)
@@ -188,6 +200,95 @@ struct OverlayMenuBars: View {
             .padding(.bottom, -(geometry.safeAreaInsets.bottom * 0.6))
             .offset(y: bottomOffset)
             .frame(maxHeight: .infinity, alignment: .bottom)
+        }
+    }
+
+    // MARK: - URL Input Overlay
+
+    private var urlInputOverlay: some View {
+        ZStack {
+            // Dimmed background
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    urlInputFocused = false
+                    showURLInput = false
+                }
+
+            // Input card
+            VStack(spacing: 16) {
+                Text("Change URL")
+                    .font(.headline)
+
+                // URL input with clear button
+                HStack(spacing: 8) {
+                    TextField("Enter URL", text: $urlInputText)
+                        .textFieldStyle(.plain)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .keyboardType(.URL)
+                        .submitLabel(.go)
+                        .focused($urlInputFocused)
+                        .onSubmit {
+                            if !urlInputText.isEmpty {
+                                onURLChange(urlInputText)
+                                showURLInput = false
+                            }
+                        }
+
+                    // Clear button
+                    if !urlInputText.isEmpty {
+                        Button {
+                            urlInputText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                                .frame(width: 32, height: 32)
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .glassEffect(in: .capsule)
+
+                // Action buttons
+                HStack(spacing: 12) {
+                    Button {
+                        urlInputFocused = false
+                        showURLInput = false
+                    } label: {
+                        Text("Cancel")
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(in: .capsule)
+
+                    Button {
+                        if !urlInputText.isEmpty {
+                            onURLChange(urlInputText)
+                            showURLInput = false
+                        }
+                    } label: {
+                        Text("Go")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(in: .capsule)
+                    .opacity(urlInputText.isEmpty ? 0.5 : 1)
+                    .disabled(urlInputText.isEmpty)
+                }
+            }
+            .padding(20)
+            .frame(width: 320)
+            .glassEffect(in: .rect(cornerRadius: 24))
+        }
+        .onAppear {
+            urlInputFocused = true
         }
     }
 
@@ -243,7 +344,8 @@ struct OverlayMenuBars: View {
             navigator: nil,
             showSettings: .constant(false),
             showBookmarks: .constant(false),
-            showInfo: .constant(false)
+            showInfo: .constant(false),
+            showConsole: .constant(false)
         )
     }
 }
@@ -263,7 +365,8 @@ struct OverlayMenuBars: View {
             navigator: nil,
             showSettings: .constant(false),
             showBookmarks: .constant(false),
-            showInfo: .constant(false)
+            showInfo: .constant(false),
+            showConsole: .constant(false)
         )
     }
 }

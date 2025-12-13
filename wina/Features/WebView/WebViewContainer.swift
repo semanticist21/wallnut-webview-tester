@@ -16,6 +16,7 @@ class WebViewNavigator {
     var canGoBack: Bool = false
     var canGoForward: Bool = false
     var currentURL: URL?
+    let consoleManager = ConsoleManager()
 
     private weak var webView: WKWebView?
     private var canGoBackObservation: NSKeyValueObservation?
@@ -314,11 +315,68 @@ struct WKWebViewRepresentable: UIViewRepresentable {
     // User Agent
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
+    // Console hooking script - intercepts console methods and forwards to native
+    private static let consoleHookScript = """
+        (function() {
+            if (window.__consoleHooked) return;
+            window.__consoleHooked = true;
+
+            const methods = ['log', 'info', 'warn', 'error', 'debug'];
+            methods.forEach(function(method) {
+                const original = console[method];
+                console[method] = function(...args) {
+                    try {
+                        const message = args.map(function(arg) {
+                            if (arg === null) return 'null';
+                            if (arg === undefined) return 'undefined';
+                            if (typeof arg === 'object') {
+                                try { return JSON.stringify(arg, null, 2); }
+                                catch(e) { return String(arg); }
+                            }
+                            return String(arg);
+                        }).join(' ');
+                        window.webkit.messageHandlers.consoleLog.postMessage({
+                            type: method,
+                            message: message
+                        });
+                    } catch(e) {}
+                    original.apply(console, args);
+                };
+            });
+
+            // Capture uncaught errors
+            window.addEventListener('error', function(e) {
+                window.webkit.messageHandlers.consoleLog.postMessage({
+                    type: 'error',
+                    message: 'Uncaught: ' + e.message + ' at ' + e.filename + ':' + e.lineno
+                });
+            });
+
+            // Capture unhandled promise rejections
+            window.addEventListener('unhandledrejection', function(e) {
+                window.webkit.messageHandlers.consoleLog.postMessage({
+                    type: 'error',
+                    message: 'Unhandled Promise: ' + String(e.reason)
+                });
+            });
+        })();
+        """
+
     func makeCoordinator() -> Coordinator {
         Coordinator(isLoading: $isLoading, navigator: navigator)
     }
 
     func makeUIView(context: Context) -> WKWebView {
+        // Add console hook script and message handler to configuration
+        let userContentController = configuration.userContentController
+        userContentController.add(context.coordinator, name: "consoleLog")
+        let script = WKUserScript(
+            source: Self.consoleHookScript,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: false
+        )
+        userContentController.addUserScript(script)
+
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
         webView.uiDelegate = context.coordinator
@@ -390,13 +448,15 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         uiView.stopLoading()
         uiView.navigationDelegate = nil
         uiView.uiDelegate = nil
+        // Remove message handler to prevent retain cycle
+        uiView.configuration.userContentController.removeScriptMessageHandler(forName: "consoleLog")
         coordinator.invalidateObservation()
         coordinator.navigator?.detach()
     }
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
+    class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptMessageHandler {
         @Binding var isLoading: Bool
         let navigator: WebViewNavigator?
 
@@ -405,6 +465,18 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         init(isLoading: Binding<Bool>, navigator: WebViewNavigator?) {
             _isLoading = isLoading
             self.navigator = navigator
+        }
+
+        // MARK: - WKScriptMessageHandler
+
+        func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+            guard message.name == "consoleLog",
+                  let body = message.body as? [String: String],
+                  let type = body["type"],
+                  let msg = body["message"] else {
+                return
+            }
+            navigator?.consoleManager.addLog(type: type, message: msg)
         }
 
         func observeWebView(_ webView: WKWebView) {

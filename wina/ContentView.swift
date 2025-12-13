@@ -14,6 +14,7 @@ struct ContentView: View {
     @State private var showSettings: Bool = false
     @State private var showBookmarks: Bool = false
     @State private var showInfo: Bool = false
+    @State private var showConsole: Bool = false
     @State private var urlValidationState: URLValidationState = .empty
     @State private var useSafariWebView: Bool = false
     @State private var showWebView: Bool = false
@@ -137,7 +138,8 @@ struct ContentView: View {
                     navigator: useSafariWebView ? nil : webViewNavigator,
                     showSettings: $showSettings,
                     showBookmarks: $showBookmarks,
-                    showInfo: $showInfo
+                    showInfo: $showInfo,
+                    showConsole: $showConsole
                 )
             } else {
                 topBar
@@ -172,6 +174,12 @@ struct ContentView: View {
                 // Pass navigator only when WebView is loaded (for live page testing)
                 InfoView(navigator: showWebView ? webViewNavigator : nil)
             }
+        }
+        .sheet(isPresented: $showConsole) {
+            ConsoleView(consoleManager: webViewNavigator.consoleManager)
+                .presentationDetents([.fraction(0.35), .medium, .large])
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                .presentationDragIndicator(.visible)
         }
         // Recreate SafariVC when configuration settings change
         .onChange(of: safariEntersReaderIfAvailable) { _, _ in
