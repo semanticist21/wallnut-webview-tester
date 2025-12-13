@@ -355,10 +355,9 @@ private struct LogRow: View {
             // Message + Source + JSON copy button
             VStack(alignment: .leading, spacing: 2) {
                 HStack(alignment: .top, spacing: 4) {
-                    Text(log.message)
+                    Text(isExpanded || !needsExpansion ? log.message : String(log.message.prefix(120)) + "...")
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(log.type == .error ? .red : .primary)
-                        .lineLimit(isExpanded ? nil : 3)
                         .textSelection(.enabled)
                         .frame(maxWidth: .infinity, alignment: .leading)
 
