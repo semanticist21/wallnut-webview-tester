@@ -83,7 +83,17 @@ wina/
 │   │   ├── SettingsView.swift         # WKWebView 설정 (20개 항목)
 │   │   └── SafariVCSettingsView.swift # SafariVC 전용 설정 (5개 항목)
 │   ├── Info/                  # WKWebView 정보 표시
-│   │   ├── InfoView.swift             # WKWebView Info (~2500줄)
+│   │   ├── InfoView.swift             # 메인 뷰 + 검색 (~570줄)
+│   │   ├── SharedInfoWebView.swift    # WebView 싱글톤 + 캐싱
+│   │   ├── InfoComponents.swift       # 공유 UI 컴포넌트
+│   │   ├── DeviceInfoView.swift       # 디바이스 정보
+│   │   ├── BrowserInfoView.swift      # 브라우저 + API 감지
+│   │   ├── APICapabilitiesView.swift  # API 카테고리별 표시
+│   │   ├── MediaCodecsView.swift      # 코덱 지원 감지
+│   │   ├── PerformanceView.swift      # 벤치마크 + 스코어링
+│   │   ├── DisplayFeaturesView.swift  # 디스플레이 기능
+│   │   ├── AccessibilityFeaturesView.swift  # 접근성 설정
+│   │   ├── ActiveSettingsView.swift   # 현재 설정 표시
 │   │   └── SafariVCInfoView.swift     # SafariVC Info
 │   └── WebView/               # WebView 컨테이너
 │       └── WebViewContainer.swift
