@@ -639,12 +639,17 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             loadingObservation = nil
         }
 
-        // Handle navigation actions (link clicks)
+        // Handle navigation actions (link clicks, reload, etc.)
         func webView(
             _ webView: WKWebView,
             decidePolicyFor navigationAction: WKNavigationAction,
             decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
         ) {
+            // Clear console only on reload (unless preserveLog is enabled)
+            // Normal navigation (links, URL changes) preserves logs
+            if navigationAction.navigationType == .reload {
+                navigator?.consoleManager.clearIfNotPreserved()
+            }
             // Allow default WKWebView behavior (including universal links opening external apps)
             decisionHandler(.allow)
         }

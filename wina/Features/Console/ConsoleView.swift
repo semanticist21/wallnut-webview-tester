@@ -105,10 +105,14 @@ struct ConsoleLog: Identifiable, Equatable {
 class ConsoleManager {
     var logs: [ConsoleLog] = []
     var isCapturing: Bool = true
-    var preserveLog: Bool = false
     var collapsedGroups: Set<UUID> = []
     private var currentGroupLevel: Int = 0
     private var groupStack: [UUID] = []
+
+    // Read preserveLog from UserDefaults (set via @AppStorage in ConsoleSettingsSheet)
+    var preserveLog: Bool {
+        UserDefaults.standard.bool(forKey: "consolePreserveLog")
+    }
 
     func addLog(type: String, message: String, source: String? = nil, tableData: [[String: String]]? = nil) {
         guard isCapturing else { return }
@@ -209,6 +213,8 @@ struct ConsoleView: View {
     @State private var showSettings: Bool = false
     // Log types to show in "All" tab (user configurable)
     @State private var enabledLogTypes: Set<ConsoleLog.LogType> = Set(ConsoleLog.LogType.displayableTypes)
+    // AppStorage for settings indicator (matches ConsoleSettingsSheet)
+    @AppStorage("consolePreserveLog") private var preserveLog: Bool = false
 
     private var filteredLogs: [ConsoleLog] {
         var result = consoleManager.logs
@@ -250,89 +256,124 @@ struct ConsoleView: View {
 
     // Settings button highlight when any setting is active
     private var settingsActive: Bool {
-        useRegex || consoleManager.preserveLog || enabledLogTypes.count != ConsoleLog.LogType.displayableTypes.count
+        useRegex || preserveLog || enabledLogTypes.count != ConsoleLog.LogType.displayableTypes.count
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                // Filter tabs (Chrome DevTools style)
-                filterTabs
+        VStack(spacing: 0) {
+            // Custom toolbar - full control over layout
+            consoleHeader
 
-                Divider()
+            // Search bar
+            searchBar
 
-                // Log list
-                if filteredLogs.isEmpty {
-                    emptyState
-                } else {
-                    logList
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    HStack {
-                        // Left buttons
-                        HStack(spacing: 24) {
-                            Button {
-                                shareItem = ShareContent(content: consoleManager.exportAsText())
-                            } label: {
-                                Image(systemName: "square.and.arrow.up")
-                                    .foregroundStyle(consoleManager.logs.isEmpty ? .tertiary : .primary)
-                            }
-                            .disabled(consoleManager.logs.isEmpty)
+            // Filter tabs (Chrome DevTools style)
+            filterTabs
 
-                            Button {
-                                consoleManager.clear()
-                            } label: {
-                                Image(systemName: "trash")
-                                    .foregroundStyle(consoleManager.logs.isEmpty ? .tertiary : .primary)
-                            }
-                            .disabled(consoleManager.logs.isEmpty)
-                        }
+            Divider()
 
-                        Spacer()
-
-                        Text("Console")
-                            .font(.headline)
-
-                        Spacer()
-
-                        // Right buttons
-                        HStack(spacing: 24) {
-                            Button {
-                                consoleManager.isCapturing.toggle()
-                            } label: {
-                                Image(systemName: consoleManager.isCapturing ? "pause.fill" : "play.fill")
-                                    .foregroundStyle(consoleManager.isCapturing ? .red : .green)
-                            }
-
-                            Button {
-                                showSettings = true
-                            } label: {
-                                Image(systemName: "gearshape")
-                                    .foregroundStyle(settingsActive ? .blue : .secondary)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: useRegex ? "Regex" : "Filter")
-            .sheet(item: $shareItem) { item in
-                ShareSheet(content: item.content)
-            }
-            .sheet(isPresented: $showSettings) {
-                ConsoleSettingsSheet(
-                    useRegex: $useRegex,
-                    preserveLog: Binding(
-                        get: { consoleManager.preserveLog },
-                        set: { consoleManager.preserveLog = $0 }
-                    ),
-                    enabledLogTypes: $enabledLogTypes
-                )
+            // Log list
+            if filteredLogs.isEmpty {
+                emptyState
+            } else {
+                logList
             }
         }
+        .sheet(item: $shareItem) { item in
+            ShareSheet(content: item.content)
+        }
+        .sheet(isPresented: $showSettings) {
+            ConsoleSettingsSheet(
+                useRegex: $useRegex,
+                enabledLogTypes: $enabledLogTypes
+            )
+        }
+    }
+
+    // MARK: - Console Header
+
+    private var consoleHeader: some View {
+        HStack(spacing: 16) {
+            // Left button group: trash + export
+            HStack(spacing: 4) {
+                Button {
+                    consoleManager.clear()
+                } label: {
+                    Image(systemName: "trash")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(consoleManager.logs.isEmpty ? .tertiary : .primary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+                .disabled(consoleManager.logs.isEmpty)
+
+                Button {
+                    shareItem = ShareContent(content: consoleManager.exportAsText())
+                } label: {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(consoleManager.logs.isEmpty ? .tertiary : .primary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+                .disabled(consoleManager.logs.isEmpty)
+            }
+            .padding(.horizontal, 6)
+            .glassEffect(in: .capsule)
+
+            Spacer()
+
+            // Center: Title
+            Text("Console")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.primary)
+
+            Spacer()
+
+            // Right button group: pause/play + settings
+            HStack(spacing: 4) {
+                Button {
+                    consoleManager.isCapturing.toggle()
+                } label: {
+                    Image(systemName: consoleManager.isCapturing ? "pause.fill" : "play.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(consoleManager.isCapturing ? .red : .green)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+
+                Button {
+                    showSettings = true
+                } label: {
+                    Image(systemName: settingsActive ? "gearshape.fill" : "gearshape")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(settingsActive ? .blue : .secondary)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                }
+            }
+            .padding(.horizontal, 6)
+            .glassEffect(in: .capsule)
+        }
+        .padding(.horizontal, 16)
+        .padding(.top, 16)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Search Bar
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField(useRegex ? "Regex" : "Filter", text: $searchText)
+                .textFieldStyle(.plain)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
     }
 }
 
@@ -739,7 +780,7 @@ private struct TypeBadge: View {
 private struct ConsoleSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var useRegex: Bool
-    @Binding var preserveLog: Bool
+    @AppStorage("consolePreserveLog") private var preserveLog: Bool = false
     @Binding var enabledLogTypes: Set<ConsoleLog.LogType>
 
     var body: some View {
