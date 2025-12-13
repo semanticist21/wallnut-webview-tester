@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var urlText: String = ""
-    @State private var isFocused: Bool = false
+    @State private var showDropdown: Bool = false
     @State private var showSettings: Bool = false
     @State private var showBookmarks: Bool = false
     @State private var urlValidationState: URLValidationState = .empty
@@ -137,190 +137,170 @@ struct ContentView: View {
 
     private var urlInputView: some View {
         GeometryReader { geometry in
-            ZStack {
-                // Background tap area (bottom layer) - dismisses keyboard/dropdown
-                Color.clear
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        // Dismiss keyboard first, then update state after delay
-                        // to avoid RTI session conflict (iOS 17+ bug)
-                        UIApplication.shared.sendAction(
-                            #selector(UIResponder.resignFirstResponder),
-                            to: nil, from: nil, for: nil
-                        )
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            isFocused = false
-                        }
-                    }
+            // Background tap to dismiss keyboard and dropdown
+            Color.clear
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    textFieldFocused = false
+                    showDropdown = false
+                }
 
-                // Main content
-                VStack(spacing: 16) {
-                    // Walnut logo
-                    Image("walnut")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 120)
-                        .padding(.bottom, -12)
+            VStack(spacing: 16) {
+                // Walnut logo
+                Image("walnut")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(height: 120)
+                    .padding(.bottom, -12)
 
-                    // URL parts chips - FlowLayout for wrapping
-                    FlowLayout(spacing: 8, alignment: .center) {
-                        ForEach(urlParts, id: \.self) { part in
-                            ChipButton(label: part) {
-                                urlText += part
-                            }
-                        }
-                    }
-                    .frame(width: inputWidth)
-
-                    // WebView Type Toggle
-                    Picker("WebView Type", selection: $useSafariWebView) {
-                        Text("WKWebView")
-                            .tag(false)
-                        Text("SafariVC")
-                            .tag(true)
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: inputWidth)
-
-                    // URL Input
-                    HStack(spacing: 12) {
-                        HStack(spacing: 12) {
-                            Image(systemName: urlValidationState.iconName)
-                                .foregroundStyle(urlValidationState.iconColor)
-                                .font(.system(size: 16))
-                                .contentTransition(.symbolEffect(.replace))
-
-                            TextField("Enter URL", text: $urlText)
-                                .textFieldStyle(.plain)
-                                .autocorrectionDisabled()
-                                .textInputAutocapitalization(.never)
-                                .keyboardType(.URL)
-                                .submitLabel(.go)
-                                .font(.system(size: 16))
-                                .focused($textFieldFocused)
-                                .onSubmit {
-                                    if urlValidationState == .valid {
-                                        isFocused = false
-                                        textFieldFocused = false
-                                        submitURL()
-                                    }
-                                }
-                                .onChange(of: urlText) { _, _ in
-                                    // Debounced URL validation
-                                    validationTask?.cancel()
-                                    validationTask = Task {
-                                        try? await Task.sleep(for: .milliseconds(150))
-                                        guard !Task.isCancelled else { return }
-                                        validateURL()
-                                    }
-                                }
-
-                            if !urlText.isEmpty {
-                                Button {
-                                    urlText = ""
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(.secondary)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal, 18)
-                        .padding(.vertical, 14)
-                        .frame(width: urlValidationState == .valid ? inputWidth - 60 : inputWidth)
-                        .glassEffect(in: .capsule)
-
-                        if urlValidationState == .valid {
-                            Button {
-                                // Dismiss keyboard first, then submit after delay
-                                // to avoid RTI session conflict (iOS 17+ bug)
-                                UIApplication.shared.sendAction(
-                                    #selector(UIResponder.resignFirstResponder),
-                                    to: nil, from: nil, for: nil
-                                )
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    isFocused = false
-                                    submitURL()
-                                }
-                            } label: {
-                                Image(systemName: "arrow.right")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(.primary)
-                                    .frame(width: 48, height: 48)
-                                    .glassEffect(in: .circle)
-                            }
-                            .buttonStyle(.plain)
-                            .transition(.opacity.animation(.easeOut(duration: 0.15)))
-                        }
-                    }
-                    .animation(.easeOut(duration: 0.25), value: urlValidationState)
-                    .onChange(of: textFieldFocused) { _, newValue in
-                        if newValue {
-                            withAnimation(.easeOut(duration: 0.15)) {
-                                isFocused = true
-                            }
-                        } else {
-                            isFocused = false
+                // URL parts chips - FlowLayout for wrapping
+                FlowLayout(spacing: 8, alignment: .center) {
+                    ForEach(urlParts, id: \.self) { part in
+                        ChipButton(label: part) {
+                            urlText += part
                         }
                     }
                 }
-                .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32)
+                .frame(width: inputWidth)
 
-                // Autocomplete dropdown (top layer - receives touches first)
-                if isFocused && !filteredURLs.isEmpty {
-                    VStack(spacing: 0) {
-                        ForEach(filteredURLs.prefix(4), id: \.self) { url in
+                // WebView Type Toggle
+                Picker("WebView Type", selection: $useSafariWebView) {
+                    Text("WKWebView")
+                        .tag(false)
+                    Text("SafariVC")
+                        .tag(true)
+                }
+                .pickerStyle(.segmented)
+                .frame(width: inputWidth)
+
+                // URL Input
+                HStack(spacing: 12) {
+                    HStack(spacing: 12) {
+                        Image(systemName: urlValidationState.iconName)
+                            .foregroundStyle(urlValidationState.iconColor)
+                            .font(.system(size: 16))
+                            .contentTransition(.symbolEffect(.replace))
+
+                        TextField("Enter URL", text: $urlText)
+                            .textFieldStyle(.plain)
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                            .keyboardType(.URL)
+                            .submitLabel(.go)
+                            .font(.system(size: 16))
+                            .focused($textFieldFocused)
+                            .onSubmit {
+                                if urlValidationState == .valid {
+                                    textFieldFocused = false
+                                    showDropdown = false
+                                    submitURL()
+                                }
+                            }
+                            .onChange(of: urlText) { _, _ in
+                                // Debounced URL validation
+                                validationTask?.cancel()
+                                validationTask = Task {
+                                    try? await Task.sleep(for: .milliseconds(150))
+                                    guard !Task.isCancelled else { return }
+                                    validateURL()
+                                }
+                            }
+
+                        if !urlText.isEmpty {
                             Button {
-                                // Dismiss keyboard first, then update state after delay
-                                // to avoid RTI session conflict (iOS 17+ bug)
-                                UIApplication.shared.sendAction(
-                                    #selector(UIResponder.resignFirstResponder),
-                                    to: nil, from: nil, for: nil
-                                )
-                                let selectedURL = url
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                    urlText = selectedURL
-                                    isFocused = false
-                                }
+                                urlText = ""
                             } label: {
-                                HStack {
-                                    Image(systemName: "clock.arrow.circlepath")
-                                        .foregroundStyle(.secondary)
-                                        .font(.system(size: 14))
-                                    Text(url)
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(.primary)
-                                        .lineLimit(1)
-                                    Spacer()
-                                }
-                                .padding(.horizontal, 18)
-                                .padding(.vertical, 10)
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundStyle(.secondary)
                             }
                             .buttonStyle(.plain)
-                            .overlay(alignment: .trailing) {
-                                Button {
-                                    removeURL(url)
-                                } label: {
-                                    Image(systemName: "xmark")
-                                        .foregroundStyle(.tertiary)
-                                        .font(.system(size: 12))
-                                }
-                                .buttonStyle(.plain)
-                                .padding(.trailing, 18)
-                            }
-
-                            if url != filteredURLs.prefix(4).last {
-                                Divider()
-                                    .padding(.horizontal, 16)
-                            }
                         }
                     }
-                    .frame(width: inputWidth)
-                    .glassEffect(in: .rect(cornerRadius: 16))
-                    .position(
-                        x: geometry.size.width / 2,
-                        y: geometry.size.height * 0.32 + 80
-                    )
+                    .padding(.horizontal, 18)
+                    .padding(.vertical, 14)
+                    .frame(width: urlValidationState == .valid ? inputWidth - 60 : inputWidth)
+                    .glassEffect(in: .capsule)
+
+                    if urlValidationState == .valid {
+                        Button {
+                            textFieldFocused = false
+                            showDropdown = false
+                            submitURL()
+                        } label: {
+                            Image(systemName: "arrow.right")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .frame(width: 48, height: 48)
+                                .glassEffect(in: .circle)
+                        }
+                        .buttonStyle(.plain)
+                        .transition(.opacity.animation(.easeOut(duration: 0.15)))
+                    }
+                }
+                .animation(.easeOut(duration: 0.25), value: urlValidationState)
+                // Autocomplete dropdown as overlay
+                .overlay(alignment: .top) {
+                    if showDropdown && !filteredURLs.isEmpty {
+                        VStack(spacing: 0) {
+                            ForEach(filteredURLs.prefix(4), id: \.self) { url in
+                                Button {
+                                    urlText = url
+                                    textFieldFocused = false
+                                    showDropdown = false
+                                } label: {
+                                    HStack {
+                                        Image(systemName: "clock.arrow.circlepath")
+                                            .foregroundStyle(.secondary)
+                                            .font(.system(size: 14))
+                                        Text(url)
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(.primary)
+                                            .lineLimit(1)
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, 18)
+                                    .padding(.vertical, 10)
+                                    .contentShape(Rectangle()) // 전체 영역 터치 가능
+                                }
+                                .buttonStyle(.plain)
+                                .overlay(alignment: .trailing) {
+                                    Button {
+                                        removeURL(url)
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                            .foregroundStyle(.tertiary)
+                                            .font(.system(size: 12))
+                                            .padding(8) // 터치 영역 확대
+                                            .contentShape(Rectangle())
+                                    }
+                                    .buttonStyle(.plain)
+                                    .padding(.trailing, 10)
+                                }
+
+                                if url != filteredURLs.prefix(4).last {
+                                    Divider()
+                                        .padding(.horizontal, 16)
+                                }
+                            }
+                        }
+                        .frame(width: inputWidth)
+                        .glassEffect(in: .rect(cornerRadius: 16))
+                        .offset(y: 60)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                }
+            }
+            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32)
+            .onChange(of: textFieldFocused) { _, newValue in
+                withAnimation(.easeOut(duration: 0.15)) {
+                    showDropdown = newValue && !filteredURLs.isEmpty
+                }
+            }
+            .onChange(of: filteredURLs) { _, newValue in
+                if textFieldFocused {
+                    withAnimation(.easeOut(duration: 0.15)) {
+                        showDropdown = !newValue.isEmpty
+                    }
                 }
             }
         }

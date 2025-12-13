@@ -276,6 +276,14 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         }
     }
 
+    static func dismantleUIView(_ uiView: WKWebView, coordinator: Coordinator) {
+        // Explicit cleanup before deallocation
+        uiView.stopLoading()
+        uiView.navigationDelegate = nil
+        uiView.uiDelegate = nil
+        coordinator.invalidateObservation()
+    }
+
     // MARK: - Coordinator
 
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
@@ -293,6 +301,11 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                     self?.isLoading = webView.isLoading
                 }
             }
+        }
+
+        func invalidateObservation() {
+            loadingObservation?.invalidate()
+            loadingObservation = nil
         }
 
         // Handle navigation actions (link clicks)
@@ -350,7 +363,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         }
 
         deinit {
-            loadingObservation?.invalidate()
+            invalidateObservation()
         }
     }
 }
