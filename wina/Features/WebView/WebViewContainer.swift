@@ -9,10 +9,71 @@ import SwiftUI
 import WebKit
 import SafariServices
 
+// MARK: - WebView Navigator
+
+@Observable
+class WebViewNavigator {
+    var canGoBack: Bool = false
+    var canGoForward: Bool = false
+
+    private weak var webView: WKWebView?
+    private var canGoBackObservation: NSKeyValueObservation?
+    private var canGoForwardObservation: NSKeyValueObservation?
+
+    func attach(to webView: WKWebView) {
+        self.webView = webView
+
+        // Initial state
+        canGoBack = webView.canGoBack
+        canGoForward = webView.canGoForward
+
+        // Observe changes
+        canGoBackObservation = webView.observe(\.canGoBack, options: .new) { [weak self] webView, _ in
+            DispatchQueue.main.async {
+                self?.canGoBack = webView.canGoBack
+            }
+        }
+        canGoForwardObservation = webView.observe(\.canGoForward, options: .new) { [weak self] webView, _ in
+            DispatchQueue.main.async {
+                self?.canGoForward = webView.canGoForward
+            }
+        }
+    }
+
+    func detach() {
+        canGoBackObservation?.invalidate()
+        canGoForwardObservation?.invalidate()
+        canGoBackObservation = nil
+        canGoForwardObservation = nil
+        webView = nil
+        canGoBack = false
+        canGoForward = false
+    }
+
+    func goBack() {
+        webView?.goBack()
+    }
+
+    func goForward() {
+        webView?.goForward()
+    }
+
+    func reload() {
+        webView?.reload()
+    }
+
+    func stopLoading() {
+        webView?.stopLoading()
+    }
+}
+
+// MARK: - WebView Container
+
 struct WebViewContainer: View {
     let urlString: String
     let useSafari: Bool
     @Binding var webViewID: UUID
+    let navigator: WebViewNavigator?
 
     // Loading State
     @State private var isLoading: Bool = true
@@ -103,7 +164,8 @@ struct WebViewContainer: View {
                     WKWebViewRepresentable(
                         urlString: normalizedURL,
                         configuration: webViewConfiguration,
-                        isLoading: $isLoading
+                        isLoading: $isLoading,
+                        navigator: navigator
                     )
                     .id(webViewID)
                     .frame(width: webViewWidth, height: webViewHeight)
@@ -209,6 +271,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
     let urlString: String
     let configuration: WKWebViewConfiguration
     @Binding var isLoading: Bool
+    let navigator: WebViewNavigator?
 
     // Navigation & Gestures
     @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = true
@@ -227,7 +290,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(isLoading: $isLoading)
+        Coordinator(isLoading: $isLoading, navigator: navigator)
     }
 
     func makeUIView(context: Context) -> WKWebView {
@@ -260,6 +323,9 @@ struct WKWebViewRepresentable: UIViewRepresentable {
 
         // Set up KVO for loading progress
         context.coordinator.observeWebView(webView)
+
+        // Attach navigator for external control
+        context.coordinator.navigator?.attach(to: webView)
 
         if let url = URL(string: urlString) {
             webView.load(URLRequest(url: url))
@@ -300,17 +366,20 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         uiView.navigationDelegate = nil
         uiView.uiDelegate = nil
         coordinator.invalidateObservation()
+        coordinator.navigator?.detach()
     }
 
     // MARK: - Coordinator
 
     class Coordinator: NSObject, WKNavigationDelegate, WKUIDelegate {
         @Binding var isLoading: Bool
+        let navigator: WebViewNavigator?
 
         private var loadingObservation: NSKeyValueObservation?
 
-        init(isLoading: Binding<Bool>) {
+        init(isLoading: Binding<Bool>, navigator: WebViewNavigator?) {
             _isLoading = isLoading
+            self.navigator = navigator
         }
 
         func observeWebView(_ webView: WKWebView) {
@@ -460,5 +529,5 @@ struct SafariWebView: UIViewControllerRepresentable {
 
 #Preview {
     @Previewable @State var id = UUID()
-    WebViewContainer(urlString: "https://apple.com", useSafari: false, webViewID: $id)
+    WebViewContainer(urlString: "https://apple.com", useSafari: false, webViewID: $id, navigator: nil)
 }

@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var showDropdown: Bool = false
     @State private var showSettings: Bool = false
     @State private var showBookmarks: Bool = false
+    @State private var showInfo: Bool = false
     @State private var urlValidationState: URLValidationState = .empty
     @State private var useSafariWebView: Bool = false
     @State private var showWebView: Bool = false
@@ -20,6 +21,7 @@ struct ContentView: View {
     @State private var bookmarks: [String] = []
     @State private var cachedRecentURLs: [String] = []
     @State private var validationTask: Task<Void, Never>?
+    @State private var webViewNavigator = WebViewNavigator()
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData = Data()
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData = Data()
@@ -93,8 +95,13 @@ struct ContentView: View {
         ZStack {
             if showWebView {
                 // WebView screen
-                WebViewContainer(urlString: loadedURL, useSafari: useSafariWebView, webViewID: $webViewID)
-                    .ignoresSafeArea(edges: .bottom)
+                WebViewContainer(
+                    urlString: loadedURL,
+                    useSafari: useSafariWebView,
+                    webViewID: $webViewID,
+                    navigator: useSafariWebView ? nil : webViewNavigator
+                )
+                .ignoresSafeArea(edges: .bottom)
             } else {
                 // URL input screen
                 urlInputView
@@ -107,13 +114,15 @@ struct ContentView: View {
                     hasBookmarks: !bookmarks.isEmpty,
                     useSafariVC: useSafariWebView,
                     isOverlayMode: !shouldBarsBeExpanded,
-                    onBack: {
+                    onHome: {
                         withAnimation(.easeOut(duration: 0.2)) {
                             showWebView = false
                         }
                     },
+                    navigator: useSafariWebView ? nil : webViewNavigator,
                     showSettings: $showSettings,
-                    showBookmarks: $showBookmarks
+                    showBookmarks: $showBookmarks,
+                    showInfo: $showInfo
                 )
             } else {
                 topBar
@@ -140,6 +149,13 @@ struct ContentView: View {
                 },
                 currentURL: urlText
             )
+        }
+        .sheet(isPresented: $showInfo) {
+            if useSafariWebView {
+                SafariVCInfoView()
+            } else {
+                InfoView()
+            }
         }
         // Recreate SafariVC when configuration settings change
         .onChange(of: safariEntersReaderIfAvailable) { _, _ in
@@ -371,9 +387,7 @@ struct ContentView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                if !showWebView {
-                    InfoButton(useSafariVC: useSafariWebView)
-                }
+                InfoSheetButton(showInfo: $showInfo)
                 SettingsButton(showSettings: $showSettings)
             }
         }

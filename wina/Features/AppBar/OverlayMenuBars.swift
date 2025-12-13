@@ -12,9 +12,11 @@ struct OverlayMenuBars: View {
     let hasBookmarks: Bool
     let useSafariVC: Bool
     let isOverlayMode: Bool  // true: pull menu, false: fixed position
-    let onBack: () -> Void
+    let onHome: () -> Void
+    let navigator: WebViewNavigator?
     @Binding var showSettings: Bool
     @Binding var showBookmarks: Bool
+    @Binding var showInfo: Bool
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
@@ -77,7 +79,21 @@ struct OverlayMenuBars: View {
             // Menu buttons
             HStack(spacing: 12) {
                 if showWebView {
-                    BackButton(action: onBack)
+                    // WebView mode: Home, Back, Forward, Refresh
+                    HomeButton(action: onHome)
+
+                    // Navigation buttons (only for WKWebView, not SafariVC)
+                    if !useSafariVC, let nav = navigator {
+                        WebBackButton(isEnabled: nav.canGoBack) {
+                            nav.goBack()
+                        }
+                        WebForwardButton(isEnabled: nav.canGoForward) {
+                            nav.goForward()
+                        }
+                        RefreshButton {
+                            nav.reload()
+                        }
+                    }
                 } else {
                     ThemeToggleButton()
                     BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: hasBookmarks)
@@ -85,9 +101,8 @@ struct OverlayMenuBars: View {
 
                 Spacer()
 
-                if !showWebView {
-                    InfoButton(useSafariVC: useSafariVC)
-                }
+                // Info button (always visible)
+                InfoSheetButton(showInfo: $showInfo)
                 SettingsButton(showSettings: $showSettings)
             }
             .padding(.horizontal, 16)
@@ -173,9 +188,11 @@ struct OverlayMenuBars: View {
             hasBookmarks: true,
             useSafariVC: false,
             isOverlayMode: true,
-            onBack: {},
+            onHome: {},
+            navigator: nil,
             showSettings: .constant(false),
-            showBookmarks: .constant(false)
+            showBookmarks: .constant(false),
+            showInfo: .constant(false)
         )
     }
 }
@@ -190,9 +207,11 @@ struct OverlayMenuBars: View {
             hasBookmarks: true,
             useSafariVC: false,
             isOverlayMode: false,
-            onBack: {},
+            onHome: {},
+            navigator: nil,
             showSettings: .constant(false),
-            showBookmarks: .constant(false)
+            showBookmarks: .constant(false),
+            showInfo: .constant(false)
         )
     }
 }

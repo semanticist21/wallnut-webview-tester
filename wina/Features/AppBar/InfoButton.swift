@@ -5,6 +5,7 @@
 
 import SwiftUI
 
+/// Info button with internal sheet management (for standalone use)
 struct InfoButton: View {
     var useSafariVC: Bool = false
     @State private var showInfo = false
@@ -19,6 +20,17 @@ struct InfoButton: View {
             } else {
                 InfoView()
             }
+        }
+    }
+}
+
+/// Info button with external sheet binding (for OverlayMenuBars)
+struct InfoSheetButton: View {
+    @Binding var showInfo: Bool
+
+    var body: some View {
+        GlassIconButton(icon: "info.circle") {
+            showInfo = true
         }
     }
 }
