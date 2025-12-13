@@ -361,9 +361,18 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                         const message = args.map(function(arg) {
                             if (arg === null) return 'null';
                             if (arg === undefined) return 'undefined';
+                            if (typeof arg === 'function') return '[Function: ' + (arg.name || 'anonymous') + ']';
+                            if (typeof arg === 'symbol') return arg.toString();
+                            if (arg instanceof Error) return arg.name + ': ' + arg.message + (arg.stack ? '\\n' + arg.stack : '');
+                            if (arg instanceof Element) return '<' + arg.tagName.toLowerCase() + (arg.id ? '#' + arg.id : '') + (arg.className ? '.' + arg.className.split(' ').join('.') : '') + '>';
+                            if (arg instanceof Map) return 'Map(' + arg.size + ') {' + Array.from(arg.entries()).map(function(e) { return e[0] + ' => ' + e[1]; }).join(', ') + '}';
+                            if (arg instanceof Set) return 'Set(' + arg.size + ') {' + Array.from(arg).join(', ') + '}';
                             if (typeof arg === 'object') {
-                                try { return JSON.stringify(arg, null, 2); }
-                                catch(e) { return String(arg); }
+                                try {
+                                    const str = JSON.stringify(arg, null, 2);
+                                    return str === '{}' && Object.keys(arg).length === 0 ? '{}' : (str === '{}' ? '[object ' + (arg.constructor?.name || 'Object') + ']' : str);
+                                }
+                                catch(e) { return '[object ' + (arg.constructor?.name || 'Object') + ']'; }
                             }
                             return String(arg);
                         }).join(' ');
