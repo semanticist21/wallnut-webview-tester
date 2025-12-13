@@ -73,17 +73,24 @@ wina/
 ├── winaApp.swift              # App entry point (@main), 다크모드 상태 관리
 ├── ContentView.swift          # Root view, URL 입력 + 유효성 검사 + 북마크 + 최근 URL 기록
 ├── Features/
-│   ├── AppBar/                # 상단 바 버튼들
+│   ├── AppBar/                # 상단/하단 메뉴 바
+│   │   ├── OverlayMenuBars.swift      # 메인 메뉴 바 (dual-mode: fixed/overlay)
 │   │   ├── ThemeToggleButton.swift
 │   │   ├── SettingsButton.swift
 │   │   ├── InfoButton.swift
 │   │   ├── BookmarkButton.swift
 │   │   └── BackButton.swift
 │   ├── Settings/              # WebView 설정
-│   │   ├── SettingsView.swift         # WKWebView 설정 (20개 항목)
-│   │   └── SafariVCSettingsView.swift # SafariVC 전용 설정 (5개 항목)
+│   │   ├── SettingsView.swift         # 메인 Settings 진입점
+│   │   ├── ConfigurationSettingsView.swift  # Static settings (WebView 재생성 필요)
+│   │   ├── PermissionsSettingsView.swift    # 권한 설정 (Camera, Mic, Location)
+│   │   └── SafariVCSettingsView.swift       # SafariVC 전용 설정
+│   ├── UserAgent/             # User-Agent 커스터마이징
+│   │   ├── UserAgentPickerView.swift  # UA 선택 UI
+│   │   ├── UserAgentPresets.swift     # 프리셋 정의
+│   │   └── UserAgentBuilder.swift     # UA 문자열 빌더
 │   ├── Info/                  # WKWebView 정보 표시
-│   │   ├── InfoView.swift             # 메인 뷰 + 검색 (~570줄)
+│   │   ├── InfoView.swift             # 메인 뷰 + 검색
 │   │   ├── SharedInfoWebView.swift    # WebView 싱글톤 + 캐싱
 │   │   ├── InfoComponents.swift       # 공유 UI 컴포넌트
 │   │   ├── DeviceInfoView.swift       # 디바이스 정보
@@ -100,11 +107,13 @@ wina/
 ├── Shared/
 │   ├── Components/            # 재사용 UI 컴포넌트
 │   │   ├── GlassIconButton.swift      # 원형 glass effect 버튼
+│   │   ├── GlassActionButton.swift    # 액션 버튼 (capsule glass)
 │   │   ├── ChipButton.swift           # 탭 가능한 칩 버튼
 │   │   ├── FlowLayout.swift           # 자동 줄바꿈 Layout
 │   │   ├── InfoPopoverButton.swift    # info/deprecated 버튼 + popover
 │   │   ├── SettingToggleRow.swift     # 설정 토글 (InfoPopoverButton 사용)
-│   │   └── ColorPickerRow.swift       # 색상 선택기 (InfoPopoverButton 사용)
+│   │   ├── ColorPickerRow.swift       # 색상 선택기 (InfoPopoverButton 사용)
+│   │   └── WebViewSizeControl.swift   # WebView 크기 조절 컨트롤
 │   └── Extensions/            # 공유 확장
 │       ├── ColorExtensions.swift      # Color/UIColor hex 변환
 │       └── DeviceUtilities.swift      # UIDevice.isIPad, ScreenUtility, SettingsFormatter
@@ -571,6 +580,30 @@ private var topBar: some View {
 
 **핵심**: `.frame(maxHeight: .infinity, alignment: .top)`으로 HStack의 실제 높이(버튼 44pt)만 터치 영역이 되고, 나머지는 아래 뷰로 pass-through됨.
 
+### 제스처 우선순위 (WebView 위 오버레이)
+
+WebView 위에 드래그 가능한 오버레이를 만들 때, WebView가 터치를 먼저 가로챔:
+
+```swift
+// ❌ 문제: WebView 스크롤이 드래그 제스처보다 우선
+.gesture(dragGesture)
+
+// ✅ 해결: highPriorityGesture로 우선순위 확보
+.highPriorityGesture(isOverlayMode ? dragGesture : nil)
+```
+
+**OverlayMenuBars 패턴** (`Features/AppBar/OverlayMenuBars.swift`):
+
+```swift
+// Dual-mode: isOverlayMode로 동작 분기
+struct OverlayMenuBars: View {
+    let isOverlayMode: Bool  // true: pull-down drawer, false: fixed position
+
+    // Fixed mode (App preset ≤82%): 바 항상 표시, 드래그 없음
+    // Overlay mode (>82%/fullscreen): 상단에 6pt 핸들만 노출, 드래그로 펼침
+}
+```
+
 ### contentShape와 터치 영역
 
 배경 탭으로 키보드/드롭다운을 닫을 때:
@@ -581,6 +614,25 @@ Color.clear
     .contentShape(Rectangle())  // 터치 영역 명시
     .onTapGesture { ... }
 ```
+
+### Safe Area 동적 처리
+
+하단 바를 홈 인디케이터 위에 배치할 때, 기기별 safe area 차이 대응:
+
+```swift
+// ❌ 하드코딩된 값은 기기별로 다르게 보임
+.padding(.bottom, -20)
+
+// ✅ GeometryReader로 동적 safe area 계산
+GeometryReader { geometry in
+    bottomBar
+        .padding(.bottom, -(geometry.safeAreaInsets.bottom * 0.6))
+}
+```
+
+**iOS Safe Area Insets 참고**:
+- 상단: 59-62pt (Dynamic Island/노치 기기), SwiftUI가 자동 처리
+- 하단: 0pt (홈 버튼), 34pt (Face ID 기기) → 동적 처리 필요
 
 ## iOS 26 주의사항
 
