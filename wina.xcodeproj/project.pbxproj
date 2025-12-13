@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		4097EBA02EEDC4B500E9A0D9 /* UAParserSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4097EB262EEDC3C000E9A0D9 /* UAParserSwift */; };
+		4097EBA32EEDC4B600E9A0D9 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 4097EBA22EEDC4B600E9A0D9 /* SwiftSoup */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4097EBA02EEDC4B500E9A0D9 /* UAParserSwift in Frameworks */,
+				4097EBA32EEDC4B600E9A0D9 /* SwiftSoup in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,6 +98,7 @@
 			name = wina;
 			packageProductDependencies = (
 				4097EB262EEDC3C000E9A0D9 /* UAParserSwift */,
+				4097EBA22EEDC4B600E9A0D9 /* SwiftSoup */,
 			);
 			productName = wina;
 			productReference = 406E0D4B2EE4093D00D6F9C6 /* wina.app */;
@@ -154,6 +157,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				4097EB252EEDC3C000E9A0D9 /* XCRemoteSwiftPackageReference "UAParserSwift" */,
+				4097EBA12EEDC4B600E9A0D9 /* XCRemoteSwiftPackageReference "SwiftSoup" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 406E0D4C2EE4093D00D6F9C6 /* Products */;
@@ -481,6 +485,14 @@
 				minimumVersion = 1.2.1;
 			};
 		};
+		4097EBA12EEDC4B600E9A0D9 /* XCRemoteSwiftPackageReference "SwiftSoup" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/scinfu/SwiftSoup.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.7.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -488,6 +500,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4097EB252EEDC3C000E9A0D9 /* XCRemoteSwiftPackageReference "UAParserSwift" */;
 			productName = UAParserSwift;
+		};
+		4097EBA22EEDC4B600E9A0D9 /* SwiftSoup */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4097EBA12EEDC4B600E9A0D9 /* XCRemoteSwiftPackageReference "SwiftSoup" */;
+			productName = SwiftSoup;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

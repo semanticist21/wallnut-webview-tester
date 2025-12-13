@@ -189,11 +189,11 @@ struct InfoView: View {
                 }
 
                 NavigationLink {
-                    PerformanceView()
+                    BenchmarkView()
                 } label: {
                     InfoCategoryRow(
                         icon: "gauge.with.needle",
-                        title: "Performance",
+                        title: "Benchmark",
                         description: "JavaScript, DOM, Graphics benchmarks"
                     )
                 }
@@ -248,7 +248,7 @@ struct InfoView: View {
     private func searchResultRow(for item: InfoSearchItem) -> some View {
         if item.linkToPerformance {
             NavigationLink {
-                PerformanceView()
+                BenchmarkView()
             } label: {
                 HStack {
                     Text(item.label)

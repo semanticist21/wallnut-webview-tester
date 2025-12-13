@@ -20,6 +20,8 @@ struct OverlayMenuBars: View {
     @Binding var showInfo: Bool
     @Binding var showConsole: Bool
     @Binding var showNetwork: Bool
+    @Binding var showStorage: Bool
+    @Binding var showPerformance: Bool
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
@@ -199,6 +201,30 @@ struct OverlayMenuBars: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
+
+                        Button {
+                            showStorage = true
+                        } label: {
+                            Image(systemName: "externaldrive")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.primary)
+                                .padding(8)
+                                .background(.ultraThinMaterial, in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
+                            showPerformance = true
+                        } label: {
+                            Image(systemName: "gauge.with.dots.needle.bottom.50percent")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.primary)
+                                .padding(8)
+                                .background(.ultraThinMaterial, in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     Spacer()
@@ -359,7 +385,9 @@ struct OverlayMenuBars: View {
             showBookmarks: .constant(false),
             showInfo: .constant(false),
             showConsole: .constant(false),
-            showNetwork: .constant(false)
+            showNetwork: .constant(false),
+            showStorage: .constant(false),
+            showPerformance: .constant(false)
         )
     }
 }
@@ -381,7 +409,9 @@ struct OverlayMenuBars: View {
             showBookmarks: .constant(false),
             showInfo: .constant(false),
             showConsole: .constant(false),
-            showNetwork: .constant(false)
+            showNetwork: .constant(false),
+            showStorage: .constant(false),
+            showPerformance: .constant(false)
         )
     }
 }

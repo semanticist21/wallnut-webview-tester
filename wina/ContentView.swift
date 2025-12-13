@@ -16,6 +16,8 @@ struct ContentView: View {
     @State private var showInfo: Bool = false
     @State private var showConsole: Bool = false
     @State private var showNetwork: Bool = false
+    @State private var showStorage: Bool = false
+    @State private var showPerformance: Bool = false
     @State private var urlValidationState: URLValidationState = .empty
     @State private var useSafariWebView: Bool = false
     @State private var showWebView: Bool = false
@@ -138,7 +140,9 @@ struct ContentView: View {
                     showBookmarks: $showBookmarks,
                     showInfo: $showInfo,
                     showConsole: $showConsole,
-                    showNetwork: $showNetwork
+                    showNetwork: $showNetwork,
+                    showStorage: $showStorage,
+                    showPerformance: $showPerformance
                 )
             } else {
                 topBar
@@ -191,6 +195,29 @@ struct ContentView: View {
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationContentInteraction(.scrolls)
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showStorage) {
+            StorageView(storageManager: StorageManager(), navigator: webViewNavigator)
+                .presentationDetents([.fraction(0.35), .medium, .large])
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                .presentationContentInteraction(.scrolls)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showPerformance) {
+            PerformanceView(performanceManager: webViewNavigator.performanceManager) {
+                // Refresh action: collect performance data
+                Task {
+                    webViewNavigator.performanceManager.isLoading = true
+                    if let result = await webViewNavigator.evaluateJavaScript(PerformanceManager.collectionScript) as? String {
+                        webViewNavigator.performanceManager.parseData(from: result)
+                    }
+                    webViewNavigator.performanceManager.isLoading = false
+                }
+            }
+            .presentationDetents([.fraction(0.35), .medium, .large])
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+            .presentationContentInteraction(.scrolls)
+            .presentationDragIndicator(.visible)
         }
         // Recreate SafariVC when configuration settings change
         .onChange(of: safariEntersReaderIfAvailable) { _, _ in

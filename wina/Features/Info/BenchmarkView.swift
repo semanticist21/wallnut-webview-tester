@@ -1,14 +1,14 @@
 //
-//  PerformanceView.swift
+//  BenchmarkView.swift
 //  wina
 //
 
 import SwiftUI
 import WebKit
 
-// MARK: - Performance View
+// MARK: - Benchmark View
 
-struct PerformanceView: View {
+struct BenchmarkView: View {
     @State private var perfInfo: PerformanceInfo?
     @State private var loadingStatus = "Launching WebView process..."
     @State private var isRunning = false

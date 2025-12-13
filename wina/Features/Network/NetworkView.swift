@@ -161,6 +161,10 @@ class NetworkManager {
     var requests: [NetworkRequest] = []
     var isCapturing: Bool = true
 
+    // Limits for memory management
+    private let maxRequestCount = 500
+    private let maxBodySize = 100 * 1024  // 100KB
+
     // Read preserveLog from UserDefaults
     var preserveLog: Bool {
         UserDefaults.standard.bool(forKey: "networkPreserveLog")
@@ -177,17 +181,22 @@ class NetworkManager {
         guard isCapturing else { return }
 
         let type = NetworkRequest.RequestType(rawValue: requestType) ?? .other
+        let truncatedBody = truncateBody(body)
         let request = NetworkRequest(
             id: UUID(uuidString: id) ?? UUID(),
             method: method.uppercased(),
             url: url,
             requestHeaders: headers,
-            requestBody: body,
+            requestBody: truncatedBody,
             startTime: Date(),
             requestType: type
         )
 
         DispatchQueue.main.async {
+            // Enforce max request count to prevent memory bloat
+            if self.requests.count >= self.maxRequestCount {
+                self.requests.removeFirst()
+            }
             self.requests.append(request)
         }
     }
@@ -202,16 +211,24 @@ class NetworkManager {
     ) {
         guard let uuid = UUID(uuidString: id) else { return }
 
+        let truncatedBody = truncateBody(responseBody)
+
         DispatchQueue.main.async {
             if let index = self.requests.firstIndex(where: { $0.id == uuid }) {
                 self.requests[index].status = status
                 self.requests[index].statusText = statusText
                 self.requests[index].responseHeaders = responseHeaders
-                self.requests[index].responseBody = responseBody
+                self.requests[index].responseBody = truncatedBody
                 self.requests[index].error = error
                 self.requests[index].endTime = Date()
             }
         }
+    }
+
+    private func truncateBody(_ body: String?) -> String? {
+        guard let body, body.count > maxBodySize else { return body }
+        let truncated = String(body.prefix(maxBodySize))
+        return truncated + "\n\n... [truncated, \(body.count - maxBodySize) more bytes]"
     }
 
     func clear() {
@@ -772,9 +789,12 @@ private struct NetworkDetailView: View {
                 } label: {
                     Image(systemName: "doc.on.doc")
                         .font(.system(size: 14))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .glassEffect(in: .circle)
             }
 
             Text(request.url)
