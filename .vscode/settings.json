@@ -1,0 +1,13 @@
+{
+  "[swift]": {
+    "editor.defaultFormatter": "vknabel.vscode-apple-swift-format",
+    "editor.formatOnSave": false,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit"
+    }
+  },
+  "swiftlint.enable": true,
+  "swiftlint.autoLintWorkspace": true,
+  "apple-swift-format.path": "swift format",
+  "editor.rulers": [120]
+}
