@@ -212,6 +212,8 @@ struct LiveSettingsView: View {
 struct LoadedSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var webViewID: UUID
+    @Binding var loadedURL: String
+    let navigator: WebViewNavigator
 
     var body: some View {
         NavigationStack {
@@ -229,7 +231,11 @@ struct LoadedSettingsView: View {
                     }
 
                     NavigationLink {
-                        ConfigurationSettingsView(webViewID: $webViewID)
+                        ConfigurationSettingsView(
+                            webViewID: $webViewID,
+                            loadedURL: $loadedURL,
+                            navigator: navigator
+                        )
                     } label: {
                         SettingsCategoryRow(
                             icon: "gearshape.fill",
@@ -685,7 +691,12 @@ struct SettingsView: View {
 
 #Preview("Loaded Settings") {
     @Previewable @State var id = UUID()
-    LoadedSettingsView(webViewID: $id)
+    @Previewable @State var url = "https://example.com"
+    LoadedSettingsView(
+        webViewID: $id,
+        loadedURL: $url,
+        navigator: WebViewNavigator()
+    )
 }
 
 #Preview("Live Settings") {

@@ -12,6 +12,8 @@ import SwiftUI
 struct ConfigurationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var webViewID: UUID
+    @Binding var loadedURL: String
+    let navigator: WebViewNavigator
 
     // AppStorage (persistent)
     @AppStorage("enableJavaScript") private var storedEnableJavaScript: Bool = true
@@ -155,6 +157,12 @@ struct ConfigurationSettingsView: View {
         storedDetectCalendarEvents = detectCalendarEvents
         storedPrivateBrowsing = privateBrowsing
         storedUpgradeToHTTPS = upgradeToHTTPS
+
+        // Update loadedURL to current page before reload
+        if let currentURL = navigator.currentURL?.absoluteString {
+            loadedURL = currentURL
+        }
+
         webViewID = UUID()
         dismiss()
     }
@@ -356,7 +364,12 @@ struct ConfigurationSettingsView: View {
 
 #Preview("Configuration Settings") {
     @Previewable @State var id = UUID()
+    @Previewable @State var url = "https://example.com"
     NavigationStack {
-        ConfigurationSettingsView(webViewID: $id)
+        ConfigurationSettingsView(
+            webViewID: $id,
+            loadedURL: $url,
+            navigator: WebViewNavigator()
+        )
     }
 }

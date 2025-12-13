@@ -149,7 +149,11 @@ struct ContentView: View {
             if useSafariWebView {
                 SafariVCSettingsView(webViewID: $webViewID)
             } else {
-                LoadedSettingsView(webViewID: $webViewID)
+                LoadedSettingsView(
+                    webViewID: $webViewID,
+                    loadedURL: $loadedURL,
+                    navigator: webViewNavigator
+                )
             }
         }
         .sheet(isPresented: $showBookmarks) {

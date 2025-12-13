@@ -145,8 +145,8 @@ func evaluateJavaScript(_ script: String) async -> Any?
 
 **인스턴스 재생성 vs 유지**:
 - URL 변경: `navigator.loadURL()` 사용 → 히스토리 유지
-- Configuration 설정 변경: `webViewID = UUID()` → 새 인스턴스 생성 필요
-- SafariVC: 항상 새 인스턴스 생성 (프레임워크 제한)
+- Configuration 설정 변경: `webViewID = UUID()` → 새 인스턴스 생성, **현재 URL 기준**으로 reload
+- SafariVC: 항상 새 인스턴스 생성 (프레임워크 제한), **최초 URL**로만 reload 가능
 
 ### Info WebView 모드
 
