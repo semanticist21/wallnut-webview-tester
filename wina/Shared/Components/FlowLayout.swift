@@ -10,13 +10,22 @@ struct FlowLayout: Layout {
     var spacing: CGFloat = 8
     var alignment: FlowLayoutAlignment = .leading
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    struct CacheData {
+        var arrangement: (size: CGSize, positions: [CGPoint], lineWidths: [CGFloat], lineIndices: [Int])?
+    }
+
+    func makeCache(subviews: Subviews) -> CacheData {
+        CacheData()
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout CacheData) -> CGSize {
         let result = arrangeSubviews(proposal: proposal, subviews: subviews)
+        cache.arrangement = result
         return result.size
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let arrangement = arrangeSubviews(proposal: proposal, subviews: subviews)
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout CacheData) {
+        let arrangement = cache.arrangement ?? arrangeSubviews(proposal: proposal, subviews: subviews)
 
         for (index, position) in arrangement.positions.enumerated() {
             let lineIndex = arrangement.lineIndices[index]

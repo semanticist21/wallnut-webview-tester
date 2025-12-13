@@ -531,8 +531,8 @@ struct InfoView: View {
             }
         }
         .task {
-            // Load device info immediately (no WebView needed)
-            deviceInfo = await DeviceInfo.load()
+            // Start device info loading in parallel with WebView init (no WebView needed)
+            async let device = DeviceInfo.load()
 
             // Pre-initialize shared WebView in background
             await SharedInfoWebView.shared.initialize { status in
@@ -545,6 +545,8 @@ struct InfoView: View {
             async let display = DisplayInfo.load { _ in }
             async let accessibility = AccessibilityInfo.load { _ in }
 
+            // Await all results (device likely already completed)
+            deviceInfo = await device
             webViewInfo = await webView
             codecInfo = await codec
             displayInfo = await display
