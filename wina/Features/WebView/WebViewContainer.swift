@@ -363,10 +363,16 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                             if (arg === undefined) return 'undefined';
                             if (typeof arg === 'function') return '[Function: ' + (arg.name || 'anonymous') + ']';
                             if (typeof arg === 'symbol') return arg.toString();
+                            if (typeof arg === 'bigint') return arg.toString() + 'n';
                             if (arg instanceof Error) return arg.name + ': ' + arg.message + (arg.stack ? '\\n' + arg.stack : '');
                             if (arg instanceof Element) return '<' + arg.tagName.toLowerCase() + (arg.id ? '#' + arg.id : '') + (arg.className ? '.' + arg.className.split(' ').join('.') : '') + '>';
+                            if (arg instanceof RegExp) return arg.toString();
+                            if (arg instanceof Date) return 'Date(' + arg.toISOString() + ')';
+                            if (arg instanceof Promise) return 'Promise {<pending>}';
                             if (arg instanceof Map) return 'Map(' + arg.size + ') {' + Array.from(arg.entries()).map(function(e) { return e[0] + ' => ' + e[1]; }).join(', ') + '}';
                             if (arg instanceof Set) return 'Set(' + arg.size + ') {' + Array.from(arg).join(', ') + '}';
+                            if (ArrayBuffer.isView(arg)) return arg.constructor.name + '(' + arg.length + ') [' + Array.from(arg.slice(0, 10)).join(', ') + (arg.length > 10 ? ', ...' : '') + ']';
+                            if (arg instanceof ArrayBuffer) return 'ArrayBuffer(' + arg.byteLength + ')';
                             if (typeof arg === 'object') {
                                 try {
                                     const str = JSON.stringify(arg, null, 2);
