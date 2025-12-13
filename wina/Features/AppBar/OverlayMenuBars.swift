@@ -23,6 +23,8 @@ struct OverlayMenuBars: View {
     @State private var dragOffset: CGFloat = 0
     @State private var showURLInput: Bool = false
     @State private var urlInputText: String = ""
+    // WKWebView 내부 input 필드의 키보드 표시 상태를 추적한다
+    @State private var isKeyboardVisible: Bool = false
 
     private let topBarHeight: CGFloat = 64
     private let bottomBarHeight: CGFloat = 56
@@ -48,9 +50,12 @@ struct OverlayMenuBars: View {
         }
     }
 
-    // Show bottom bar?
+    // 하단 바 표시 여부를 결정한다 (키보드가 올라오면 하단 바를 숨긴다)
     private var showBottomBar: Bool {
-        !isOverlayMode || isExpanded
+        // 키보드가 보이면 하단 바를 숨겨서 입력을 방해하지 않는다
+        guard !isKeyboardVisible else { return false }
+        // overlay 모드에서는 확장 상태일 때만, fixed 모드에서는 항상 표시한다
+        return !isOverlayMode || isExpanded
     }
 
     var body: some View {
@@ -67,11 +72,20 @@ struct OverlayMenuBars: View {
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isExpanded)
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: dragOffset)
+        .animation(.easeInOut(duration: 0.25), value: isKeyboardVisible)
         .onAppear {
             isExpanded = !isOverlayMode  // Expanded by default in fixed mode
         }
         .onChange(of: isOverlayMode) { _, newValue in
             isExpanded = !newValue
+        }
+        // WKWebView 내부 input 필드에서 키보드가 올라올 때 시스템 notification을 수신한다
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            isKeyboardVisible = true
+        }
+        // WKWebView 내부 input 필드에서 키보드가 내려갈 때 시스템 notification을 수신한다
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            isKeyboardVisible = false
         }
     }
 

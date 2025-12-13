@@ -21,6 +21,15 @@ struct PermissionsSettingsView: View {
     var body: some View {
         List {
             Section {
+                HStack {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text("Changing permissions in Settings will restart the app")
+                        .font(.subheadline)
+                }
+            }
+
+            Section {
                 PermissionRow(
                     title: "Camera",
                     status: permissionText(for: cameraStatus),

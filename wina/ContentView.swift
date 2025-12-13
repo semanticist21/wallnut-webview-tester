@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import WebKit
 
 struct ContentView: View {
     @State private var urlText: String = ""
@@ -22,9 +23,15 @@ struct ContentView: View {
     @State private var cachedRecentURLs: [String] = []
     @State private var validationTask: Task<Void, Never>?
     @State private var webViewNavigator = WebViewNavigator()
+    @State private var cleanStart: Bool = false
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData = Data()
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData = Data()
+
+    // Quick options (synced with Settings)
+    @AppStorage("privateBrowsing") private var privateBrowsing = false
+    @AppStorage("enableJavaScript") private var enableJavaScript = true
+    @AppStorage("contentMode") private var contentMode: Int = 0
 
     // Cached NSDataDetector for URL validation (expensive to create)
     private static let linkDetector = try? NSDataDetector(types: NSTextCheckingResult.CheckingType.link.rawValue)
@@ -303,6 +310,11 @@ struct ContentView: View {
                 }
                 .animation(.easeOut(duration: 0.25), value: urlValidationState)
                 .overlay(alignment: .top) { dropdownOverlay }
+
+                // Quick options
+                if !useSafariWebView {
+                    quickOptionsRow
+                }
             }
             .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32)
             .onChange(of: textFieldFocused) { _, newValue in
@@ -380,6 +392,33 @@ struct ContentView: View {
         }
     }
 
+    // Inverted binding for "No JS" toggle
+    private var noJavaScript: Binding<Bool> {
+        Binding(
+            get: { !enableJavaScript },
+            set: { enableJavaScript = !$0 }
+        )
+    }
+
+    // Desktop mode binding (contentMode: 0=Recommended, 1=Mobile, 2=Desktop)
+    private var desktopMode: Binding<Bool> {
+        Binding(
+            get: { contentMode == 2 },
+            set: { contentMode = $0 ? 2 : 0 }
+        )
+    }
+
+    private var quickOptionsRow: some View {
+        FlowLayout(spacing: 8, alignment: .center) {
+            ToggleChipButton(isOn: $cleanStart, label: "Clean Start")
+            ToggleChipButton(isOn: $privateBrowsing, label: "Private")
+            ToggleChipButton(isOn: noJavaScript, label: "No JS")
+            ToggleChipButton(isOn: desktopMode, label: "Desktop")
+        }
+        .frame(width: inputWidth)
+        .padding(.top, 8)
+    }
+
     private var topBar: some View {
         HStack {
             HStack(spacing: 12) {
@@ -426,9 +465,28 @@ struct ContentView: View {
             }
         }
 
-        loadedURL = urlText
-        withAnimation(.easeOut(duration: 0.2)) {
-            showWebView = true
+        // Clean Start: clear all website data before loading
+        if cleanStart {
+            cleanStart = false  // Reset toggle (one-time action)
+            Task {
+                let dataStore = WKWebsiteDataStore.default()
+                let allTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+                let records = await dataStore.dataRecords(ofTypes: allTypes)
+                await dataStore.removeData(ofTypes: allTypes, for: records)
+
+                await MainActor.run {
+                    loadedURL = urlText
+                    webViewID = UUID()  // Force new instance after clearing
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        showWebView = true
+                    }
+                }
+            }
+        } else {
+            loadedURL = urlText
+            withAnimation(.easeOut(duration: 0.2)) {
+                showWebView = true
+            }
         }
     }
 
