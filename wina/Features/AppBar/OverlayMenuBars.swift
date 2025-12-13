@@ -13,6 +13,7 @@ struct OverlayMenuBars: View {
     let useSafariVC: Bool
     let isOverlayMode: Bool  // true: pull menu, false: fixed position
     let onHome: () -> Void
+    let onURLChange: (String) -> Void
     let navigator: WebViewNavigator?
     @Binding var showSettings: Bool
     @Binding var showBookmarks: Bool
@@ -20,6 +21,8 @@ struct OverlayMenuBars: View {
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
+    @State private var showURLInput: Bool = false
+    @State private var urlInputText: String = ""
 
     private let topBarHeight: CGFloat = 64
     private let bottomBarHeight: CGFloat = 56
@@ -127,8 +130,27 @@ struct OverlayMenuBars: View {
 
     private var bottomBar: some View {
         GeometryReader { geometry in
-            VStack(spacing: 0) {
-                Spacer()
+            HStack(spacing: 16) {
+                if showWebView {
+                    // Current URL display + change button
+                    Button {
+                        urlInputText = navigator?.currentURL?.absoluteString ?? ""
+                        showURLInput = true
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "link")
+                                .font(.system(size: 14))
+                            Text(navigator?.currentURL?.host() ?? "URL")
+                                .font(.subheadline)
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(.ultraThinMaterial, in: Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
             }
             .frame(height: bottomBarHeight)
             .frame(maxWidth: .infinity)
@@ -138,6 +160,19 @@ struct OverlayMenuBars: View {
             .padding(.bottom, -(geometry.safeAreaInsets.bottom * 0.6))
             .offset(y: bottomOffset)
             .frame(maxHeight: .infinity, alignment: .bottom)
+            .alert("Change URL", isPresented: $showURLInput) {
+                TextField("Enter URL", text: $urlInputText)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                Button("Cancel", role: .cancel) {}
+                Button("Go") {
+                    if !urlInputText.isEmpty {
+                        onURLChange(urlInputText)
+                    }
+                }
+            } message: {
+                Text("Enter a new URL to load")
+            }
         }
     }
 
@@ -189,6 +224,7 @@ struct OverlayMenuBars: View {
             useSafariVC: false,
             isOverlayMode: true,
             onHome: {},
+            onURLChange: { _ in },
             navigator: nil,
             showSettings: .constant(false),
             showBookmarks: .constant(false),
@@ -208,6 +244,7 @@ struct OverlayMenuBars: View {
             useSafariVC: false,
             isOverlayMode: false,
             onHome: {},
+            onURLChange: { _ in },
             navigator: nil,
             showSettings: .constant(false),
             showBookmarks: .constant(false),

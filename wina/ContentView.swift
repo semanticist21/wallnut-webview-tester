@@ -119,6 +119,16 @@ struct ContentView: View {
                             showWebView = false
                         }
                     },
+                    onURLChange: { newURL in
+                        // Load in same WebView instance (preserves history)
+                        if !useSafariWebView {
+                            webViewNavigator.loadURL(newURL)
+                        } else {
+                            // SafariVC needs recreation
+                            loadedURL = newURL
+                            webViewID = UUID()
+                        }
+                    },
                     navigator: useSafariWebView ? nil : webViewNavigator,
                     showSettings: $showSettings,
                     showBookmarks: $showBookmarks,

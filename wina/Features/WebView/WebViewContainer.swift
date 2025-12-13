@@ -34,18 +34,18 @@ class WebViewNavigator {
         canGoForward = webView.canGoForward
         currentURL = webView.url
 
-        // Observe changes
-        canGoBackObservation = webView.observe(\.canGoBack, options: .new) { [weak self] webView, _ in
+        // Observe changes (use .initial to get immediate value, .new for updates)
+        canGoBackObservation = webView.observe(\.canGoBack, options: [.initial, .new]) { [weak self] webView, _ in
             DispatchQueue.main.async {
                 self?.canGoBack = webView.canGoBack
             }
         }
-        canGoForwardObservation = webView.observe(\.canGoForward, options: .new) { [weak self] webView, _ in
+        canGoForwardObservation = webView.observe(\.canGoForward, options: [.initial, .new]) { [weak self] webView, _ in
             DispatchQueue.main.async {
                 self?.canGoForward = webView.canGoForward
             }
         }
-        urlObservation = webView.observe(\.url, options: .new) { [weak self] webView, _ in
+        urlObservation = webView.observe(\.url, options: [.initial, .new]) { [weak self] webView, _ in
             DispatchQueue.main.async {
                 self?.currentURL = webView.url
             }
@@ -79,6 +79,20 @@ class WebViewNavigator {
 
     func stopLoading() {
         webView?.stopLoading()
+    }
+
+    /// Load a new URL in the same WebView instance
+    func loadURL(_ urlString: String) {
+        guard let webView else { return }
+
+        // Normalize URL (add https:// if no scheme)
+        var normalized = urlString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !normalized.contains("://") {
+            normalized = "https://\(normalized)"
+        }
+
+        guard let url = URL(string: normalized) else { return }
+        webView.load(URLRequest(url: url))
     }
 
     /// Evaluate JavaScript on the attached WebView
