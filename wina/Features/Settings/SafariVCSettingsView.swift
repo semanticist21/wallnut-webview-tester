@@ -49,30 +49,29 @@ struct SafariVCSettingsView: View {
 // MARK: - SafariVC Configuration Settings
 
 struct SafariVCConfigurationSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
     @Binding var webViewID: UUID
 
-    // Store initial values for change detection
-    @State private var initialValues: [String: AnyHashable] = [:]
+    // AppStorage (persistent)
+    @AppStorage("safariEntersReaderIfAvailable") private var storedEntersReaderIfAvailable: Bool = false
+    @AppStorage("safariBarCollapsingEnabled") private var storedBarCollapsingEnabled: Bool = true
+    @AppStorage("safariDismissButtonStyle") private var storedDismissButtonStyle: Int = 0
+    @AppStorage("safariControlTintColorHex") private var storedControlTintColorHex: String = ""
+    @AppStorage("safariBarTintColorHex") private var storedBarTintColorHex: String = ""
+
+    // Local state (editable)
+    @State private var entersReaderIfAvailable: Bool = false
+    @State private var barCollapsingEnabled: Bool = true
+    @State private var dismissButtonStyle: Int = 0
+    @State private var controlTintColorHex: String = ""
+    @State private var barTintColorHex: String = ""
 
     private var hasChanges: Bool {
-        initialValues != currentValues
-    }
-
-    // SafariVC Configuration
-    @AppStorage("safariEntersReaderIfAvailable") private var entersReaderIfAvailable: Bool = false
-    @AppStorage("safariBarCollapsingEnabled") private var barCollapsingEnabled: Bool = true
-    @AppStorage("safariDismissButtonStyle") private var dismissButtonStyle: Int = 0
-    @AppStorage("safariControlTintColorHex") private var controlTintColorHex: String = ""
-    @AppStorage("safariBarTintColorHex") private var barTintColorHex: String = ""
-
-    private var currentValues: [String: AnyHashable] {
-        [
-            "entersReaderIfAvailable": entersReaderIfAvailable,
-            "barCollapsingEnabled": barCollapsingEnabled,
-            "dismissButtonStyle": dismissButtonStyle,
-            "controlTintColorHex": controlTintColorHex,
-            "barTintColorHex": barTintColorHex
-        ]
+        entersReaderIfAvailable != storedEntersReaderIfAvailable ||
+        barCollapsingEnabled != storedBarCollapsingEnabled ||
+        dismissButtonStyle != storedDismissButtonStyle ||
+        controlTintColorHex != storedControlTintColorHex ||
+        barTintColorHex != storedBarTintColorHex
     }
 
     var body: some View {
@@ -81,25 +80,36 @@ struct SafariVCConfigurationSettingsView: View {
             behaviorSection
             uiStyleSection
             colorsSection
+            resetSection
         }
         .navigationTitle("Configuration")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Reset") {
-                    resetToDefaults()
-                }
-                .foregroundStyle(.red)
+                Button("Apply") { applyChanges() }
+                    .fontWeight(.semibold)
+                    .disabled(!hasChanges)
             }
         }
-        .onAppear {
-            initialValues = currentValues
-        }
-        .onDisappear {
-            if hasChanges {
-                webViewID = UUID()
-            }
-        }
+        .onAppear { loadFromStorage() }
+    }
+
+    private func loadFromStorage() {
+        entersReaderIfAvailable = storedEntersReaderIfAvailable
+        barCollapsingEnabled = storedBarCollapsingEnabled
+        dismissButtonStyle = storedDismissButtonStyle
+        controlTintColorHex = storedControlTintColorHex
+        barTintColorHex = storedBarTintColorHex
+    }
+
+    private func applyChanges() {
+        storedEntersReaderIfAvailable = entersReaderIfAvailable
+        storedBarCollapsingEnabled = barCollapsingEnabled
+        storedDismissButtonStyle = dismissButtonStyle
+        storedControlTintColorHex = controlTintColorHex
+        storedBarTintColorHex = barTintColorHex
+        webViewID = UUID()
+        dismiss()
     }
 
     // MARK: - Sections
@@ -165,6 +175,20 @@ struct SafariVCConfigurationSettingsView: View {
             )
         } header: {
             Text("Colors")
+        }
+    }
+
+    @ViewBuilder
+    private var resetSection: some View {
+        Section {
+            HStack {
+                Spacer()
+                GlassActionButton("Reset", icon: "arrow.counterclockwise", style: .destructive) {
+                    resetToDefaults()
+                }
+                Spacer()
+            }
+            .listRowBackground(Color.clear)
         }
     }
 

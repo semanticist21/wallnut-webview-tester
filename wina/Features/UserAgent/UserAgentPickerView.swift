@@ -2,8 +2,15 @@ import SwiftUI
 
 struct UserAgentPickerView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("customUserAgent") private var customUserAgent: String = ""
+    @AppStorage("customUserAgent") private var storedCustomUserAgent: String = ""
     @AppStorage("cachedSystemUserAgent") private var cachedSystemUserAgent: String = ""
+
+    // Local binding support for Apply-based settings
+    private var localUserAgentBinding: Binding<String>?
+
+    private var customUserAgent: Binding<String> {
+        localUserAgentBinding ?? $storedCustomUserAgent
+    }
 
     @State private var showingCustomEditor = false
 
@@ -16,30 +23,31 @@ struct UserAgentPickerView: View {
         UserAgentPresets.chromeMobileAndroid,
     ]
 
+    init() {
+        self.localUserAgentBinding = nil
+    }
+
+    init(localUserAgent: Binding<String>) {
+        self.localUserAgentBinding = localUserAgent
+    }
+
     var body: some View {
-        NavigationStack {
-            List {
-                currentPreviewSection
-                quickPicksSection
-                browseAllSection
-            }
-            .navigationTitle("User Agent")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-            .sheet(isPresented: $showingCustomEditor) {
-                CustomUserAgentEditor(userAgent: $customUserAgent)
-            }
+        List {
+            currentPreviewSection
+            quickPicksSection
+            browseAllSection
+        }
+        .navigationTitle("User Agent")
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingCustomEditor) {
+            CustomUserAgentEditor(userAgent: customUserAgent)
         }
     }
 
     // MARK: - Current Preview Section
 
-    private var currentUserAgent: String {
-        customUserAgent.isEmpty ? cachedSystemUserAgent : customUserAgent
+    private var currentUserAgentValue: String {
+        customUserAgent.wrappedValue.isEmpty ? cachedSystemUserAgent : customUserAgent.wrappedValue
     }
 
     private var currentPreviewSection: some View {
@@ -50,11 +58,11 @@ struct UserAgentPickerView: View {
                 HStack(alignment: .top, spacing: 12) {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 6) {
-                            if customUserAgent.isEmpty {
+                            if customUserAgent.wrappedValue.isEmpty {
                                 Text("Default")
                                     .font(.subheadline.weight(.medium))
                             } else {
-                                Text(detectBrowserName(customUserAgent))
+                                Text(detectBrowserName(customUserAgent.wrappedValue))
                                     .font(.subheadline.weight(.medium))
                                 Text("Custom")
                                     .font(.caption2)
@@ -64,20 +72,20 @@ struct UserAgentPickerView: View {
                                     .background(.blue, in: Capsule())
                             }
                         }
-                        if currentUserAgent.isEmpty {
+                        if currentUserAgentValue.isEmpty {
                             Text("System default (view Info to detect)")
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                         } else {
-                            HighlightedUserAgent(userAgent: currentUserAgent)
+                            HighlightedUserAgent(userAgent: currentUserAgentValue)
                                 .lineLimit(3)
                         }
                     }
                     Spacer(minLength: 0)
 
-                    if !customUserAgent.isEmpty {
+                    if !customUserAgent.wrappedValue.isEmpty {
                         Button {
-                            withAnimation { customUserAgent = "" }
+                            withAnimation { customUserAgent.wrappedValue = "" }
                         } label: {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.title3)
@@ -104,9 +112,9 @@ struct UserAgentPickerView: View {
             ForEach(quickPicks) { preset in
                 QuickPickRow(
                     preset: preset,
-                    isActive: customUserAgent == preset.userAgent
+                    isActive: customUserAgent.wrappedValue == preset.userAgent
                 ) {
-                    withAnimation { customUserAgent = preset.userAgent }
+                    withAnimation { customUserAgent.wrappedValue = preset.userAgent }
                 }
             }
         } header: {
@@ -121,7 +129,7 @@ struct UserAgentPickerView: View {
     private var browseAllSection: some View {
         Section {
             NavigationLink {
-                AllPresetsView(customUserAgent: $customUserAgent)
+                AllPresetsView(customUserAgent: customUserAgent)
             } label: {
                 HStack {
                     Image(systemName: "list.bullet.rectangle")

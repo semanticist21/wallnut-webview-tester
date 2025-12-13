@@ -2686,8 +2686,6 @@ struct ActiveSettingsView: View {
                         .foregroundStyle(.green)
                     Text("Live Settings")
                 }
-            } footer: {
-                Text("Changes apply instantly without reload")
             }
 
             Section {
@@ -2732,8 +2730,6 @@ struct ActiveSettingsView: View {
                         .foregroundStyle(.orange)
                     Text("Configuration")
                 }
-            } footer: {
-                Text("Changes require WebView reload")
             }
 
             Section {
@@ -2795,8 +2791,6 @@ struct ActiveSettingsView: View {
                         .foregroundStyle(.blue)
                     Text("Permissions")
                 }
-            } footer: {
-                Text("Manage in Settings → Permissions")
             }
         }
         .navigationTitle("Active Settings")

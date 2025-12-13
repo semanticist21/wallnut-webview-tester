@@ -16,68 +16,69 @@ struct ConfigurationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var webViewID: UUID
 
-    // Store initial values for change detection
-    @State private var initialValues: [String: AnyHashable] = [:]
+    // AppStorage (persistent)
+    @AppStorage("enableJavaScript") private var storedEnableJavaScript: Bool = true
+    @AppStorage("allowsContentJavaScript") private var storedAllowsContentJavaScript: Bool = true
+    @AppStorage("minimumFontSize") private var storedMinimumFontSize: Double = 0
+    @AppStorage("mediaAutoplay") private var storedMediaAutoplay: Bool = false
+    @AppStorage("inlineMediaPlayback") private var storedInlineMediaPlayback: Bool = true
+    @AppStorage("allowsAirPlay") private var storedAllowsAirPlay: Bool = true
+    @AppStorage("allowsPictureInPicture") private var storedAllowsPictureInPicture: Bool = true
+    @AppStorage("preferredContentMode") private var storedPreferredContentMode: Int = 0
+    @AppStorage("javaScriptCanOpenWindows") private var storedJavaScriptCanOpenWindows: Bool = false
+    @AppStorage("fraudulentWebsiteWarning") private var storedFraudulentWebsiteWarning: Bool = true
+    @AppStorage("elementFullscreenEnabled") private var storedElementFullscreenEnabled: Bool = false
+    @AppStorage("suppressesIncrementalRendering") private var storedSuppressesIncrementalRendering: Bool = false
+    @AppStorage("detectPhoneNumbers") private var storedDetectPhoneNumbers: Bool = false
+    @AppStorage("detectLinks") private var storedDetectLinks: Bool = false
+    @AppStorage("detectAddresses") private var storedDetectAddresses: Bool = false
+    @AppStorage("detectCalendarEvents") private var storedDetectCalendarEvents: Bool = false
+    @AppStorage("privateBrowsing") private var storedPrivateBrowsing: Bool = false
+    @AppStorage("upgradeToHTTPS") private var storedUpgradeToHTTPS: Bool = true
 
-    private var hasChanges: Bool {
-        initialValues != currentValues
-    }
-
-    // Core Settings
-    @AppStorage("enableJavaScript") private var enableJavaScript: Bool = true
-    @AppStorage("allowsContentJavaScript") private var allowsContentJavaScript: Bool = true
-    @AppStorage("minimumFontSize") private var minimumFontSize: Double = 0
-
-    // Media Settings
-    @AppStorage("mediaAutoplay") private var mediaAutoplay: Bool = false
-    @AppStorage("inlineMediaPlayback") private var inlineMediaPlayback: Bool = true
-    @AppStorage("allowsAirPlay") private var allowsAirPlay: Bool = true
-    @AppStorage("allowsPictureInPicture") private var allowsPictureInPicture: Bool = true
-
-    // Content Mode
-    @AppStorage("preferredContentMode") private var preferredContentMode: Int = 0
-
-    // Behavior Settings
-    @AppStorage("javaScriptCanOpenWindows") private var javaScriptCanOpenWindows: Bool = false
-    @AppStorage("fraudulentWebsiteWarning") private var fraudulentWebsiteWarning: Bool = true
-    @AppStorage("elementFullscreenEnabled") private var elementFullscreenEnabled: Bool = false
-    @AppStorage("suppressesIncrementalRendering") private var suppressesIncrementalRendering: Bool = false
-
-    // Data Detectors
-    @AppStorage("detectPhoneNumbers") private var detectPhoneNumbers: Bool = false
-    @AppStorage("detectLinks") private var detectLinks: Bool = false
-    @AppStorage("detectAddresses") private var detectAddresses: Bool = false
-    @AppStorage("detectCalendarEvents") private var detectCalendarEvents: Bool = false
-
-    // Privacy & Security
-    @AppStorage("privateBrowsing") private var privateBrowsing: Bool = false
-    @AppStorage("upgradeToHTTPS") private var upgradeToHTTPS: Bool = true
+    // Local state (editable)
+    @State private var enableJavaScript: Bool = true
+    @State private var allowsContentJavaScript: Bool = true
+    @State private var minimumFontSize: Double = 0
+    @State private var mediaAutoplay: Bool = false
+    @State private var inlineMediaPlayback: Bool = true
+    @State private var allowsAirPlay: Bool = true
+    @State private var allowsPictureInPicture: Bool = true
+    @State private var preferredContentMode: Int = 0
+    @State private var javaScriptCanOpenWindows: Bool = false
+    @State private var fraudulentWebsiteWarning: Bool = true
+    @State private var elementFullscreenEnabled: Bool = false
+    @State private var suppressesIncrementalRendering: Bool = false
+    @State private var detectPhoneNumbers: Bool = false
+    @State private var detectLinks: Bool = false
+    @State private var detectAddresses: Bool = false
+    @State private var detectCalendarEvents: Bool = false
+    @State private var privateBrowsing: Bool = false
+    @State private var upgradeToHTTPS: Bool = true
 
     private var isIPad: Bool {
         UIDevice.current.isIPad
     }
 
-    private var currentValues: [String: AnyHashable] {
-        [
-            "enableJavaScript": enableJavaScript,
-            "allowsContentJavaScript": allowsContentJavaScript,
-            "minimumFontSize": minimumFontSize,
-            "mediaAutoplay": mediaAutoplay,
-            "inlineMediaPlayback": inlineMediaPlayback,
-            "allowsAirPlay": allowsAirPlay,
-            "allowsPictureInPicture": allowsPictureInPicture,
-            "preferredContentMode": preferredContentMode,
-            "javaScriptCanOpenWindows": javaScriptCanOpenWindows,
-            "fraudulentWebsiteWarning": fraudulentWebsiteWarning,
-            "elementFullscreenEnabled": elementFullscreenEnabled,
-            "suppressesIncrementalRendering": suppressesIncrementalRendering,
-            "detectPhoneNumbers": detectPhoneNumbers,
-            "detectLinks": detectLinks,
-            "detectAddresses": detectAddresses,
-            "detectCalendarEvents": detectCalendarEvents,
-            "privateBrowsing": privateBrowsing,
-            "upgradeToHTTPS": upgradeToHTTPS
-        ]
+    private var hasChanges: Bool {
+        enableJavaScript != storedEnableJavaScript ||
+        allowsContentJavaScript != storedAllowsContentJavaScript ||
+        minimumFontSize != storedMinimumFontSize ||
+        mediaAutoplay != storedMediaAutoplay ||
+        inlineMediaPlayback != storedInlineMediaPlayback ||
+        allowsAirPlay != storedAllowsAirPlay ||
+        allowsPictureInPicture != storedAllowsPictureInPicture ||
+        preferredContentMode != storedPreferredContentMode ||
+        javaScriptCanOpenWindows != storedJavaScriptCanOpenWindows ||
+        fraudulentWebsiteWarning != storedFraudulentWebsiteWarning ||
+        elementFullscreenEnabled != storedElementFullscreenEnabled ||
+        suppressesIncrementalRendering != storedSuppressesIncrementalRendering ||
+        detectPhoneNumbers != storedDetectPhoneNumbers ||
+        detectLinks != storedDetectLinks ||
+        detectAddresses != storedDetectAddresses ||
+        detectCalendarEvents != storedDetectCalendarEvents ||
+        privateBrowsing != storedPrivateBrowsing ||
+        upgradeToHTTPS != storedUpgradeToHTTPS
     }
 
     var body: some View {
@@ -89,17 +90,76 @@ struct ConfigurationSettingsView: View {
             configBehaviorSection
             configDataDetectorsSection
             configPrivacySection
+            resetSection
         }
         .navigationTitle("Configuration")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Reset") { resetAllToDefaults() }
-                    .foregroundStyle(.red)
+                Button("Apply") { applyChanges() }
+                    .fontWeight(.semibold)
+                    .disabled(!hasChanges)
             }
         }
-        .onAppear { initialValues = currentValues }
-        .onDisappear { if hasChanges { webViewID = UUID() } }
+        .onAppear { loadFromStorage() }
+    }
+
+    private func loadFromStorage() {
+        enableJavaScript = storedEnableJavaScript
+        allowsContentJavaScript = storedAllowsContentJavaScript
+        minimumFontSize = storedMinimumFontSize
+        mediaAutoplay = storedMediaAutoplay
+        inlineMediaPlayback = storedInlineMediaPlayback
+        allowsAirPlay = storedAllowsAirPlay
+        allowsPictureInPicture = storedAllowsPictureInPicture
+        preferredContentMode = storedPreferredContentMode
+        javaScriptCanOpenWindows = storedJavaScriptCanOpenWindows
+        fraudulentWebsiteWarning = storedFraudulentWebsiteWarning
+        elementFullscreenEnabled = storedElementFullscreenEnabled
+        suppressesIncrementalRendering = storedSuppressesIncrementalRendering
+        detectPhoneNumbers = storedDetectPhoneNumbers
+        detectLinks = storedDetectLinks
+        detectAddresses = storedDetectAddresses
+        detectCalendarEvents = storedDetectCalendarEvents
+        privateBrowsing = storedPrivateBrowsing
+        upgradeToHTTPS = storedUpgradeToHTTPS
+    }
+
+    private func applyChanges() {
+        storedEnableJavaScript = enableJavaScript
+        storedAllowsContentJavaScript = allowsContentJavaScript
+        storedMinimumFontSize = minimumFontSize
+        storedMediaAutoplay = mediaAutoplay
+        storedInlineMediaPlayback = inlineMediaPlayback
+        storedAllowsAirPlay = allowsAirPlay
+        storedAllowsPictureInPicture = allowsPictureInPicture
+        storedPreferredContentMode = preferredContentMode
+        storedJavaScriptCanOpenWindows = javaScriptCanOpenWindows
+        storedFraudulentWebsiteWarning = fraudulentWebsiteWarning
+        storedElementFullscreenEnabled = elementFullscreenEnabled
+        storedSuppressesIncrementalRendering = suppressesIncrementalRendering
+        storedDetectPhoneNumbers = detectPhoneNumbers
+        storedDetectLinks = detectLinks
+        storedDetectAddresses = detectAddresses
+        storedDetectCalendarEvents = detectCalendarEvents
+        storedPrivateBrowsing = privateBrowsing
+        storedUpgradeToHTTPS = upgradeToHTTPS
+        webViewID = UUID()
+        dismiss()
+    }
+
+    @ViewBuilder
+    private var resetSection: some View {
+        Section {
+            HStack {
+                Spacer()
+                GlassActionButton("Reset", icon: "arrow.counterclockwise", style: .destructive) {
+                    resetAllToDefaults()
+                }
+                Spacer()
+            }
+            .listRowBackground(Color.clear)
+        }
     }
 
     // MARK: - Configuration Sections
@@ -299,31 +359,62 @@ struct ConfigurationSettingsView: View {
     }
 }
 
-// MARK: - Live Settings View (Instant Apply)
+// MARK: - Live Settings View (Apply to Save)
 
 struct LiveSettingsView: View {
-    // Navigation & Gestures (Dynamic)
-    @AppStorage("allowsBackForwardGestures") private var allowsBackForwardGestures: Bool = false
-    @AppStorage("allowsLinkPreview") private var allowsLinkPreview: Bool = true
-    @AppStorage("allowZoom") private var allowZoom: Bool = false
-    @AppStorage("textInteractionEnabled") private var textInteractionEnabled: Bool = true
+    @Environment(\.dismiss) private var dismiss
 
-    // Display (Dynamic)
-    @AppStorage("pageZoom") private var pageZoom: Double = 1.0
-    @AppStorage("underPageBackgroundColor") private var underPageBackgroundColorHex: String = ""
+    // AppStorage (persistent)
+    @AppStorage("allowsBackForwardGestures") private var storedAllowsBackForwardGestures: Bool = false
+    @AppStorage("allowsLinkPreview") private var storedAllowsLinkPreview: Bool = true
+    @AppStorage("allowZoom") private var storedAllowZoom: Bool = false
+    @AppStorage("textInteractionEnabled") private var storedTextInteractionEnabled: Bool = true
+    @AppStorage("pageZoom") private var storedPageZoom: Double = 1.0
+    @AppStorage("underPageBackgroundColor") private var storedUnderPageBackgroundColorHex: String = ""
+    @AppStorage("findInteractionEnabled") private var storedFindInteractionEnabled: Bool = false
+    @AppStorage("customUserAgent") private var storedCustomUserAgent: String = ""
+    @AppStorage("webViewWidthRatio") private var storedWebViewWidthRatio: Double = 1.0
+    @AppStorage("webViewHeightRatio") private var storedWebViewHeightRatio: Double = 0.82
 
-    // Features (Dynamic)
-    @AppStorage("findInteractionEnabled") private var findInteractionEnabled: Bool = false
+    // Local state (editable)
+    @State private var allowsBackForwardGestures: Bool = false
+    @State private var allowsLinkPreview: Bool = true
+    @State private var allowZoom: Bool = false
+    @State private var textInteractionEnabled: Bool = true
+    @State private var pageZoom: Double = 1.0
+    @State private var underPageBackgroundColorHex: String = ""
+    @State private var findInteractionEnabled: Bool = false
+    @State private var customUserAgent: String = ""
+    @State private var webViewWidthRatio: Double = 1.0
+    @State private var webViewHeightRatio: Double = 0.82
 
-    // User Agent (Dynamic)
-    @AppStorage("customUserAgent") private var customUserAgent: String = ""
-
-    // WebView Size
-    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
-    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
+    private var hasChanges: Bool {
+        allowsBackForwardGestures != storedAllowsBackForwardGestures ||
+        allowsLinkPreview != storedAllowsLinkPreview ||
+        allowZoom != storedAllowZoom ||
+        textInteractionEnabled != storedTextInteractionEnabled ||
+        pageZoom != storedPageZoom ||
+        underPageBackgroundColorHex != storedUnderPageBackgroundColorHex ||
+        findInteractionEnabled != storedFindInteractionEnabled ||
+        customUserAgent != storedCustomUserAgent ||
+        webViewWidthRatio != storedWebViewWidthRatio ||
+        webViewHeightRatio != storedWebViewHeightRatio
+    }
 
     var body: some View {
         List {
+            if hasChanges {
+                Section {
+                    HStack {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundStyle(.blue)
+                        Text("Changes will apply to WebView")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
             Section {
                 SettingToggleRow(
                     title: "Back/Forward Gestures",
@@ -376,7 +467,7 @@ struct LiveSettingsView: View {
 
             Section {
                 NavigationLink {
-                    UserAgentPickerView()
+                    UserAgentPickerView(localUserAgent: $customUserAgent)
                 } label: {
                     HStack {
                         Text("User Agent")
@@ -398,37 +489,66 @@ struct LiveSettingsView: View {
             } header: {
                 Text("WebView Size")
             }
+
+            Section {
+                HStack {
+                    Spacer()
+                    GlassActionButton("Reset", icon: "arrow.counterclockwise", style: .destructive) {
+                        resetToDefaults()
+                    }
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+            }
         }
         .navigationTitle("Live Settings")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Reset") {
-                    resetToDefaults()
-                }
-                .foregroundStyle(.red)
+                Button("Apply") { applyChanges() }
+                    .fontWeight(.semibold)
+                    .disabled(!hasChanges)
             }
         }
+        .onAppear { loadFromStorage() }
+    }
+
+    private func loadFromStorage() {
+        allowsBackForwardGestures = storedAllowsBackForwardGestures
+        allowsLinkPreview = storedAllowsLinkPreview
+        allowZoom = storedAllowZoom
+        textInteractionEnabled = storedTextInteractionEnabled
+        pageZoom = storedPageZoom
+        underPageBackgroundColorHex = storedUnderPageBackgroundColorHex
+        findInteractionEnabled = storedFindInteractionEnabled
+        customUserAgent = storedCustomUserAgent
+        webViewWidthRatio = storedWebViewWidthRatio
+        webViewHeightRatio = storedWebViewHeightRatio
+    }
+
+    private func applyChanges() {
+        storedAllowsBackForwardGestures = allowsBackForwardGestures
+        storedAllowsLinkPreview = allowsLinkPreview
+        storedAllowZoom = allowZoom
+        storedTextInteractionEnabled = textInteractionEnabled
+        storedPageZoom = pageZoom
+        storedUnderPageBackgroundColorHex = underPageBackgroundColorHex
+        storedFindInteractionEnabled = findInteractionEnabled
+        storedCustomUserAgent = customUserAgent
+        storedWebViewWidthRatio = webViewWidthRatio
+        storedWebViewHeightRatio = webViewHeightRatio
+        dismiss()
     }
 
     private func resetToDefaults() {
-        // Navigation & Gestures
         allowsBackForwardGestures = false
         allowsLinkPreview = true
         allowZoom = false
         textInteractionEnabled = true
-
-        // Display
         pageZoom = 1.0
         underPageBackgroundColorHex = ""
-
-        // Features
         findInteractionEnabled = false
-
-        // User Agent
         customUserAgent = ""
-
-        // WebView Size (App preset)
         webViewWidthRatio = 1.0
         webViewHeightRatio = 0.82
     }
@@ -703,22 +823,31 @@ struct SettingsView: View {
                 displaySection
                 userAgentSection
                 webViewSizeSection
+                resetSection
             }
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Reset All") {
-                        resetAllToDefaults()
-                    }
-                    .foregroundStyle(.red)
-                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var resetSection: some View {
+        Section {
+            HStack {
+                Spacer()
+                GlassActionButton("Reset", icon: "arrow.counterclockwise", style: .destructive) {
+                    resetAllToDefaults()
+                }
+                Spacer()
+            }
+            .listRowBackground(Color.clear)
         }
     }
 

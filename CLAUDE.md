@@ -101,6 +101,7 @@ wina/
 | 용도 | 컴포넌트 | 사용처 |
 |------|----------|--------|
 | 원형 아이콘 버튼 | `GlassIconButton` | AppBar 버튼들 |
+| 액션 버튼 | `GlassActionButton` | Reset/Apply/Done (capsule glass) |
 | 칩/태그 버튼 | `ChipButton` | 프리셋 선택, 태그 |
 | info 버튼 | `InfoPopoverButton` | 모든 info 버튼 (Generic ShapeStyle 지원) |
 | 설정 토글 | `SettingToggleRow` | SettingsView 전체 |
@@ -128,6 +129,23 @@ InfoPopoverButton(text: "설명 텍스트")
 // ✅ 색상 지정 (ShapeStyle 지원)
 InfoPopoverButton(text: "설명 텍스트", iconColor: .tertiary)
 InfoPopoverButton(text: "설명 텍스트", iconColor: Color.blue)
+```
+
+### 액션 버튼 사용법
+
+`GlassActionButton` 컴포넌트를 반드시 사용:
+
+```swift
+// ✅ 기본 스타일
+GlassActionButton("Done") { dismiss() }
+
+// ✅ 아이콘 + 스타일
+GlassActionButton("Reset to Defaults", icon: "arrow.counterclockwise", style: .destructive) {
+    resetToDefaults()
+}
+
+// ✅ 스타일 옵션: .default, .destructive, .primary
+GlassActionButton("Apply", icon: "checkmark", style: .primary) { applyChanges() }
 ```
 
 ### 공유 유틸리티 (`DeviceUtilities.swift`)
@@ -510,6 +528,46 @@ if useSafariWebView {
 ```
 
 모든 설정은 `@AppStorage`로 UserDefaults에 영속화됨.
+
+### Settings 패턴: Local State → Explicit Apply
+
+Configuration, Live Settings는 **명시적 확인** 패턴 사용:
+
+```swift
+// 1. @AppStorage (stored) + @State (local) 분리
+@AppStorage("settingKey") private var storedValue: Bool = false
+@State private var localValue: Bool = false
+
+// 2. 변경 감지
+private var hasChanges: Bool {
+    localValue != storedValue
+}
+
+// 3. 로드/적용/리셋
+private func loadFromStorage() {
+    localValue = storedValue
+}
+
+private func applyChanges() {
+    storedValue = localValue
+    webViewID = UUID()  // WebView 리로드 트리거
+    dismiss()
+}
+
+private func resetToDefaults() {
+    localValue = false  // 기본값으로 리셋 (저장 X)
+}
+```
+
+**적용 대상**:
+- `ConfigurationSettingsView`: Static settings (WebView 재생성 필요)
+- `LiveSettingsView`: Live settings (즉시 적용)
+- `SafariVCConfigurationSettingsView`: SafariVC 설정
+
+**UI 패턴**:
+- Toolbar: Apply 버튼 (`hasChanges` false면 disabled)
+- List 내부: Reset 버튼 (`GlassActionButton` destructive style)
+- 변경 시 경고 Section 표시
 
 ### UI 컴포넌트
 - `SettingsCategoryRow`: 아이콘, 제목, 부가설명이 포함된 NavigationLink 스타일
