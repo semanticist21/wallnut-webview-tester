@@ -287,8 +287,8 @@ struct StorageView: View {
     var body: some View {
         VStack(spacing: 0) {
             storageHeader
-            storageTypePicker
             searchBar
+            storageTypePicker
 
             Divider()
 
