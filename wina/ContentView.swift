@@ -31,6 +31,19 @@ struct ContentView: View {
     @AppStorage("safariEntersReaderIfAvailable") private var safariEntersReaderIfAvailable = false
     @AppStorage("safariBarCollapsingEnabled") private var safariBarCollapsingEnabled = true
 
+    // WebView size settings (for fullscreen detection)
+    @AppStorage("webViewWidthRatio") private var webViewWidthRatio: Double = 1.0
+    @AppStorage("webViewHeightRatio") private var webViewHeightRatio: Double = 0.82
+    @AppStorage("safariWidthRatio") private var safariWidthRatio: Double = 1.0
+    @AppStorage("safariHeightRatio") private var safariHeightRatio: Double = 0.82
+
+    // App preset: heightRatio = 0.82
+    // Use 0.83 threshold to handle floating point comparison
+    private var shouldBarsBeExpanded: Bool {
+        let heightRatio = useSafariWebView ? safariHeightRatio : webViewHeightRatio
+        return heightRatio <= 0.83
+    }
+
     private enum URLValidationState {
         case empty
         case valid
@@ -87,8 +100,24 @@ struct ContentView: View {
                 urlInputView
             }
 
-            // Top bar (always visible)
-            topBar
+            // Menu bars
+            if showWebView {
+                OverlayMenuBars(
+                    showWebView: showWebView,
+                    hasBookmarks: !bookmarks.isEmpty,
+                    useSafariVC: useSafariWebView,
+                    isOverlayMode: !shouldBarsBeExpanded,
+                    onBack: {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            showWebView = false
+                        }
+                    },
+                    showSettings: $showSettings,
+                    showBookmarks: $showBookmarks
+                )
+            } else {
+                topBar
+            }
         }
         .sheet(isPresented: $showSettings) {
             if useSafariWebView {
