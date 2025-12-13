@@ -316,7 +316,6 @@ struct WKWebViewRepresentable: UIViewRepresentable {
     @AppStorage("customUserAgent") private var customUserAgent: String = ""
 
     // Console hooking script - intercepts console methods and forwards to native
-    // swiftlint:disable:next line_length
     private static let consoleHookScript = """
         (function() {
             if (window.__consoleHooked) return;
@@ -408,7 +407,6 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             });
         })();
         """
-    // swiftlint:enable:next line_length
 
     func makeCoordinator() -> Coordinator {
         Coordinator(isLoading: $isLoading, navigator: navigator)

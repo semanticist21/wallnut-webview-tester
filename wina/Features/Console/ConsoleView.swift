@@ -52,6 +52,16 @@ struct ConsoleLog: Identifiable, Equatable {
             case .debug: return "Debug"
             }
         }
+
+        var shortLabel: String {
+            switch self {
+            case .log: return "LOG"
+            case .info: return "INFO"
+            case .warn: return "WARN"
+            case .error: return "ERROR"
+            case .debug: return "DEBUG"
+            }
+        }
     }
 }
 
@@ -195,6 +205,8 @@ struct ConsoleView: View {
             }
             Spacer()
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemBackground))
     }
 
     // MARK: - Log List
@@ -208,8 +220,10 @@ struct ConsoleView: View {
                             .id(log.id)
                     }
                 }
+                .frame(maxWidth: .infinity)
             }
             .background(Color(uiColor: .systemBackground))
+            .scrollContentBackground(.hidden)
             .onChange(of: consoleManager.logs.count) { _, _ in
                 if let lastLog = filteredLogs.last {
                     withAnimation(.easeOut(duration: 0.15)) {
@@ -235,7 +249,7 @@ private struct FilterTab: View {
             HStack(spacing: 4) {
                 Text(label)
                     .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
-                if count > 0 {
+                if count != 0 {  // swiftlint:disable:this empty_count
                     Text("\(count)")
                         .font(.system(size: 10, weight: .medium))
                         .padding(.horizontal, 5)
@@ -265,9 +279,9 @@ private struct LogRow: View {
     @State private var isExpanded: Bool = false
 
     private static let timeFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "HH:mm:ss.SSS"
-        return f
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm:ss.SSS"
+        return formatter
     }()
 
     // Check if message needs expansion (more than 3 lines or 200+ chars)
@@ -276,52 +290,41 @@ private struct LogRow: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .top, spacing: 8) {
-                // Expand indicator (only if expandable)
-                if needsExpansion {
-                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.tertiary)
-                        .frame(width: 10)
-                        .padding(.top, 4)
-                } else {
-                    // Type icon
-                    Image(systemName: log.type.icon)
-                        .font(.system(size: 10))
-                        .foregroundStyle(log.type.color)
-                        .frame(width: 10)
-                        .padding(.top, 3)
-                }
+        HStack(alignment: .top, spacing: 8) {
+            // Expand indicator (only if expandable)
+            if needsExpansion {
+                Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 10)
+                    .padding(.top, 4)
+            }
 
-                VStack(alignment: .leading, spacing: 2) {
-                    // Message
-                    Text(log.message)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(log.type == .error ? .red : .primary)
-                        .lineLimit(isExpanded ? nil : 3)
-                        .textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+            // Message + Source
+            VStack(alignment: .leading, spacing: 2) {
+                Text(log.message)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(log.type == .error ? .red : .primary)
+                    .lineLimit(isExpanded ? nil : 3)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                    // Source location (if available)
-                    if let source = log.source {
-                        Text(source)
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.blue)
-                    }
-                }
-
-                // Right side: type icon (if expandable) + timestamp
-                VStack(alignment: .trailing, spacing: 2) {
-                    if needsExpansion {
-                        Image(systemName: log.type.icon)
-                            .font(.system(size: 10))
-                            .foregroundStyle(log.type.color)
-                    }
-                    Text(Self.timeFormatter.string(from: log.timestamp))
+                // Source location (if available)
+                if let source = log.source {
+                    Text(source)
                         .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(.blue)
                 }
+            }
+
+            // Right side: Type badge + timestamp
+            VStack(alignment: .trailing, spacing: 4) {
+                // Type badge (icon + label)
+                TypeBadge(type: log.type)
+
+                Text(Self.timeFormatter.string(from: log.timestamp))
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.tertiary)
             }
         }
         .padding(.horizontal, 12)
@@ -337,8 +340,27 @@ private struct LogRow: View {
         }
         .overlay(alignment: .bottom) {
             Divider()
-                .padding(.leading, 30)
+                .padding(.leading, 12)
         }
+    }
+}
+
+// MARK: - Type Badge
+
+private struct TypeBadge: View {
+    let type: ConsoleLog.LogType
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image(systemName: type.icon)
+                .font(.system(size: 8))
+            Text(type.shortLabel)
+                .font(.system(size: 9, weight: .medium))
+        }
+        .foregroundStyle(type.color)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(type.color.opacity(0.15), in: RoundedRectangle(cornerRadius: 4))
     }
 }
 
