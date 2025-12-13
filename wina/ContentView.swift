@@ -28,7 +28,7 @@ struct ContentView: View {
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData = Data()
 
     // Quick options (synced with Settings)
-    @AppStorage("cleanStart") private var cleanStart = false
+    @AppStorage("cleanStart") private var cleanStart = true
     @AppStorage("privateBrowsing") private var privateBrowsing = false
 
     // Cached NSDataDetector for URL validation (expensive to create)
