@@ -374,12 +374,6 @@ struct OverlayMenuBars: View {
 
     private func takeScreenshotWithFeedback() {
         Task {
-            // Show ad (30% probability, once per session)
-            await AdManager.shared.showInterstitialAd(
-                options: AdOptions(id: "screenshot_action"),
-                adUnitId: AdManager.interstitialAdUnitId
-            )
-
             // Play shutter sound
             AudioServicesPlaySystemSound(1108)
 
@@ -398,7 +392,22 @@ struct OverlayMenuBars: View {
 
             // Take screenshot (after flash starts)
             try? await Task.sleep(for: .milliseconds(50))
-            await navigator?.takeScreenshot()
+            let success = await navigator?.takeScreenshot() ?? false
+
+            // Show saved toast on success
+            if success {
+                await MainActor.run {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        navigator?.showScreenshotSavedToast = true
+                    }
+                }
+                try? await Task.sleep(for: .seconds(1.5))
+                await MainActor.run {
+                    withAnimation(.easeIn(duration: 0.2)) {
+                        navigator?.showScreenshotSavedToast = false
+                    }
+                }
+            }
         }
     }
 
