@@ -38,7 +38,8 @@ wina/
 │   ├── Sources/         # DOM Tree, Stylesheets, Scripts (Chrome DevTools 스타일)
 │   ├── Info/            # SharedInfoWebView, API Capability 감지, 벤치마크
 │   ├── UserAgent/       # UA 커스터마이징
-│   └── WebView/         # WebViewContainer, WebViewNavigator
+│   ├── WebView/         # WebViewContainer, WebViewNavigator
+│   └── About/           # AboutView, StoreManager (IAP)
 ├── Shared/
 │   ├── Components/      # GlassIconButton, GlassActionButton, ChipButton, InfoPopoverButton, SettingToggleRow, DevToolsHeader, FlowLayout, JsonEditor/
 │   └── Extensions/      # ColorExtensions, DeviceUtilities, URLValidator
@@ -136,6 +137,36 @@ struct Node: Identifiable {
     var id: String { path.joined(separator: ".") }
 }
 ```
+
+### StoreKit 2 IAP 패턴 (StoreManager)
+
+싱글톤 기반, 앱 시작 시 자동 초기화. Best practices 준수.
+
+```swift
+// winaApp.swift에서 초기화
+_ = StoreManager.shared
+
+// StoreManager 핵심 구조
+@Observable
+final class StoreManager {
+    static let shared = StoreManager()
+
+    private init() {
+        updateListenerTask = listenForTransactions()  // 환불/백그라운드 구매 감지
+        Task {
+            await processUnfinishedTransactions()     // 앱 종료 중 완료된 구매
+            await checkEntitlements()                 // 현재 구매 상태
+        }
+    }
+}
+```
+
+**필수 체크리스트:**
+- ✅ `Transaction.updates` 리스너 (앱 시작 즉시)
+- ✅ `Transaction.unfinished` 처리 (중단된 구매)
+- ✅ `transaction.finish()` 항상 호출
+- ✅ `revocationDate` 체크 (환불 처리)
+- ✅ `Task.detached` 백그라운드 실행
 
 ### Runestone (Sources Raw HTML View)
 

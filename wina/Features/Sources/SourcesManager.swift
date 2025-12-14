@@ -11,13 +11,18 @@ import Foundation
 // MARK: - Models
 
 struct DOMNode: Identifiable, Hashable {
-    let id = UUID()
+    /// Path-based stable ID (e.g., "0.1.3" for root -> child 1 -> child 3)
+    /// This ensures expand/collapse state is preserved across re-parses
+    let path: [Int]
     let nodeType: Int
     let nodeName: String
     let attributes: [String: String]
     let textContent: String?
     var children: [DOMNode]
     var isExpanded: Bool = false
+
+    /// Stable ID derived from path (e.g., "0.1.3")
+    var id: String { path.map(String.init).joined(separator: ".") }
 
     var isElement: Bool { nodeType == 1 }
     var isText: Bool { nodeType == 3 }
@@ -27,8 +32,8 @@ struct DOMNode: Identifiable, Hashable {
             return textContent ?? ""
         }
         var result = nodeName.lowercased()
-        if let id = attributes["id"] {
-            result += "#\(id)"
+        if let attrId = attributes["id"] {
+            result += "#\(attrId)"
         }
         if let className = attributes["class"], !className.isEmpty {
             let classes = className.split(separator: " ").prefix(2).joined(separator: ".")
@@ -122,7 +127,7 @@ class SourcesManager: ObservableObject {
            let data = result.data(using: .utf8) {
             do {
                 let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-                domTree = parseNode(json)
+                domTree = parseNode(json, path: [0])
             } catch {
                 errorMessage = "Failed to parse DOM: \(error.localizedDescription)"
             }
@@ -171,7 +176,7 @@ class SourcesManager: ObservableObject {
         isLoading = false
     }
 
-    private func parseNode(_ json: [String: Any]?) -> DOMNode? {
+    private func parseNode(_ json: [String: Any]?, path: [Int]) -> DOMNode? {
         guard let json else { return nil }
 
         let nodeType = json["type"] as? Int ?? 0
@@ -180,9 +185,17 @@ class SourcesManager: ObservableObject {
         let text = json["text"] as? String
         let childrenJson = json["children"] as? [[String: Any]] ?? []
 
-        let children = childrenJson.compactMap { parseNode($0) }
+        // Build children with indexed paths
+        var children: [DOMNode] = []
+        for (index, childJson) in childrenJson.enumerated() {
+            let childPath = path + [index]
+            if let child = parseNode(childJson, path: childPath) {
+                children.append(child)
+            }
+        }
 
         return DOMNode(
+            path: path,
             nodeType: nodeType,
             nodeName: nodeName,
             attributes: attrs,

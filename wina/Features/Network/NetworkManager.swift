@@ -16,8 +16,10 @@ final class NetworkBodyStorage {
     private let queue = DispatchQueue(label: "com.wina.networkbodystorage", qos: .utility)
 
     private lazy var cacheDirectory: URL = {
-        let caches = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
-        let dir = caches.appendingPathComponent("NetworkBodies", isDirectory: true)
+        // Use caches directory, fallback to temp directory if unavailable
+        let baseDir = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? fileManager.temporaryDirectory
+        let dir = baseDir.appendingPathComponent("NetworkBodies", isDirectory: true)
         try? fileManager.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }()

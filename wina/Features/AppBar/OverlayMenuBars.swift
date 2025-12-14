@@ -373,24 +373,32 @@ struct OverlayMenuBars: View {
     // MARK: - Screenshot
 
     private func takeScreenshotWithFeedback() {
-        // Play shutter sound
-        AudioServicesPlaySystemSound(1108)
+        Task {
+            // Show ad (30% probability, once per session)
+            await AdManager.shared.showInterstitialAd(
+                options: AdOptions(id: "screenshot_action"),
+                adUnitId: AdManager.interstitialAdUnitId
+            )
 
-        // Flash effect on WebView
-        withAnimation(.easeIn(duration: 0.05)) {
-            navigator?.showScreenshotFlash = true
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeOut(duration: 0.15)) {
-                navigator?.showScreenshotFlash = false
-            }
-        }
+            // Play shutter sound
+            AudioServicesPlaySystemSound(1108)
 
-        // Take screenshot (after flash starts)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-            Task {
-                await navigator?.takeScreenshot()
+            // Flash effect on WebView
+            await MainActor.run {
+                withAnimation(.easeIn(duration: 0.05)) {
+                    navigator?.showScreenshotFlash = true
+                }
             }
+            try? await Task.sleep(for: .milliseconds(100))
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    navigator?.showScreenshotFlash = false
+                }
+            }
+
+            // Take screenshot (after flash starts)
+            try? await Task.sleep(for: .milliseconds(50))
+            await navigator?.takeScreenshot()
         }
     }
 

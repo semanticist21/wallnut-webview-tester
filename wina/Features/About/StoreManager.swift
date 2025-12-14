@@ -21,8 +21,9 @@ final class StoreManager {
         // Start listening for transaction updates (refunds, background purchases, etc.)
         updateListenerTask = listenForTransactions()
 
-        // Check current entitlements on init
+        // Process unfinished transactions and check entitlements on init
         Task {
+            await processUnfinishedTransactions()
             await checkEntitlements()
         }
     }
@@ -40,6 +41,16 @@ final class StoreManager {
                 guard let self else { return }
                 await self.handle(transactionResult: result)
             }
+        }
+    }
+
+    // MARK: - Unfinished Transactions
+
+    /// Process any unfinished transactions from previous sessions
+    @MainActor
+    private func processUnfinishedTransactions() async {
+        for await result in Transaction.unfinished {
+            await handle(transactionResult: result)
         }
     }
 

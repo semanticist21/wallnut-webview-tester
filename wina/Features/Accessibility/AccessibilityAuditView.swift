@@ -201,6 +201,12 @@ struct AccessibilityAuditView: View {
                 issuesList
             }
         }
+        .task {
+            await AdManager.shared.showInterstitialAd(
+                options: AdOptions(id: "accessibility_devtools"),
+                adUnitId: AdManager.interstitialAdUnitId
+            )
+        }
     }
 
     // MARK: - Header
