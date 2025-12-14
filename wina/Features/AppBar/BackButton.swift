@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 /// Home button - navigates back to URL input screen
 struct HomeButton: View {
@@ -31,7 +32,7 @@ struct WebBackButton: View {
                 .foregroundStyle(isEnabled ? .primary : .tertiary)
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
-                .glassEffect(in: .circle)
+                .backport.glassEffect(in: .circle)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
@@ -52,7 +53,7 @@ struct WebForwardButton: View {
                 .foregroundStyle(isEnabled ? .primary : .tertiary)
                 .frame(width: 44, height: 44)
                 .contentShape(Circle())
-                .glassEffect(in: .circle)
+                .backport.glassEffect(in: .circle)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

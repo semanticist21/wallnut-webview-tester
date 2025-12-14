@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 // MARK: - Header Action Button
 
@@ -28,7 +29,7 @@ struct HeaderActionButton: View {
             .padding(.vertical, 6)
         }
         .buttonStyle(.plain)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
         .disabled(isDisabled)
         .accessibilityLabel(accessibilityLabel ?? label)
         .accessibilityAddTraits(.isButton)
@@ -58,7 +59,7 @@ struct CopyButton: View {
             .padding(.vertical, 6)
         }
         .buttonStyle(.plain)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
         .disabled(text.isEmpty)
         .accessibilityLabel("Copy to clipboard")
         .accessibilityAddTraits(.isButton)

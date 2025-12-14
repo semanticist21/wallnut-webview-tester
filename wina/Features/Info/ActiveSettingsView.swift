@@ -6,6 +6,7 @@
 import AVFoundation
 import CoreLocation
 import SwiftUI
+import SwiftUIBackports
 
 // MARK: - Active Settings View
 
@@ -90,7 +91,7 @@ struct ActiveSettingsView: View {
                             .padding(.vertical, 10)
                     }
                     .buttonStyle(.plain)
-                    .glassEffect(in: .capsule)
+                    .backport.glassEffect(in: .capsule)
                     Spacer()
                 }
                 .listRowBackground(Color.clear)

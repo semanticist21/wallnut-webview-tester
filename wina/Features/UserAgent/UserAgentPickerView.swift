@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftUIBackports
 
 struct UserAgentPickerView: View {
     @Environment(\.dismiss) private var dismiss
@@ -301,7 +302,7 @@ private struct FilterChip: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
     }
 }
 

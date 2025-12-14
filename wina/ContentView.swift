@@ -6,38 +6,41 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 import WebKit
 
 struct ContentView: View {
-    @State private var urlText: String = ""
-    @State private var showDropdown: Bool = false
-    @State private var showSettings: Bool = false
-    @State private var showBookmarks: Bool = false
-    @State private var showInfo: Bool = false
+    // MARK: - State Properties (internal for extension access)
+
+    @State var urlText: String = ""
+    @State var showDropdown: Bool = false
+    @State var showSettings: Bool = false
+    @State var showBookmarks: Bool = false
+    @State var showInfo: Bool = false
     @State private var showConsole: Bool = false
     @State private var showNetwork: Bool = false
     @State private var showStorage: Bool = false
     @State private var showPerformance: Bool = false
     @State private var showEditor: Bool = false
     @State private var showAccessibility: Bool = false
-    @State private var showAbout: Bool = false
-    @State private var urlValidationState: URLValidationState = .empty
-    @State private var useSafariWebView: Bool = false
-    @State private var showWebView: Bool = false
+    @State var showAbout: Bool = false
+    @State var urlValidationState: URLValidationState = .empty
+    @State var useSafariWebView: Bool = false
+    @State var showWebView: Bool = false
     @State private var loadedURL = ""
     @State private var webViewID = UUID()
-    @State private var bookmarks: [String] = []
+    @State var bookmarks: [String] = []
     @State private var cachedRecentURLs: [String] = []
-    @State private var validationTask: Task<Void, Never>?
+    @State var validationTask: Task<Void, Never>?
     @State private var webViewNavigator = WebViewNavigator()
     @State private var storageManager = StorageManager()
-    @FocusState private var textFieldFocused: Bool
+    @FocusState var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData = Data()
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData = Data()
 
     // Quick options (synced with Settings)
-    @AppStorage("cleanStart") private var cleanStart = true
-    @AppStorage("privateBrowsing") private var privateBrowsing = false
+    @AppStorage("cleanStart") var cleanStart = true
+    @AppStorage("privateBrowsing") var privateBrowsing = false
 
     // Safari configuration settings (for onChange detection)
     @AppStorage("safariEntersReaderIfAvailable") private var safariEntersReaderIfAvailable = false
@@ -64,20 +67,20 @@ struct ContentView: View {
         (try? JSONDecoder().decode([String].self, from: bookmarkedURLsData)) ?? []
     }
 
-    private var filteredURLs: [String] {
+    var filteredURLs: [String] {
         if urlText.isEmpty {
             return cachedRecentURLs
         }
         return cachedRecentURLs.filter { $0.localizedCaseInsensitiveContains(urlText) }
     }
 
-    private let urlParts = [
+    let urlParts = [
         "https://", "http://",
         "www.", "m.",
         ".com",
         "192.168.", ":8080", ":3000"
     ]
-    private let inputWidth: CGFloat = 340
+    let inputWidth: CGFloat = 340
 
     var body: some View {
         ZStack {
@@ -271,244 +274,9 @@ struct ContentView: View {
         }
     }
 
-    private var urlInputView: some View {
-        GeometryReader { geometry in
-            // Background tap to dismiss keyboard and dropdown
-            Color.clear
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    textFieldFocused = false
-                    showDropdown = false
-                }
+    // MARK: - URL Actions (internal for extension access)
 
-            VStack(spacing: 16) {
-                // Walnut logo
-                Image("walnut")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(height: 120)
-                    .padding(.bottom, -12)
-
-                // URL parts chips - FlowLayout for wrapping
-                FlowLayout(spacing: 8, alignment: .center) {
-                    ForEach(urlParts, id: \.self) { part in
-                        ChipButton(label: part) {
-                            urlText += part
-                        }
-                    }
-                }
-                .frame(width: inputWidth)
-
-                // WebView Type Toggle
-                Picker("WebView Type", selection: $useSafariWebView) {
-                    Text("WKWebView")
-                        .tag(false)
-                    Text("SafariVC")
-                        .tag(true)
-                }
-                .pickerStyle(.segmented)
-                .frame(width: inputWidth)
-
-                // URL Input
-                HStack(spacing: 12) {
-                    HStack(spacing: 12) {
-                        Image(systemName: urlValidationState.iconName)
-                            .foregroundStyle(urlValidationState.iconColor)
-                            .font(.system(size: 16))
-                            .contentTransition(.symbolEffect(.replace))
-
-                        TextField("Enter URL", text: $urlText)
-                            .textFieldStyle(.plain)
-                            .autocorrectionDisabled()
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.URL)
-                            .submitLabel(.go)
-                            .font(.system(size: 16))
-                            .focused($textFieldFocused)
-                            .onSubmit {
-                                if urlValidationState == .valid {
-                                    textFieldFocused = false
-                                    showDropdown = false
-                                    submitURL()
-                                }
-                            }
-                            .onChange(of: urlText) { _, _ in
-                                // Debounced URL validation
-                                validationTask?.cancel()
-                                validationTask = Task {
-                                    try? await Task.sleep(for: .milliseconds(150))
-                                    guard !Task.isCancelled else { return }
-                                    validateURL()
-                                }
-                            }
-
-                        Button {
-                            urlText = ""
-                            textFieldFocused = false
-                        } label: {
-                            Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(.secondary)
-                                .padding(8)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .opacity(urlText.isEmpty ? 0 : 1)
-                        .disabled(urlText.isEmpty)
-                    }
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 10)
-                    .frame(width: urlValidationState == .valid ? inputWidth - 60 : inputWidth)
-                    .contentShape(Capsule())
-                    .onTapGesture {
-                        textFieldFocused = true
-                    }
-                    .glassEffect(in: .capsule)
-
-                    if urlValidationState == .valid {
-                        Button {
-                            textFieldFocused = false
-                            showDropdown = false
-                            submitURL()
-                        } label: {
-                            Image(systemName: "arrow.right")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(.primary)
-                                .frame(width: 48, height: 48)
-                                .contentShape(Circle())
-                                .glassEffect(in: .circle)
-                        }
-                        .buttonStyle(.plain)
-                        .transition(.opacity.animation(.easeOut(duration: 0.15)))
-                    }
-                }
-                .animation(.easeOut(duration: 0.25), value: urlValidationState)
-                .overlay(alignment: .bottom) {
-                    dropdownOverlay
-                        .alignmentGuide(.bottom) { $0[.top] }
-                }
-                .zIndex(1)
-
-                // Quick options (WKWebView only)
-                if !useSafariWebView {
-                    quickOptionsRow
-                }
-            }
-            // Offset to keep URL input position stable:
-            // When quick options visible, shift down to compensate for VStack height increase
-            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32 + (useSafariWebView ? 0 : 30))
-            .onChange(of: textFieldFocused) { _, newValue in
-                withAnimation(.easeOut(duration: 0.15)) {
-                    showDropdown = newValue && !filteredURLs.isEmpty
-                }
-            }
-            .onChange(of: filteredURLs) { _, newValue in
-                if textFieldFocused {
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        showDropdown = !newValue.isEmpty
-                    }
-                }
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var dropdownOverlay: some View {
-        if showDropdown && !filteredURLs.isEmpty {
-            ScrollView {
-                VStack(spacing: 0) {
-                    ForEach(Array(filteredURLs.enumerated()), id: \.element) { index, url in
-                        dropdownRow(url: url, isLast: index == filteredURLs.count - 1)
-                    }
-                }
-            }
-            .scrollBounceBehavior(.basedOnSize)
-            .frame(width: inputWidth, height: min(CGFloat(filteredURLs.count) * 40, 160))
-            .glassEffect(in: .rect(cornerRadius: 16))
-            .padding(.top, 8)
-            .transition(.opacity.combined(with: .move(edge: .top)))
-        }
-    }
-
-    private func dropdownRow(url: String, isLast: Bool) -> some View {
-        Button {
-            urlText = url
-            textFieldFocused = false
-            showDropdown = false
-        } label: {
-            HStack {
-                Image(systemName: "clock.arrow.circlepath")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 14))
-                Text(url)
-                    .font(.system(size: 14))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                Spacer()
-            }
-            .padding(.horizontal, 18)
-            .padding(.vertical, 10)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .overlay(alignment: .trailing) {
-            Button {
-                removeURL(url)
-            } label: {
-                Image(systemName: "xmark")
-                    .foregroundStyle(.tertiary)
-                    .font(.system(size: 12))
-                    .padding(8)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .padding(.trailing, 10)
-        }
-        .overlay(alignment: .bottom) {
-            if !isLast {
-                Divider()
-                    .padding(.horizontal, 16)
-            }
-        }
-    }
-
-    private var quickOptionsRow: some View {
-        VStack(spacing: 8) {
-            ToggleChipButton(isOn: $cleanStart, label: "Start with fresh data")
-            ToggleChipButton(isOn: $privateBrowsing, label: "Browse in private session")
-        }
-        .frame(width: inputWidth)
-        .padding(.top, 12)
-    }
-
-    private var topBar: some View {
-        HStack {
-            HStack(spacing: 12) {
-                if showWebView {
-                    BackButton {
-                        withAnimation(.easeOut(duration: 0.2)) {
-                            showWebView = false
-                        }
-                    }
-                } else {
-                    ThemeToggleButton()
-                    BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: !bookmarks.isEmpty)
-                    AboutButton(showAbout: $showAbout)
-                }
-            }
-
-            Spacer()
-
-            HStack(spacing: 12) {
-                InfoSheetButton(showInfo: $showInfo)
-                SettingsButton(showSettings: $showSettings)
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 8)
-        .frame(maxHeight: .infinity, alignment: .top)
-    }
-
-    private func submitURL() {
+    func submitURL() {
         guard !urlText.isEmpty else { return }
 
         var urls = cachedRecentURLs
@@ -562,7 +330,7 @@ struct ContentView: View {
         }
     }
 
-    private func removeURL(_ url: String) {
+    func removeURL(_ url: String) {
         var urls = cachedRecentURLs
         urls.removeAll { $0 == url }
         cachedRecentURLs = urls
@@ -601,7 +369,7 @@ struct ContentView: View {
         }
     }
 
-    private func validateURL() {
+    func validateURL() {
         guard !urlText.isEmpty else {
             urlValidationState = .empty
             return

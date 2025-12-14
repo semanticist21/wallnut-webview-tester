@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftUIBackports
 
 struct ToggleChipButton: View {
     @Binding var isOn: Bool
@@ -26,7 +27,7 @@ struct ToggleChipButton: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .glassEffect(in: .rect(cornerRadius: 12))
+        .backport.glassEffect(in: .rect(cornerRadius: 12))
         .accessibilityLabel(label)
         .accessibilityValue(isOn ? "On" : "Off")
         .accessibilityAddTraits(.isButton)

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 struct DevToolsHeader: View {
     let title: String
@@ -99,7 +100,7 @@ struct DevToolsHeader: View {
             }
         }
         .padding(.horizontal, 6)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
     }
 }
 

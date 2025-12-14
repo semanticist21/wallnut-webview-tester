@@ -7,6 +7,7 @@
 
 import SwiftSoup
 import SwiftUI
+import SwiftUIBackports
 
 // MARK: - Network Detail View
 
@@ -632,7 +633,7 @@ struct DetailSection<Content: View>: View {
                             .padding(.vertical, 6)
                     }
                     .buttonStyle(.plain)
-                    .glassEffect(in: .capsule)
+                    .backport.glassEffect(in: .capsule)
 
                     // Share button (optional)
                     if let onShare {

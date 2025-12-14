@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftUIBackports
 
 struct ChipButton: View {
     let label: String
@@ -14,7 +15,7 @@ struct ChipButton: View {
                 .padding(.vertical, 8)
         }
         .buttonStyle(.plain)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
         .accessibilityLabel(accessibilityLabel ?? "Insert \(label)")
         .accessibilityAddTraits(.isButton)
     }

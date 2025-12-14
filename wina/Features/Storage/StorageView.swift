@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 // MARK: - Cookie Metadata
 
@@ -445,7 +446,7 @@ struct StorageView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
         .padding(.horizontal, 16)
         .padding(.bottom, 8)
     }

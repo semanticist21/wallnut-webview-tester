@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 struct GlassIconButton: View {
     enum Size {
@@ -39,7 +40,7 @@ struct GlassIconButton: View {
                 .foregroundStyle(isDisabled ? Color.secondary.opacity(0.5) : color)
                 .frame(width: size.frame, height: size.frame)
                 .contentShape(Circle())
-                .glassEffect(in: .circle)
+                .backport.glassEffect(in: .circle)
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)

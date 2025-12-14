@@ -7,6 +7,7 @@
 
 import AudioToolbox
 import SwiftUI
+import SwiftUIBackports
 
 struct OverlayMenuBars: View {
     let showWebView: Bool
@@ -148,7 +149,7 @@ struct OverlayMenuBars: View {
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
         .padding(.horizontal, 8)
         .offset(y: topOffset)
         .highPriorityGesture(isOverlayMode ? dragGesture : nil)
@@ -272,7 +273,7 @@ struct OverlayMenuBars: View {
             .padding(.horizontal, 16)
             .frame(height: bottomBarHeight)
             .frame(maxWidth: .infinity)
-            .glassEffect(in: .capsule)
+            .backport.glassEffect(in: .capsule)
             .padding(.horizontal, 8)
             // Dynamic: push down by half of safe area to sit nicely above home indicator
             .padding(.bottom, -(geometry.safeAreaInsets.bottom * 0.6))
@@ -329,7 +330,7 @@ struct OverlayMenuBars: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .glassEffect(in: .capsule)
+                .backport.glassEffect(in: .capsule)
 
                 // Action buttons
                 HStack(spacing: 12) {
@@ -342,7 +343,7 @@ struct OverlayMenuBars: View {
                             .padding(.vertical, 12)
                     }
                     .buttonStyle(.plain)
-                    .glassEffect(in: .capsule)
+                    .backport.glassEffect(in: .capsule)
 
                     Button {
                         if !urlInputText.isEmpty {
@@ -356,14 +357,14 @@ struct OverlayMenuBars: View {
                             .padding(.vertical, 12)
                     }
                     .buttonStyle(.plain)
-                    .glassEffect(in: .capsule)
+                    .backport.glassEffect(in: .capsule)
                     .opacity(urlInputText.isEmpty ? 0.5 : 1)
                     .disabled(urlInputText.isEmpty)
                 }
             }
             .padding(20)
             .frame(width: 320)
-            .glassEffect(in: .rect(cornerRadius: 24))
+            .backport.glassEffect(in: .rect(cornerRadius: 24))
         }
         .onAppear {
             urlInputFocused = true

@@ -5,6 +5,7 @@
 
 import SafariServices
 import SwiftUI
+import SwiftUIBackports
 
 struct SafariVCInfoView: View {
     @Environment(\.dismiss) private var dismiss
@@ -292,7 +293,7 @@ private struct SafariActiveSettingsDetailView: View {
                             .padding(.vertical, 10)
                     }
                     .buttonStyle(.plain)
-                    .glassEffect(in: .capsule)
+                    .backport.glassEffect(in: .capsule)
                     Spacer()
                 }
                 .listRowBackground(Color.clear)

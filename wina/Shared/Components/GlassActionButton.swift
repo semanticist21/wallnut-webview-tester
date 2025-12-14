@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 /// Capsule-shaped glass effect button for actions like Reset, Apply, Done
 /// Used in Settings views as inline action buttons
@@ -54,7 +55,7 @@ struct GlassActionButton: View {
             .padding(.vertical, 10)
         }
         .buttonStyle(.plain)
-        .glassEffect(in: .capsule)
+        .backport.glassEffect(in: .capsule)
         .accessibilityLabel(title)
         .accessibilityAddTraits(.isButton)
     }

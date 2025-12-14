@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import SwiftUIBackports
 
 struct AboutView: View {
     @Environment(\.dismiss) private var dismiss
@@ -52,7 +53,7 @@ struct AboutView: View {
                         .foregroundStyle(.primary)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .glassEffect(in: .capsule)
+                        .backport.glassEffect(in: .capsule)
                     } else {
                         GlassActionButton("Remove Ads", icon: "sparkles", style: .primary) {
                             Task {
