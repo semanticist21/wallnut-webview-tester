@@ -767,7 +767,7 @@ private struct ConsoleSettingsSheet: View {
                 }
 
                 Section("Logging") {
-                    Toggle("Preserve Log on Navigation", isOn: $preserveLog)
+                    Toggle("Preserve Log on Reload", isOn: $preserveLog)
                 }
 
                 Section("Log Types in 'All' Tab") {

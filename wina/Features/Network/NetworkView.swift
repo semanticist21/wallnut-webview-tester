@@ -342,12 +342,15 @@ class NetworkManager {
 
         DispatchQueue.main.async {
             if let index = self.requests.firstIndex(where: { $0.id == uuid }) {
-                self.requests[index].status = status
-                self.requests[index].statusText = statusText
-                self.requests[index].responseHeaders = responseHeaders
-                self.requests[index].responseBodyPreview = preview
-                self.requests[index].error = error
-                self.requests[index].endTime = Date()
+                // Replace entire struct to ensure @Observable detects the change
+                var updated = self.requests[index]
+                updated.status = status
+                updated.statusText = statusText
+                updated.responseHeaders = responseHeaders
+                updated.responseBodyPreview = preview
+                updated.error = error
+                updated.endTime = Date()
+                self.requests[index] = updated
             }
         }
     }
@@ -796,7 +799,7 @@ private struct NetworkSettingsSheet: View {
         NavigationStack {
             List {
                 Section("Logging") {
-                    Toggle("Preserve Log on Navigation", isOn: $preserveLog)
+                    Toggle("Preserve Log on Reload", isOn: $preserveLog)
                 }
             }
             .navigationTitle("Network Settings")

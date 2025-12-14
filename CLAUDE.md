@@ -200,7 +200,59 @@ UIDevice.current.isIPad   // Extension
 
 ### 10. 확장/축소 리스트 Layout Shift
 
-커스텀 expand/collapse → layout shift 발생. `DisclosureGroup` 사용 권장
+```swift
+// ❌ VStack 기본 spacing + 조건부 렌더링 (layout shift)
+VStack(spacing: 4) {
+    Button { withAnimation { isExpanded.toggle() } } ...
+    if isExpanded { content }
+}
+
+// ✅ spacing: 0 + 컨테이너 애니메이션 + chevron 회전
+VStack(spacing: 0) {
+    HStack {
+        Image(systemName: "chevron.right")
+            .rotationEffect(.degrees(isExpanded ? 90 : 0))
+        Text(title)
+    }
+    if isExpanded {
+        content
+            .padding(.bottom, 8)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+.animation(.easeOut(duration: 0.15), value: isExpanded)
+```
+
+**핵심**: `spacing: 0` + 명시적 padding (VStack 기본 spacing이 콘텐츠에 따라 변함)
+
+### 11. @Observable 배열 요소 업데이트
+
+배열 내 struct 속성 개별 수정 시 뷰 갱신 안 됨
+
+```swift
+// ❌ 개별 속성 수정 - 뷰 갱신 안 됨
+requests[index].status = 200
+requests[index].endTime = Date()
+
+// ✅ 전체 struct 교체 - 뷰 갱신 됨
+var updated = requests[index]
+updated.status = 200
+updated.endTime = Date()
+requests[index] = updated
+```
+
+### 12. UIViewRepresentable 높이 계산 (iOS 16+)
+
+UITextView 등 intrinsic size 계산이 필요한 뷰는 `sizeThatFits` 구현
+
+```swift
+// ✅ iOS 16+ sizeThatFits로 정확한 높이 계산
+func sizeThatFits(_ proposal: ProposedViewSize, uiView: UITextView, context: Context) -> CGSize? {
+    guard let width = proposal.width, width > 0 else { return nil }
+    let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+    return CGSize(width: width, height: size.height)
+}
+```
 
 ```swift
 // ❌ 커스텀 구현 (layout shift)

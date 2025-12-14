@@ -963,6 +963,9 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             loadingObservation = nil
         }
 
+        // Track pending document request ID by URL (since WKNavigation doesn't expose URL)
+        private var pendingDocumentRequestId: String?
+
         // Handle navigation actions (link clicks, reload, etc.)
         func webView(
             _ webView: WKWebView,
@@ -975,8 +978,87 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                 navigator?.consoleManager.clearIfNotPreserved()
                 navigator?.networkManager.clearIfNotPreserved()
             }
+
+            // Track document navigation for main frame only
+            if navigationAction.targetFrame?.isMainFrame == true,
+               let url = navigationAction.request.url?.absoluteString {
+                let requestId = UUID().uuidString
+                pendingDocumentRequestId = requestId
+
+                navigator?.networkManager.addRequest(
+                    id: requestId,
+                    method: navigationAction.request.httpMethod ?? "GET",
+                    url: url,
+                    requestType: "document",
+                    headers: nil,
+                    body: nil
+                )
+            }
+
             // Allow default WKWebView behavior (including universal links opening external apps)
             decisionHandler(.allow)
+        }
+
+        // Get response status and headers for document navigation
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationResponse: WKNavigationResponse,
+            decisionHandler: @escaping (WKNavigationResponsePolicy) -> Void
+        ) {
+            // Update document request with response info
+            if navigationResponse.isForMainFrame,
+               let requestId = pendingDocumentRequestId,
+               let httpResponse = navigationResponse.response as? HTTPURLResponse {
+                var headers: [String: String] = [:]
+                for (key, value) in httpResponse.allHeaderFields {
+                    headers[String(describing: key)] = String(describing: value)
+                }
+
+                navigator?.networkManager.updateRequest(
+                    id: requestId,
+                    status: httpResponse.statusCode,
+                    statusText: HTTPURLResponse.localizedString(forStatusCode: httpResponse.statusCode),
+                    responseHeaders: headers.isEmpty ? nil : headers,
+                    responseBody: nil,
+                    error: nil
+                )
+            }
+            decisionHandler(.allow)
+        }
+
+        // Mark document navigation as complete
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            pendingDocumentRequestId = nil
+        }
+
+        // Handle document navigation failure
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            if let requestId = pendingDocumentRequestId {
+                navigator?.networkManager.updateRequest(
+                    id: requestId,
+                    status: nil,
+                    statusText: nil,
+                    responseHeaders: nil,
+                    responseBody: nil,
+                    error: error.localizedDescription
+                )
+            }
+            pendingDocumentRequestId = nil
+        }
+
+        // Handle provisional navigation failure
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            if let requestId = pendingDocumentRequestId {
+                navigator?.networkManager.updateRequest(
+                    id: requestId,
+                    status: nil,
+                    statusText: nil,
+                    responseHeaders: nil,
+                    responseBody: nil,
+                    error: error.localizedDescription
+                )
+            }
+            pendingDocumentRequestId = nil
         }
 
         // Handle new window requests (target="_blank")
