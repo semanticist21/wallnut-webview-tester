@@ -96,15 +96,21 @@ struct JsonEditorSheet: View {
             Button {
                 addingToNode = node
             } label: {
-                Label("Add Property", systemImage: "plus.circle")
-                    .foregroundStyle(.blue)
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle")
+                    Text("Add Property")
+                }
+                .foregroundStyle(.blue)
             }
         case .array:
             Button {
                 addingToNode = node
             } label: {
-                Label("Add Item", systemImage: "plus.circle")
-                    .foregroundStyle(.blue)
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle")
+                    Text("Add Item")
+                }
+                .foregroundStyle(.blue)
             }
         default:
             EmptyView()
@@ -193,10 +199,10 @@ private struct JsonNodeRow: View {
             Button {
                 onAdd(node)
             } label: {
-                Label(
-                    node.value.isObject ? "Add Property" : "Add Item",
-                    systemImage: "plus.circle"
-                )
+                HStack(spacing: 6) {
+                    Image(systemName: "plus.circle")
+                    Text(node.value.isObject ? "Add Property" : "Add Item")
+                }
                 .font(.system(size: 13))
                 .foregroundStyle(.blue)
             }
@@ -301,13 +307,31 @@ private struct NodeEditSheet: View {
     let onSave: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var editedKey: String = ""
     @State private var editedValue: String = ""
+
+    private var isInObject: Bool {
+        // Check if parent is object (key exists means it's in an object)
+        node.key != nil && !node.key!.hasPrefix("[")
+    }
+
+    private var keyChanged: Bool {
+        guard let originalKey = node.key else { return false }
+        return editedKey != originalKey
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                if let key = node.key {
+                if node.key != nil, isInObject {
                     Section("Key") {
+                        TextField("Key", text: $editedKey)
+                            .font(.system(.body, design: .monospaced))
+                            .autocorrectionDisabled()
+                            .textInputAutocapitalization(.never)
+                    }
+                } else if let key = node.key {
+                    Section("Index") {
                         Text(key)
                             .font(.system(.body, design: .monospaced))
                             .foregroundStyle(.secondary)
@@ -320,7 +344,7 @@ private struct NodeEditSheet: View {
                         .frame(minHeight: 120)
                 }
             }
-            .navigationTitle("Edit Value")
+            .navigationTitle("Edit")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -332,9 +356,11 @@ private struct NodeEditSheet: View {
                     Button("Save") {
                         saveValue()
                     }
+                    .disabled(isInObject && editedKey.isEmpty)
                 }
             }
             .onAppear {
+                editedKey = node.key ?? ""
                 editedValue = node.rawValue
             }
         }
@@ -364,9 +390,21 @@ private struct NodeEditSheet: View {
             }
         }
 
-        if let updated = JsonParser.update(jsonText, at: node.path, value: newValue) {
-            jsonText = updated
-            onSave()
+        if keyChanged, isInObject {
+            // Key changed: delete old, add new
+            let parentPath = Array(node.path.dropLast())
+            if let deleted = JsonParser.delete(jsonText, at: node.path),
+               let updated = JsonParser.addToObject(deleted, at: parentPath, key: editedKey, value: newValue)
+            {
+                jsonText = updated
+                onSave()
+            }
+        } else {
+            // Only value changed
+            if let updated = JsonParser.update(jsonText, at: node.path, value: newValue) {
+                jsonText = updated
+                onSave()
+            }
         }
         dismiss()
     }
@@ -609,31 +647,13 @@ struct JsonExplorerView: View {
            let json = try? JSONSerialization.jsonObject(with: data)
         {
             let rootNode = ExplorerNode.parse(json)
-            VStack(alignment: .leading, spacing: 0) {
-                explorerHeader
-
-                Divider()
-
-                ScrollView(.horizontal, showsIndicators: false) {
-                    ScrollView(.vertical, showsIndicators: false) {
-                        ExplorerNodeView(node: rootNode, depth: 0, isLast: true)
-                            .padding(12)
-                    }
+            ScrollView(.horizontal, showsIndicators: false) {
+                ScrollView(.vertical, showsIndicators: false) {
+                    ExplorerNodeView(node: rootNode, depth: 0, isLast: true)
+                        .padding(12)
                 }
             }
-            .background(.ultraThinMaterial)
         }
-    }
-
-    private var explorerHeader: some View {
-        HStack {
-            Label("Explorer", systemImage: "list.bullet.indent")
-                .font(.subheadline.weight(.medium))
-            Spacer()
-        }
-        .foregroundStyle(.secondary)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 }
 

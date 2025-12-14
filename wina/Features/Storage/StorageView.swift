@@ -184,8 +184,8 @@ class StorageManager {
         guard let navigator else { return false }
 
         // Use JSON encoding for safe JavaScript string escaping
-        guard let keyData = try? JSONSerialization.data(withJSONObject: key),
-              let valueData = try? JSONSerialization.data(withJSONObject: value),
+        guard let keyData = try? JSONSerialization.data(withJSONObject: key, options: .fragmentsAllowed),
+              let valueData = try? JSONSerialization.data(withJSONObject: value, options: .fragmentsAllowed),
               let jsonKey = String(data: keyData, encoding: .utf8),
               let jsonValue = String(data: valueData, encoding: .utf8)
         else { return false }
@@ -369,7 +369,7 @@ struct StorageView: View {
                 .init(icon: "plus") {
                     showAddSheet = true
                 },
-                .init(icon: "arrow.clockwise", color: .blue) {
+                .init(icon: "arrow.clockwise") {
                     Task { await storageManager.refresh() }
                 }
             ]
@@ -435,9 +435,8 @@ struct StorageView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
-            Spacer()
             Image(systemName: selectedType.icon)
-                .font(.system(size: 36))
+                .font(.system(size: 32))
                 .foregroundStyle(.tertiary)
             Text("No \(selectedType.label.lowercased()) data")
                 .font(.subheadline)
@@ -449,23 +448,22 @@ struct StorageView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 32)
     }
 
     private var noMatchState: some View {
         VStack(spacing: 8) {
-            Spacer()
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 36))
+                .font(.system(size: 32))
                 .foregroundStyle(.tertiary)
             Text("No matches")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 32)
     }
 
     // MARK: - Item List
@@ -571,23 +569,47 @@ private struct StorageEditSheet: View {
     let onDelete: () -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var editedKey: String = ""
     @State private var editedValue: String = ""
     @State private var isSaving: Bool = false
     @State private var isDeleting: Bool = false
-    @State private var showDeleteConfirm: Bool = false
     @State private var showJsonEditor: Bool = false
 
     private var isValueJson: Bool {
         JsonParser.isValidJson(editedValue)
     }
 
+    private var keyChanged: Bool {
+        editedKey != item.key
+    }
+
+    private var hasChanges: Bool {
+        editedKey != item.key || editedValue != item.value
+    }
+
+    private var isDuplicateKey: Bool {
+        guard keyChanged else { return false }
+        let existingKeys = storageManager.items
+            .filter { $0.storageType == item.storageType && $0.key != item.key }
+            .map(\.key)
+        return existingKeys.contains(editedKey)
+    }
+
     var body: some View {
         NavigationStack {
             List {
-                Section("Key") {
-                    Text(item.key)
+                Section {
+                    TextField("Key", text: $editedKey)
                         .font(.system(size: 14, design: .monospaced))
-                        .textSelection(.enabled)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                } header: {
+                    Text("Key")
+                } footer: {
+                    if isDuplicateKey {
+                        Text("Key '\(editedKey)' already exists")
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Section {
@@ -640,7 +662,7 @@ private struct StorageEditSheet: View {
                             ProgressView()
                         } else {
                             GlassActionButton("Delete", icon: "trash", style: .destructive) {
-                                showDeleteConfirm = true
+                                deleteItem()
                             }
                         }
                         Spacer()
@@ -660,22 +682,14 @@ private struct StorageEditSheet: View {
                     Button("Save") {
                         saveItem()
                     }
-                    .disabled(isSaving || editedValue == item.value)
-                }
-            }
-            .confirmationDialog(
-                "Delete \"\(item.key)\"?",
-                isPresented: $showDeleteConfirm,
-                titleVisibility: .visible
-            ) {
-                Button("Delete", role: .destructive) {
-                    deleteItem()
+                    .disabled(isSaving || !hasChanges || editedKey.isEmpty || isDuplicateKey)
                 }
             }
             .sheet(isPresented: $showJsonEditor) {
                 JsonEditorSheet(jsonText: $editedValue)
             }
             .onAppear {
+                editedKey = item.key
                 editedValue = item.value
             }
         }
@@ -684,11 +698,28 @@ private struct StorageEditSheet: View {
     private func saveItem() {
         isSaving = true
         Task {
-            if await storageManager.setItem(
-                key: item.key,
-                value: editedValue,
-                type: item.storageType
-            ) {
+            var success = false
+
+            if keyChanged {
+                // Key changed: remove old key first, then set new key
+                let removed = await storageManager.removeItem(key: item.key, type: item.storageType)
+                if removed {
+                    success = await storageManager.setItem(
+                        key: editedKey,
+                        value: editedValue,
+                        type: item.storageType
+                    )
+                }
+            } else {
+                // Only value changed
+                success = await storageManager.setItem(
+                    key: editedKey,
+                    value: editedValue,
+                    type: item.storageType
+                )
+            }
+
+            if success {
                 onSave()
                 dismiss()
             }
@@ -733,14 +764,28 @@ private struct StorageAddSheet: View {
         JsonParser.isValidJson(value)
     }
 
+    private var isDuplicateKey: Bool {
+        let existingKeys = storageManager.items
+            .filter { $0.storageType == storageType }
+            .map(\.key)
+        return existingKeys.contains(key)
+    }
+
     var body: some View {
         NavigationStack {
             List {
-                Section("Key") {
+                Section {
                     TextField("Enter key", text: $key)
                         .font(.system(size: 14, design: .monospaced))
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
+                } header: {
+                    Text("Key")
+                } footer: {
+                    if isDuplicateKey {
+                        Text("Key '\(key)' already exists")
+                            .foregroundStyle(.red)
+                    }
                 }
 
                 Section {
@@ -798,7 +843,7 @@ private struct StorageAddSheet: View {
                     Button("Add") {
                         addItem()
                     }
-                    .disabled(isSaving || key.isEmpty)
+                    .disabled(isSaving || key.isEmpty || isDuplicateKey)
                 }
             }
             .sheet(isPresented: $showJsonEditor) {
