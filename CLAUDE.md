@@ -37,7 +37,7 @@ wina/
 │   ├── UserAgent/       # UA 커스터마이징
 │   └── WebView/         # WebViewContainer, WebViewNavigator
 ├── Shared/
-│   ├── Components/      # GlassIconButton, GlassActionButton, ChipButton, InfoPopoverButton, SettingToggleRow, DevToolsHeader, FlowLayout
+│   ├── Components/      # GlassIconButton, GlassActionButton, ChipButton, InfoPopoverButton, SettingToggleRow, DevToolsHeader, FlowLayout, JsonEditor/
 │   └── Extensions/      # ColorExtensions, DeviceUtilities
 └── Resources/Icons/
 ```
@@ -76,6 +76,40 @@ func resetToDefaults() { localValue = false }  // 저장 X
 ### DevTools Manager 패턴
 
 `ConsoleManager`, `NetworkManager`, `StorageManager` 모두 `WebViewNavigator`에 포함. JavaScript 인젝션으로 캡처.
+
+### JavaScript 문자열 Escape
+
+Swift → JavaScript 문자열 전달 시 `JSONSerialization` 사용 (newline, 따옴표 등 자동 escape)
+
+```swift
+// ❌ 특수문자 깨짐
+let script = "storage.setItem('\(key)', '\(value)');"
+
+// ✅ JSONSerialization으로 안전하게 escape
+guard let keyData = try? JSONSerialization.data(withJSONObject: key),
+      let valueData = try? JSONSerialization.data(withJSONObject: value),
+      let jsonKey = String(data: keyData, encoding: .utf8),
+      let jsonValue = String(data: valueData, encoding: .utf8)
+else { return }
+let script = "storage.setItem(\(jsonKey), \(jsonValue));"  // 따옴표 포함됨
+```
+
+### Tree View Expand/Collapse
+
+UUID 대신 경로 기반 stable ID 사용 (렌더링마다 새 UUID 생성되면 상태 유실)
+
+```swift
+// ❌ 매번 새 ID → expand 상태 유실
+struct Node: Identifiable {
+    let id = UUID()  // 렌더링마다 새로 생성
+}
+
+// ✅ 경로 기반 stable ID
+struct Node: Identifiable {
+    let path: [String]
+    var id: String { path.joined(separator: ".") }
+}
+```
 
 ---
 
