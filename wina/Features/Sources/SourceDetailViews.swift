@@ -1176,6 +1176,7 @@ struct CSSPropertyRow: View {
 private struct ExpandableURLView: View {
     let url: String
     @State private var isExpanded: Bool = false
+    @State private var copiedFeedback: String?
 
     private var isLongURL: Bool {
         url.count > 60
@@ -1228,10 +1229,26 @@ private struct ExpandableURLView: View {
 
             GlassActionButton("Copy URL", icon: "doc.on.doc") {
                 UIPasteboard.general.string = url
+                showCopiedFeedback()
             }
         }
         .padding()
         .background(Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .overlay(alignment: .bottom) {
+            if let feedback = copiedFeedback {
+                CopiedFeedbackToast(message: feedback)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: copiedFeedback)
+    }
+
+    private func showCopiedFeedback() {
+        copiedFeedback = "URL copied"
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            copiedFeedback = nil
+        }
     }
 }
 
@@ -1665,7 +1682,7 @@ struct CodeBlock: View {
 
 #Preview("Stylesheet Detail") {
     StylesheetDetailView(
-        sheet: StylesheetInfo(index: 0, href: "styles.css", rulesCount: 42, isExternal: true, mediaText: nil),
+        sheet: StylesheetInfo(index: 0, href: "styles.css", rulesCount: 42, isExternal: true, mediaText: nil, cssContent: nil),
         index: 0,
         navigator: nil
     )
@@ -1673,7 +1690,7 @@ struct CodeBlock: View {
 
 #Preview("Script Detail") {
     ScriptDetailView(
-        script: ScriptInfo(index: 0, src: "app.js", isExternal: true, isModule: true, isAsync: false, isDefer: true),
+        script: ScriptInfo(index: 0, src: "app.js", isExternal: true, isModule: true, isAsync: false, isDefer: true, content: nil),
         index: 0,
         navigator: nil
     )

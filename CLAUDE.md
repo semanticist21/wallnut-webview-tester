@@ -1,12 +1,14 @@
 # CLAUDE.md
 
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 ## Project Overview
 
 **Wallnut (wina)** - iOS WKWebView 테스터 앱
 
 WKWebView 설정을 실시간 테스트하는 개발자 도구. SwiftUI 기반, iOS 26.1+ (Tahoe)
 
-**주요 기능**: WKWebView/SafariVC 토글, 설정 옵션 테스트, DevTools (Console/Network/Storage/Performance), API Capability 감지, 북마크, 반응형 크기 조절, 스크린샷 (WKWebView 전용)
+**주요 기능**: WKWebView/SafariVC 토글, 설정 옵션 테스트, DevTools (Console/Network/Storage/Performance/Sources), API Capability 감지, 북마크, 반응형 크기 조절, 스크린샷 (WKWebView 전용)
 
 ## Quick Reference
 
@@ -33,12 +35,13 @@ wina/
 │   ├── Network/         # NetworkManager + UI (fetch/XHR 모니터링)
 │   ├── Storage/         # StorageManager + UI (localStorage/sessionStorage/cookies, SWR 패턴)
 │   ├── Performance/     # Web Vitals + Navigation Timing
+│   ├── Sources/         # DOM Tree, Stylesheets, Scripts (Chrome DevTools 스타일)
 │   ├── Info/            # SharedInfoWebView, API Capability 감지, 벤치마크
 │   ├── UserAgent/       # UA 커스터마이징
 │   └── WebView/         # WebViewContainer, WebViewNavigator
 ├── Shared/
 │   ├── Components/      # GlassIconButton, GlassActionButton, ChipButton, InfoPopoverButton, SettingToggleRow, DevToolsHeader, FlowLayout, JsonEditor/
-│   └── Extensions/      # ColorExtensions, DeviceUtilities
+│   └── Extensions/      # ColorExtensions, DeviceUtilities, URLValidator
 └── Resources/Icons/
 ```
 
@@ -133,6 +136,25 @@ struct Node: Identifiable {
     var id: String { path.joined(separator: ".") }
 }
 ```
+
+### Runestone (Sources Raw HTML View)
+
+대용량 HTML 표시 시 Runestone + Tree-sitter 사용 (virtualization + syntax highlighting)
+
+```swift
+import Runestone
+import TreeSitterHTMLRunestone
+
+// TextView with HTML syntax highlighting
+let state = TextViewState(text: html, theme: HTMLViewerTheme(), language: .html)
+textView.setState(state)
+
+// Built-in search support
+let query = SearchQuery(text: searchText, matchMethod: .contains, isCaseSensitive: false)
+let results = textView.search(for: query)
+```
+
+**장점**: LazyVStack 대비 양방향 스크롤 + 텍스트 선택 + 메모리 효율 (virtualization)
 
 ---
 
@@ -475,13 +497,14 @@ struct HTMLTextView: UIViewRepresentable {
 | 헤더 액션 버튼 | `HeaderActionButton` (capsule, section header용) |
 | 복사 버튼 | `CopyButton` (header), `CopyIconButton` (icon only), `CopiedFeedbackToast` |
 | 타입 배지 | `TypeBadge` (text + color + icon) |
-| 칩/태그 | `ChipButton` |
+| 칩/태그 | `ChipButton`, `ToggleChipButton` (toggle state) |
 | info 버튼 | `InfoPopoverButton` (Generic ShapeStyle) |
 | deprecated 경고 | `DeprecatedPopoverButton` |
 | 설정 토글 | `SettingToggleRow` |
 | 색상 선택 | `ColorPickerRow` (deprecatedInfo 파라미터) |
 | 자동 줄바꿈 | `FlowLayout` |
 | DevTools 헤더 | `DevToolsHeader` |
+| WebView 크기 조절 | `WebViewSizeControl` |
 
 ### DevToolsHeader 레이아웃
 
@@ -496,7 +519,7 @@ struct HTMLTextView: UIViewRepresentable {
 - Left: Close (xmark.circle.fill) → Actions (trash, share)
 - Right: Toggles (play/pause, settings)
 
-**사용 뷰**: Console, Network, Storage, Performance (모두 동일 패턴)
+**사용 뷰**: Console, Network, Storage, Performance, Sources (모두 동일 패턴)
 
 ### 금지 사항
 

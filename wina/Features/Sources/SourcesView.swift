@@ -77,6 +77,7 @@ struct StylesheetInfo: Identifiable {
     let rulesCount: Int
     let isExternal: Bool
     let mediaText: String?
+    let cssContent: String? // For search - inline CSS or fetched rules
 }
 
 struct ScriptInfo: Identifiable {
@@ -87,6 +88,7 @@ struct ScriptInfo: Identifiable {
     let isModule: Bool
     let isAsync: Bool
     let isDefer: Bool
+    let content: String? // For search - inline script content only
 }
 
 // MARK: - Sources Manager
@@ -228,14 +230,26 @@ class SourcesManager: ObservableObject {
         const sheets = [];
         for (const sheet of document.styleSheets) {
             let rulesCount = 0;
+            let cssContent = null;
             try {
-                rulesCount = sheet.cssRules ? sheet.cssRules.length : 0;
-            } catch(e) {}
+                if (sheet.cssRules) {
+                    rulesCount = sheet.cssRules.length;
+                    // Collect CSS content for search (selectors + properties)
+                    const parts = [];
+                    for (const rule of sheet.cssRules) {
+                        if (rule.cssText) parts.push(rule.cssText);
+                    }
+                    cssContent = parts.join('\\n');
+                }
+            } catch(e) {
+                // CORS: external stylesheets can't access cssRules
+            }
             sheets.push({
                 href: sheet.href,
                 rulesCount: rulesCount,
                 isExternal: !!sheet.href,
-                media: sheet.media ? sheet.media.mediaText : null
+                media: sheet.media ? sheet.media.mediaText : null,
+                cssContent: cssContent
             });
         }
         return JSON.stringify(sheets);
@@ -260,7 +274,8 @@ class SourcesManager: ObservableObject {
                     href: item["href"] as? String,
                     rulesCount: item["rulesCount"] as? Int ?? 0,
                     isExternal: item["isExternal"] as? Bool ?? false,
-                    mediaText: item["media"] as? String
+                    mediaText: item["media"] as? String,
+                    cssContent: item["cssContent"] as? String
                 )
             }
         } else {
@@ -276,12 +291,15 @@ class SourcesManager: ObservableObject {
     (function() {
         const scripts = [];
         for (const script of document.scripts) {
+            // Only inline scripts have textContent (external scripts are empty)
+            const content = script.src ? null : (script.textContent || null);
             scripts.push({
                 src: script.src || null,
                 isExternal: !!script.src,
                 isModule: script.type === 'module',
                 isAsync: script.async,
-                isDefer: script.defer
+                isDefer: script.defer,
+                content: content
             });
         }
         return JSON.stringify(scripts);
@@ -307,7 +325,8 @@ class SourcesManager: ObservableObject {
                     isExternal: item["isExternal"] as? Bool ?? false,
                     isModule: item["isModule"] as? Bool ?? false,
                     isAsync: item["isAsync"] as? Bool ?? false,
-                    isDefer: item["isDefer"] as? Bool ?? false
+                    isDefer: item["isDefer"] as? Bool ?? false,
+                    content: item["content"] as? String
                 )
             }
         } else {
@@ -387,12 +406,12 @@ struct SourcesView: View {
             }
         }
         .task(id: searchText) {
-            // Debounce search: wait 200ms before processing
+            // Debounce search: wait 400ms before processing
             guard !searchText.isEmpty else {
                 debouncedSearchText = ""
                 return
             }
-            try? await Task.sleep(for: .milliseconds(200))
+            try? await Task.sleep(for: .milliseconds(400))
             guard !Task.isCancelled else { return }
             debouncedSearchText = searchText
         }
@@ -508,15 +527,22 @@ struct SourcesView: View {
 
     private var filteredStylesheets: [StylesheetInfo] {
         guard !debouncedSearchText.isEmpty else { return manager.stylesheets }
-        return manager.stylesheets.filter {
-            $0.href?.localizedCaseInsensitiveContains(debouncedSearchText) == true
+        let query = debouncedSearchText
+        return manager.stylesheets.filter { sheet in
+            // Search in href (URL), mediaText, and CSS content
+            sheet.href?.localizedCaseInsensitiveContains(query) == true ||
+            sheet.mediaText?.localizedCaseInsensitiveContains(query) == true ||
+            sheet.cssContent?.localizedCaseInsensitiveContains(query) == true
         }
     }
 
     private var filteredScripts: [ScriptInfo] {
         guard !debouncedSearchText.isEmpty else { return manager.scripts }
-        return manager.scripts.filter {
-            $0.src?.localizedCaseInsensitiveContains(debouncedSearchText) == true
+        let query = debouncedSearchText
+        return manager.scripts.filter { script in
+            // Search in src (URL) and inline script content
+            script.src?.localizedCaseInsensitiveContains(query) == true ||
+            script.content?.localizedCaseInsensitiveContains(query) == true
         }
     }
 
@@ -602,9 +628,9 @@ struct SourcesView: View {
             TextField(selectedTab == .elements ? "Search" : "Filter", text: $searchText)
                 .textFieldStyle(.plain)
 
-            // Search navigation - always reserve space
+            // Search navigation - always reserve space (use debounced for stability)
             Group {
-                if selectedTab == .elements && !searchText.isEmpty {
+                if selectedTab == .elements && !debouncedSearchText.isEmpty {
                     searchNavigationView
                 }
             }
@@ -875,7 +901,7 @@ struct SourcesView: View {
                                     node: root,
                                     depth: 0,
                                     manager: manager,
-                                    searchText: searchText,
+                                    searchText: debouncedSearchText,
                                     currentMatchPath: currentMatchPath,
                                     onSelect: { node in
                                         selectedNode = node
@@ -897,7 +923,7 @@ struct SourcesView: View {
                 if let html = manager.rawHTML {
                     HTMLSyntaxView(
                         html: html,
-                        searchText: searchText,
+                        searchText: debouncedSearchText,
                         currentMatchLineIndex: rawMatchLineIndices.isEmpty ? nil : currentRawMatchIndex,
                         matchingLineIndices: rawMatchLineIndices
                     )
@@ -932,7 +958,7 @@ struct SourcesView: View {
         } else if manager.stylesheets.isEmpty {
             emptyView("No stylesheets found")
         } else if filteredStylesheets.isEmpty {
-            emptyView(searchText.isEmpty ? "No stylesheets found" : "No matches")
+            emptyView(debouncedSearchText.isEmpty ? "No stylesheets found" : "No matches")
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -961,7 +987,7 @@ struct SourcesView: View {
         } else if let error = manager.errorMessage {
             errorView(error)
         } else if filteredScripts.isEmpty {
-            emptyView(searchText.isEmpty ? "No scripts found" : "No matches")
+            emptyView(debouncedSearchText.isEmpty ? "No scripts found" : "No matches")
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
