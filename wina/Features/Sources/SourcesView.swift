@@ -339,9 +339,16 @@ struct SourcesView: View {
     // Elements view mode (tree vs raw HTML)
     @State private var elementsViewMode: ElementsViewMode = .tree
 
-    // Search navigation for Elements
+    // Search navigation for Elements (Tree mode)
     @State private var currentMatchIndex: Int = 0
     @State private var matchingNodePaths: [[String]] = []
+
+    // Search navigation for Elements (Raw HTML mode)
+    @State private var currentRawMatchIndex: Int = 0
+    @State private var rawMatchLineIndices: [Int] = []
+    @State private var cachedRawHTMLLines: [String] = []
+    @State private var searchTask: Task<Void, Never>?
+    @State private var isSearching: Bool = false
 
     // Detail view selections
     @State private var selectedNode: DOMNode?
@@ -379,8 +386,49 @@ struct SourcesView: View {
             }
         }
         .onChange(of: selectedTab) { _, _ in
+            // Clear search when switching tabs
+            searchText = ""
+            currentMatchIndex = 0
+            matchingNodePaths = []
+            currentRawMatchIndex = 0
+            rawMatchLineIndices = []
+
             Task {
                 await fetchCurrentTab()
+            }
+        }
+        .onChange(of: manager.domTree?.id) { _, _ in
+            // Update search results when DOM tree loads
+            if !searchText.isEmpty && elementsViewMode == .tree {
+                updateMatchingNodes()
+            }
+        }
+        .onChange(of: manager.rawHTML) { _, newHTML in
+            // Cache processed lines when raw HTML loads
+            if let html = newHTML {
+                Task.detached(priority: .userInitiated) {
+                    let lines = HTMLProcessor.formatHTMLToLines(html)
+                    let limitedLines = Array(lines.prefix(HTMLSyntaxView.maxLines))
+                    await MainActor.run {
+                        cachedRawHTMLLines = limitedLines
+                        // Update search results if needed
+                        if !searchText.isEmpty && elementsViewMode == .raw {
+                            updateRawHTMLMatches()
+                        }
+                    }
+                }
+            } else {
+                cachedRawHTMLLines = []
+            }
+        }
+        .onChange(of: elementsViewMode) { _, newMode in
+            // Update search results when view mode changes
+            if !searchText.isEmpty {
+                if newMode == .tree {
+                    updateMatchingNodes()
+                } else {
+                    updateRawHTMLMatches()
+                }
             }
         }
         .onChange(of: navigator?.currentURL) { _, newURL in
@@ -505,65 +553,24 @@ struct SourcesView: View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
+
             TextField(selectedTab == .elements ? "Search" : "Filter", text: $searchText)
                 .textFieldStyle(.plain)
                 .onChange(of: searchText) { _, _ in
                     if selectedTab == .elements {
-                        updateMatchingNodes()
+                        if elementsViewMode == .tree {
+                            updateMatchingNodes()
+                        } else {
+                            updateRawHTMLMatches()
+                        }
                     }
                 }
 
-            // Match count and navigation for Elements tab
-            if selectedTab == .elements && !searchText.isEmpty && elementsViewMode == .tree {
-                if matchingNodePaths.isEmpty {
-                    Text("0")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.secondary.opacity(0.1), in: Capsule())
-                } else {
-                    // Match counter
-                    Text("\(currentMatchIndex + 1)/\(matchingNodePaths.count)")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.secondary.opacity(0.1), in: Capsule())
-
-                    // Navigation buttons
-                    HStack(spacing: 0) {
-                        Button {
-                            navigateToPreviousMatch()
-                        } label: {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 12, weight: .medium))
-                                .frame(width: 28, height: 28)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(matchingNodePaths.count <= 1)
-
-                        Button {
-                            navigateToNextMatch()
-                        } label: {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 12, weight: .medium))
-                                .frame(width: 28, height: 28)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(matchingNodePaths.count <= 1)
-                    }
-                    .foregroundStyle(matchingNodePaths.count <= 1 ? .tertiary : .primary)
-                }
-            }
+            searchNavigationView
 
             if !searchText.isEmpty {
                 Button {
-                    searchText = ""
-                    currentMatchIndex = 0
-                    matchingNodePaths = []
+                    clearSearch()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
@@ -596,6 +603,89 @@ struct SourcesView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(.ultraThinMaterial)
+    }
+
+    @ViewBuilder
+    private var searchNavigationView: some View {
+        if selectedTab == .elements && !searchText.isEmpty {
+            if elementsViewMode == .tree {
+                treeSearchNavigation
+            } else {
+                rawHTMLSearchNavigation
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var treeSearchNavigation: some View {
+        if matchingNodePaths.isEmpty {
+            matchCountBadge("0")
+        } else {
+            matchCountBadge("\(currentMatchIndex + 1)/\(matchingNodePaths.count)")
+            navigationButtons(
+                onPrevious: navigateToPreviousMatch,
+                onNext: navigateToNextMatch,
+                isDisabled: matchingNodePaths.count <= 1
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var rawHTMLSearchNavigation: some View {
+        if rawMatchLineIndices.isEmpty {
+            matchCountBadge("0")
+        } else {
+            matchCountBadge("\(currentRawMatchIndex + 1)/\(rawMatchLineIndices.count)")
+            navigationButtons(
+                onPrevious: navigateToPreviousRawMatch,
+                onNext: navigateToNextRawMatch,
+                isDisabled: rawMatchLineIndices.count <= 1
+            )
+        }
+    }
+
+    private func matchCountBadge(_ text: String) -> some View {
+        Text(text)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(.secondary.opacity(0.1), in: Capsule())
+    }
+
+    private func navigationButtons(
+        onPrevious: @escaping () -> Void,
+        onNext: @escaping () -> Void,
+        isDisabled: Bool
+    ) -> some View {
+        HStack(spacing: 0) {
+            Button(action: onPrevious) {
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 12, weight: .medium))
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isDisabled)
+
+            Button(action: onNext) {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .medium))
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(isDisabled)
+        }
+        .foregroundStyle(isDisabled ? .tertiary : .primary)
+    }
+
+    private func clearSearch() {
+        searchText = ""
+        currentMatchIndex = 0
+        matchingNodePaths = []
+        currentRawMatchIndex = 0
+        rawMatchLineIndices = []
     }
 
     private func updateMatchingNodes() {
@@ -638,6 +728,57 @@ struct SourcesView: View {
     private func navigateToNextMatch() {
         guard !matchingNodePaths.isEmpty else { return }
         currentMatchIndex = (currentMatchIndex + 1) % matchingNodePaths.count
+    }
+
+    private func updateRawHTMLMatches() {
+        // Cancel previous search task
+        searchTask?.cancel()
+
+        guard !searchText.isEmpty else {
+            rawMatchLineIndices = []
+            currentRawMatchIndex = 0
+            isSearching = false
+            return
+        }
+
+        // Debounce: wait 150ms before searching
+        isSearching = true
+        let query = searchText.lowercased()
+        let lines = cachedRawHTMLLines
+
+        searchTask = Task {
+            // Debounce delay
+            try? await Task.sleep(for: .milliseconds(150))
+
+            guard !Task.isCancelled else { return }
+
+            // Search on background thread
+            let matchingIndices = await Task.detached(priority: .userInitiated) {
+                var indices: [Int] = []
+                for (index, line) in lines.enumerated() where line.lowercased().contains(query) {
+                    indices.append(index)
+                }
+                return indices
+            }.value
+
+            guard !Task.isCancelled else { return }
+
+            await MainActor.run {
+                rawMatchLineIndices = matchingIndices
+                currentRawMatchIndex = matchingIndices.isEmpty ? 0 : min(currentRawMatchIndex, matchingIndices.count - 1)
+                isSearching = false
+            }
+        }
+    }
+
+    private func navigateToPreviousRawMatch() {
+        guard !rawMatchLineIndices.isEmpty else { return }
+        currentRawMatchIndex = (currentRawMatchIndex - 1 + rawMatchLineIndices.count) % rawMatchLineIndices.count
+    }
+
+    private func navigateToNextRawMatch() {
+        guard !rawMatchLineIndices.isEmpty else { return }
+        currentRawMatchIndex = (currentRawMatchIndex + 1) % rawMatchLineIndices.count
     }
 
     private var currentMatchPath: [String]? {
@@ -720,7 +861,12 @@ struct SourcesView: View {
                 }
             case .raw:
                 if let html = manager.rawHTML {
-                    HTMLSyntaxView(html: html, searchText: searchText)
+                    HTMLSyntaxView(
+                        html: html,
+                        searchText: searchText,
+                        currentMatchLineIndex: rawMatchLineIndices.isEmpty ? nil : currentRawMatchIndex,
+                        matchingLineIndices: rawMatchLineIndices
+                    )
                 } else {
                     emptyView("No HTML available")
                 }
@@ -730,8 +876,12 @@ struct SourcesView: View {
 
     private func scrollToCurrentMatch(proxy: ScrollViewProxy) {
         guard let path = currentMatchPath, let targetId = path.last else { return }
-        withAnimation(.easeOut(duration: 0.2)) {
-            proxy.scrollTo(targetId, anchor: .center)
+        // Delay scroll to allow parent nodes to expand first
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(100))
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(targetId, anchor: .center)
+            }
         }
     }
 
@@ -1194,12 +1344,14 @@ struct SourcesShareSheet: UIViewControllerRepresentable {
 struct HTMLSyntaxView: View {
     let html: String
     let searchText: String
+    let currentMatchLineIndex: Int?
+    let matchingLineIndices: [Int]
 
     @State private var lines: [HTMLLine] = []
     @State private var isProcessing = true
     @State private var totalLines = 0
 
-    private static let maxLines = 5000
+    static let maxLines = 10000
 
     var body: some View {
         Group {
@@ -1216,31 +1368,69 @@ struct HTMLSyntaxView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                ScrollView([.horizontal, .vertical]) {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        if totalLines > Self.maxLines {
-                            HStack(spacing: 4) {
-                                Image(systemName: "exclamationmark.triangle.fill")
-                                    .foregroundStyle(.orange)
-                                Text("Showing first \(Self.maxLines) of \(totalLines) lines")
-                            }
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                        }
+                GeometryReader { geometry in
+                    ScrollViewReader { proxy in
+                        ScrollView([.horizontal, .vertical]) {
+                            LazyVStack(alignment: .leading, spacing: 0) {
+                                if totalLines > Self.maxLines {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "exclamationmark.triangle.fill")
+                                                .foregroundStyle(.orange)
+                                            Text("Showing \(Self.maxLines) of \(totalLines) lines")
+                                                .fontWeight(.medium)
+                                        }
+                                        Text("Remaining \(totalLines - Self.maxLines) lines not loaded (not searchable)")
+                                            .foregroundStyle(.tertiary)
+                                    }
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 8)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(.ultraThinMaterial)
+                                }
 
-                        ForEach(lines) { line in
-                            HTMLLineView(line: line, searchText: searchText)
+                                ForEach(lines) { line in
+                                    HTMLLineView(
+                                        line: line,
+                                        searchText: searchText,
+                                        isCurrentMatch: currentLineIndex == line.id
+                                    )
+                                    .id(line.id)
+                                }
+                            }
+                            .padding(12)
+                            .frame(minWidth: geometry.size.width, alignment: .topLeading)
+                        }
+                        .onChange(of: currentMatchLineIndex) { _, newIndex in
+                            scrollToLine(proxy: proxy, index: newIndex)
                         }
                     }
-                    .padding(12)
                 }
             }
         }
         .background(Color(uiColor: .systemBackground))
         .task(id: html) {
             await processHTML()
+        }
+    }
+
+    private var currentLineIndex: Int? {
+        guard let matchIndex = currentMatchLineIndex,
+              matchIndex < matchingLineIndices.count else { return nil }
+        return matchingLineIndices[matchIndex]
+    }
+
+    private func scrollToLine(proxy: ScrollViewProxy, index: Int?) {
+        guard let matchIndex = index,
+              matchIndex < matchingLineIndices.count else { return }
+        let lineIndex = matchingLineIndices[matchIndex]
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(50))
+            withAnimation(.easeOut(duration: 0.2)) {
+                proxy.scrollTo(lineIndex, anchor: .center)
+            }
         }
     }
 
@@ -1273,13 +1463,21 @@ struct HTMLLine: Identifiable {
 struct HTMLLineView: View {
     let line: HTMLLine
     let searchText: String
+    var isCurrentMatch: Bool = false
 
     var body: some View {
         Text(highlightedContent)
             .font(.system(size: 12, design: .monospaced))
             .textSelection(.enabled)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .frame(height: 16)
+            .fixedSize(horizontal: true, vertical: false)
+            .frame(height: 16, alignment: .leading)
+            .padding(.horizontal, 4)
+            .background {
+                if isCurrentMatch {
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(Color.accentColor.opacity(0.3))
+                }
+            }
     }
 
     private var highlightedContent: AttributedString {
@@ -1307,13 +1505,25 @@ struct HTMLLineView: View {
 
 // MARK: - HTML Processor (Background Thread Safe)
 
-private enum HTMLProcessor {
-    static func process(html: String, searchText: String) -> AttributedString {
-        let formatted = formatHTML(html)
-        return buildAttributedString(from: formatted, searchText: searchText)
+enum HTMLProcessor {
+    struct ProcessResult {
+        let lines: [HTMLLine]
+        let totalLines: Int
     }
 
-    private static func formatHTML(_ html: String) -> String {
+    static func processToLines(html: String, maxLines: Int) -> ProcessResult {
+        let rawLines = formatHTMLToLines(html)
+        let totalLines = rawLines.count
+        let limitedLines = Array(rawLines.prefix(maxLines))
+
+        let htmlLines = limitedLines.enumerated().map { index, lineStr in
+            HTMLLine(id: index, content: highlightLine(lineStr))
+        }
+
+        return ProcessResult(lines: htmlLines, totalLines: totalLines)
+    }
+
+    static func formatHTMLToLines(_ html: String) -> [String] {
         var lines: [String] = []
         var depth = 0
         var inTag = false
@@ -1322,11 +1532,10 @@ private enum HTMLProcessor {
 
         for char in html {
             if char == "<" {
-                // Flush text buffer
                 if !textBuffer.isEmpty {
                     let trimmed = textBuffer.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !trimmed.isEmpty {
-                        lines.append(String(repeating: "  ", count: depth) + trimmed)
+                        lines.append(String(repeating: " ", count: depth) + trimmed)
                     }
                     textBuffer = ""
                 }
@@ -1342,7 +1551,7 @@ private enum HTMLProcessor {
                 let isVoid = isVoidTag(tagContent)
 
                 if isClosing { depth = max(0, depth - 1) }
-                lines.append(String(repeating: "  ", count: depth) + tagContent)
+                lines.append(String(repeating: " ", count: depth) + tagContent)
                 if !isClosing && !isSelfClosing && !isVoid { depth += 1 }
 
                 tagContent = ""
@@ -1353,7 +1562,7 @@ private enum HTMLProcessor {
             }
         }
 
-        return lines.joined(separator: "\n")
+        return lines
     }
 
     private static func isVoidTag(_ tag: String) -> Bool {
@@ -1363,48 +1572,34 @@ private enum HTMLProcessor {
         return voidTags.contains { lower.hasPrefix("<\($0)") || lower.hasPrefix("<\($0) ") }
     }
 
-    private static func buildAttributedString(from text: String, searchText: String) -> AttributedString {
-        var result = AttributedString()
-
+    private static func highlightLine(_ lineStr: String) -> AttributedString {
         let bracketColor = Color.secondary
         let tagNameColor = Color(red: 0.8, green: 0.2, blue: 0.4)
         let attrNameColor = Color(red: 0.6, green: 0.4, blue: 0.8)
         let attrValueColor = Color(red: 0.2, green: 0.6, blue: 0.8)
 
-        for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
-            let lineStr = String(line)
+        if let tagStart = lineStr.firstIndex(of: "<"),
+           let tagEnd = lineStr.lastIndex(of: ">") {
+            var result = AttributedString()
 
-            if let tagStart = lineStr.firstIndex(of: "<"),
-               let tagEnd = lineStr.lastIndex(of: ">") {
-                // Indentation before tag
-                let indent = String(lineStr[..<tagStart])
-                if !indent.isEmpty {
-                    result.append(AttributedString(indent))
-                }
-
-                // Parse the tag
-                let tagRange = tagStart...tagEnd
-                let tag = String(lineStr[tagRange])
-                result.append(highlightTag(tag, bracketColor: bracketColor,
-                                           tagNameColor: tagNameColor,
-                                           attrNameColor: attrNameColor,
-                                           attrValueColor: attrValueColor))
-            } else {
-                // Plain text line
-                var plainLine = AttributedString(lineStr)
-                plainLine.foregroundColor = .primary
-                result.append(plainLine)
+            // Indentation
+            let indent = String(lineStr[..<tagStart])
+            if !indent.isEmpty {
+                result.append(AttributedString(indent))
             }
 
-            result.append(AttributedString("\n"))
+            // Tag
+            let tag = String(lineStr[tagStart...tagEnd])
+            result.append(highlightTag(tag, bracketColor: bracketColor,
+                                       tagNameColor: tagNameColor,
+                                       attrNameColor: attrNameColor,
+                                       attrValueColor: attrValueColor))
+            return result
+        } else {
+            var plainLine = AttributedString(lineStr)
+            plainLine.foregroundColor = .primary
+            return plainLine
         }
-
-        // Highlight search matches
-        if !searchText.isEmpty {
-            highlightSearchMatches(in: &result, query: searchText)
-        }
-
-        return result
     }
 
     private static func highlightTag(
@@ -1522,23 +1717,6 @@ private enum HTMLProcessor {
         }
 
         return result
-    }
-
-    private static func highlightSearchMatches(in text: inout AttributedString, query: String) {
-        let plainText = String(text.characters).lowercased()
-        let queryLower = query.lowercased()
-
-        var searchStart = plainText.startIndex
-        while let range = plainText.range(of: queryLower, range: searchStart..<plainText.endIndex) {
-            let startOffset = plainText.distance(from: plainText.startIndex, to: range.lowerBound)
-            let endOffset = plainText.distance(from: plainText.startIndex, to: range.upperBound)
-
-            let attrStart = text.index(text.startIndex, offsetByCharacters: startOffset)
-            let attrEnd = text.index(text.startIndex, offsetByCharacters: endOffset)
-            text[attrStart..<attrEnd].backgroundColor = Color.yellow.opacity(0.3)
-
-            searchStart = range.upperBound
-        }
     }
 
     private enum ParseState {

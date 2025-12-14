@@ -308,13 +308,7 @@ struct ElementDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button {
-                        UIPasteboard.general.string = outerHTML
-                    } label: {
-                        Image(systemName: "doc.on.doc")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.plain)
+                    CopyIconButton(text: outerHTML)
                 }
 
                 CodeBlock(code: outerHTML, language: .html)
@@ -327,13 +321,7 @@ struct ElementDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    Button {
-                        UIPasteboard.general.string = innerHTML
-                    } label: {
-                        Image(systemName: "doc.on.doc")
-                            .font(.caption)
-                    }
-                    .buttonStyle(.plain)
+                    CopyIconButton(text: innerHTML)
                 }
 
                 CodeBlock(code: innerHTML, language: .html)
