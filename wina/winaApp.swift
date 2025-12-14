@@ -12,6 +12,9 @@ struct winaApp: App {
     @AppStorage("isDarkMode") private var isDarkMode = false
 
     init() {
+        // Clear network body cache from previous session (unless preserveLog is enabled)
+        NetworkBodyStorage.shared.clearOnLaunchIfNeeded()
+
         // Prewarm WebKit processes in background to reduce Info screen cold start
         Task.detached(priority: .background) {
             await prewarmInfoWebView()
