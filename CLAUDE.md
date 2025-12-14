@@ -186,6 +186,35 @@ ScreenUtility.screenSize  // DeviceUtilities.swift
 UIDevice.current.isIPad   // Extension
 ```
 
+### 9. @Observable vs ObservableObject
+
+`@Observable` 매크로는 `objectWillChange` 퍼블리셔가 없음
+
+```swift
+// ❌ @Observable에서 사용 불가
+.onReceive(navigator?.objectWillChange ?? Empty().eraseToAnyPublisher())
+
+// ✅ 특정 프로퍼티 관찰
+.onChange(of: navigator?.currentURL) { _, newURL in ... }
+```
+
+### 10. 확장/축소 리스트 Layout Shift
+
+커스텀 expand/collapse → layout shift 발생. `DisclosureGroup` 사용 권장
+
+```swift
+// ❌ 커스텀 구현 (layout shift)
+Button { isExpanded.toggle() } label: { ... }
+if isExpanded { content }
+
+// ✅ DisclosureGroup (네이티브 애니메이션)
+DisclosureGroup(isExpanded: $isExpanded) {
+    content
+} label: {
+    labelView
+}
+```
+
 ---
 
 ## Design System
@@ -279,6 +308,17 @@ NSLocationWhenInUseUsageDescription  # Geolocation
 
 - Service Workers, Web Push (Safari/PWA 전용)
 - Vibration, Battery, Bluetooth, USB, NFC (WebKit 정책)
+
+### Resource Timing API 제한
+
+Cross-origin 리소스(외부 CDN 이미지, 폰트 등)는 보안상 크기 정보 0B 반환
+
+```javascript
+// transferSize, encodedBodySize, decodedBodySize 모두 0
+// 서버에서 Timing-Allow-Origin 헤더 필요 (우회 불가)
+```
+
+**displaySize fallback 패턴**: `transferSize` → `encodedBodySize` → `decodedBodySize`
 
 ### 벤치마크 주의
 

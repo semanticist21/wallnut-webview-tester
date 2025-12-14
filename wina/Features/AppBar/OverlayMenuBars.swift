@@ -22,6 +22,7 @@ struct OverlayMenuBars: View {
     @Binding var showNetwork: Bool
     @Binding var showStorage: Bool
     @Binding var showPerformance: Bool
+    @Binding var showEditor: Bool
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
@@ -225,6 +226,18 @@ struct OverlayMenuBars: View {
                                 .contentShape(Circle())
                         }
                         .buttonStyle(.plain)
+
+                        Button {
+                            showEditor = true
+                        } label: {
+                            Image(systemName: "chevron.left.forwardslash.chevron.right")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.primary)
+                                .padding(8)
+                                .background(.ultraThinMaterial, in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
                     }
 
                     Spacer()
@@ -387,7 +400,8 @@ struct OverlayMenuBars: View {
             showConsole: .constant(false),
             showNetwork: .constant(false),
             showStorage: .constant(false),
-            showPerformance: .constant(false)
+            showPerformance: .constant(false),
+            showEditor: .constant(false)
         )
     }
 }
@@ -411,7 +425,8 @@ struct OverlayMenuBars: View {
             showConsole: .constant(false),
             showNetwork: .constant(false),
             showStorage: .constant(false),
-            showPerformance: .constant(false)
+            showPerformance: .constant(false),
+            showEditor: .constant(false)
         )
     }
 }

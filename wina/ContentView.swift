@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var showNetwork: Bool = false
     @State private var showStorage: Bool = false
     @State private var showPerformance: Bool = false
+    @State private var showEditor: Bool = false
     @State private var urlValidationState: URLValidationState = .empty
     @State private var useSafariWebView: Bool = false
     @State private var showWebView: Bool = false
@@ -142,7 +143,8 @@ struct ContentView: View {
                     showConsole: $showConsole,
                     showNetwork: $showNetwork,
                     showStorage: $showStorage,
-                    showPerformance: $showPerformance
+                    showPerformance: $showPerformance,
+                    showEditor: $showEditor
                 )
             } else {
                 topBar
@@ -204,20 +206,44 @@ struct ContentView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showPerformance) {
-            PerformanceView(performanceManager: webViewNavigator.performanceManager) {
-                // Refresh action: collect performance data
-                Task {
-                    webViewNavigator.performanceManager.isLoading = true
-                    if let result = await webViewNavigator.evaluateJavaScript(PerformanceManager.collectionScript) as? String {
-                        webViewNavigator.performanceManager.parseData(from: result)
+            PerformanceView(
+                performanceManager: webViewNavigator.performanceManager,
+                onCollect: {
+                    // Collect cached performance data from current page
+                    Task {
+                        webViewNavigator.performanceManager.isLoading = true
+                        if let result = await webViewNavigator.evaluateJavaScript(PerformanceManager.collectionScript) as? String {
+                            webViewNavigator.performanceManager.parseData(from: result)
+                        }
+                        webViewNavigator.performanceManager.isLoading = false
                     }
-                    webViewNavigator.performanceManager.isLoading = false
+                },
+                onReload: {
+                    // Reload page and collect fresh performance data
+                    Task {
+                        webViewNavigator.performanceManager.isLoading = true
+                        webViewNavigator.performanceManager.clear()
+                        webViewNavigator.reload()
+                        // Wait for page load then collect
+                        try? await Task.sleep(for: .seconds(2))
+                        if let result = await webViewNavigator.evaluateJavaScript(PerformanceManager.collectionScript) as? String {
+                            webViewNavigator.performanceManager.parseData(from: result)
+                        }
+                        webViewNavigator.performanceManager.isLoading = false
+                    }
                 }
-            }
+            )
             .presentationDetents([.fraction(0.35), .medium, .large])
             .presentationBackgroundInteraction(.enabled(upThrough: .medium))
             .presentationContentInteraction(.scrolls)
             .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showEditor) {
+            SourcesView(navigator: webViewNavigator)
+                .presentationDetents([.fraction(0.35), .medium, .large])
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                .presentationContentInteraction(.scrolls)
+                .presentationDragIndicator(.visible)
         }
         // Recreate SafariVC when configuration settings change
         .onChange(of: safariEntersReaderIfAvailable) { _, _ in
@@ -364,7 +390,9 @@ struct ContentView: View {
                     quickOptionsRow
                 }
             }
-            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32)
+            // Offset to keep URL input position stable:
+            // When quick options visible, shift down to compensate for VStack height increase
+            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32 + (useSafariWebView ? 0 : 30))
             .onChange(of: textFieldFocused) { _, newValue in
                 withAnimation(.easeOut(duration: 0.15)) {
                     showDropdown = newValue && !filteredURLs.isEmpty

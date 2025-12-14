@@ -939,6 +939,7 @@ private struct NetworkDetailView: View {
                             font: .monospacedSystemFont(ofSize: 12, weight: .regular),
                             padding: .zero
                         )
+                        .fixedSize(horizontal: false, vertical: true)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     } else {
                         Text(String(request.url.prefix(urlCollapseThreshold)) + "...")
@@ -960,6 +961,8 @@ private struct NetworkDetailView: View {
                         .foregroundStyle(.blue)
                     }
                     .buttonStyle(.plain)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 8)
                 }
             } else {
                 SelectableTextView(
@@ -994,31 +997,43 @@ private struct NetworkDetailView: View {
                 } else if let status = request.status {
                     DetailTableRow(key: "Status Code", value: "\(status)", onCopy: copyToClipboard)
                 }
-                DetailTableRow(key: "Type", value: request.requestType.rawValue.capitalized, onCopy: copyToClipboard)
+                DetailTableRow(key: "Type", value: request.requestType.rawValue.capitalized, onCopy: copyToClipboard, showBorder: false)
             }
 
             // Response headers
             if let headers = request.responseHeaders, !headers.isEmpty {
+                let sortedHeaders = headers.sorted(by: { $0.key.lowercased() < $1.key.lowercased() })
                 DetailSection(
                     title: "Response Headers",
                     rawText: formatHeadersForCopy(headers),
                     onCopy: copyToClipboard
                 ) {
-                    ForEach(headers.sorted(by: { $0.key.lowercased() < $1.key.lowercased() }), id: \.key) { key, value in
-                        DetailTableRow(key: key, value: value, onCopy: copyToClipboard)
+                    ForEach(Array(sortedHeaders.enumerated()), id: \.element.key) { index, pair in
+                        DetailTableRow(
+                            key: pair.key,
+                            value: pair.value,
+                            onCopy: copyToClipboard,
+                            showBorder: index < sortedHeaders.count - 1
+                        )
                     }
                 }
             }
 
             // Request headers
             if let headers = request.requestHeaders, !headers.isEmpty {
+                let sortedHeaders = headers.sorted(by: { $0.key.lowercased() < $1.key.lowercased() })
                 DetailSection(
                     title: "Request Headers",
                     rawText: formatHeadersForCopy(headers),
                     onCopy: copyToClipboard
                 ) {
-                    ForEach(headers.sorted(by: { $0.key.lowercased() < $1.key.lowercased() }), id: \.key) { key, value in
-                        DetailTableRow(key: key, value: value, onCopy: copyToClipboard)
+                    ForEach(Array(sortedHeaders.enumerated()), id: \.element.key) { index, pair in
+                        DetailTableRow(
+                            key: pair.key,
+                            value: pair.value,
+                            onCopy: copyToClipboard,
+                            showBorder: index < sortedHeaders.count - 1
+                        )
                     }
                 }
             }
@@ -1063,7 +1078,8 @@ private struct NetworkDetailView: View {
                     DetailTableRow(
                         key: "Path",
                         value: urlComponents.path.isEmpty ? "/" : urlComponents.path,
-                        onCopy: copyToClipboard
+                        onCopy: copyToClipboard,
+                        showBorder: false
                     )
                 }
 
@@ -1074,8 +1090,13 @@ private struct NetworkDetailView: View {
                         rawText: queryParametersRawText(queryItems),
                         onCopy: copyToClipboard
                     ) {
-                        ForEach(queryItems, id: \.name) { item in
-                            DetailTableRow(key: item.name, value: item.value ?? "(empty)", onCopy: copyToClipboard)
+                        ForEach(Array(queryItems.enumerated()), id: \.element.name) { index, item in
+                            DetailTableRow(
+                                key: item.name,
+                                value: item.value ?? "(empty)",
+                                onCopy: copyToClipboard,
+                                showBorder: index < queryItems.count - 1
+                            )
                         }
                     }
                 }
@@ -1670,6 +1691,12 @@ private struct SelectableTextView: UIViewRepresentable {
         uiView.textContainerInset = padding
         uiView.invalidateIntrinsicContentSize()
     }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: AutoSizingTextView, context: Context) -> CGSize? {
+        guard let width = proposal.width, width > 0 else { return nil }
+        let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: size.height)
+    }
 }
 
 // Custom UITextView that properly calculates intrinsic content size
@@ -1774,6 +1801,12 @@ private struct SearchableTextView: UIViewRepresentable {
                 uiView.scrollRangeToVisible(targetRange)
             }
         }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: AutoSizingTextView, context: Context) -> CGSize? {
+        guard let width = proposal.width, width > 0 else { return nil }
+        let size = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: size.height)
     }
 
     class Coordinator {
@@ -1923,7 +1956,7 @@ private struct JSONNodeView: View {
                 childrenView
             }
         }
-        .padding(.leading, CGFloat(depth) * 20)
+        .padding(.leading, CGFloat(depth) * 10)
     }
 
     // Chrome DevTools style: strings = red, primitives = blue, containers = gray

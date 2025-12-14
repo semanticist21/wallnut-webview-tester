@@ -510,6 +510,38 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         })();
         """
 
+    // Performance observer script - sets up tracking for LCP and CLS
+    // Note: INP removed - Safari/WKWebView doesn't support Event Timing API (until 2026)
+    private static let performanceObserverScript = """
+        (function() {
+            if (window.__webVitals_initialized) return;
+            window.__webVitals_initialized = true;
+
+            // LCP tracking (Largest Contentful Paint)
+            window.__webVitals_lcp = -1;
+            try {
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    if (entries.length > 0) {
+                        window.__webVitals_lcp = entries[entries.length - 1].startTime;
+                    }
+                }).observe({ type: 'largest-contentful-paint', buffered: true });
+            } catch (e) {}
+
+            // CLS tracking (Cumulative Layout Shift)
+            window.__webVitals_cls = 0;
+            try {
+                new PerformanceObserver((list) => {
+                    for (const entry of list.getEntries()) {
+                        if (!entry.hadRecentInput) {
+                            window.__webVitals_cls += entry.value;
+                        }
+                    }
+                }).observe({ type: 'layout-shift', buffered: true });
+            } catch (e) {}
+        })();
+        """
+
     // Network hooking script - intercepts fetch and XMLHttpRequest
     private static let networkHookScript = """
         (function() {
@@ -745,6 +777,14 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             forMainFrameOnly: false
         )
         userContentController.addUserScript(networkScript)
+
+        // Performance observer hook (for LCP, CLS)
+        let performanceScript = WKUserScript(
+            source: Self.performanceObserverScript,
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        userContentController.addUserScript(performanceScript)
 
         let webView = WKWebView(frame: .zero, configuration: configuration)
         webView.navigationDelegate = context.coordinator
