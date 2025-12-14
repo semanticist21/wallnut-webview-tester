@@ -279,6 +279,13 @@ struct LoadedSettingsView: View {
                     }
                 }
             }
+            .task {
+                // Show interstitial ad (30% probability, once per session)
+                await AdManager.shared.showInterstitialAd(
+                    options: AdOptions(id: "settings_sheet"),
+                    adUnitId: AdManager.interstitialAdUnitId
+                )
+            }
         }
     }
 }

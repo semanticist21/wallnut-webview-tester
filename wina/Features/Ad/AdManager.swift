@@ -27,6 +27,11 @@ struct AdOptions {
 final class AdManager: NSObject {
     static let shared = AdManager()
 
+    // MARK: - Ad Unit IDs
+
+    /// Test interstitial ad unit ID (replace with production ID before release)
+    static let interstitialAdUnitId = "ca-app-pub-3940256099942544/4411468910"
+
     private var interstitialAd: InterstitialAd?
     private var shownAdIds: Set<String> = []
     private var isLoading = false
@@ -69,6 +74,11 @@ final class AdManager: NSObject {
     /// - Returns: `true` if ad was shown, `false` if skipped (already shown, probability check failed) or failed.
     @discardableResult
     func showInterstitialAd(options: AdOptions, adUnitId: String) async -> Bool {
+        // Skip if user purchased ad removal
+        guard !UserDefaults.standard.bool(forKey: "isAdRemoved") else {
+            return false
+        }
+
         // Skip if already shown for this id
         guard !shownAdIds.contains(options.id) else {
             logger.info("Ad already shown for id: \(options.id), skipping")

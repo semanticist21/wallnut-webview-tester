@@ -120,6 +120,13 @@ struct SafariVCInfoView: View {
             .sheet(isPresented: $showingSettings) {
                 SafariVCSettingsView()
             }
+            .task {
+                // Show interstitial ad (30% probability, once per session)
+                await AdManager.shared.showInterstitialAd(
+                    options: AdOptions(id: "info_sheet"),
+                    adUnitId: AdManager.interstitialAdUnitId
+                )
+            }
         }
     }
 

@@ -14,6 +14,9 @@ struct winaApp: App {
     init() {
         // Clear network body cache from previous session (unless preserveLog is enabled)
         NetworkBodyStorage.shared.clearOnLaunchIfNeeded()
+
+        // Initialize Google Mobile Ads SDK
+        AdManager.shared.initialize()
     }
 
     var body: some Scene {

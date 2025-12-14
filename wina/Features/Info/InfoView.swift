@@ -93,6 +93,12 @@ struct InfoView: View {
             }
         }
         .task {
+            // Show interstitial ad (30% probability, once per session)
+            await AdManager.shared.showInterstitialAd(
+                options: AdOptions(id: "info_sheet"),
+                adUnitId: AdManager.interstitialAdUnitId
+            )
+
             // Set navigator for live page testing (or nil for test WebView)
             SharedInfoWebView.shared.setNavigator(navigator)
             await loadAllInfo()
