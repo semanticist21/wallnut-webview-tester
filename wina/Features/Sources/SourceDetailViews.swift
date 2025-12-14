@@ -80,6 +80,7 @@ struct ElementDetailView: View {
     @State private var isLoading: Bool = true
     @State private var selectedSection: ElementSection = .attributes
     @State private var showMatchedRules: Bool = true  // Toggle between matched/computed
+    @State private var copiedFeedback: String?
 
     enum ElementSection: String, CaseIterable {
         case attributes = "Attributes"
@@ -106,6 +107,13 @@ struct ElementDetailView: View {
                 .background(Color(uiColor: .systemBackground))
             }
         }
+        .overlay(alignment: .bottom) {
+            if let feedback = copiedFeedback {
+                CopiedFeedbackToast(message: feedback)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: copiedFeedback)
         .task {
             await fetchDetails()
         }
@@ -308,7 +316,9 @@ struct ElementDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    CopyIconButton(text: outerHTML)
+                    CopyIconButton(text: outerHTML) {
+                        showCopiedFeedback("outerHTML")
+                    }
                 }
 
                 CodeBlock(code: outerHTML, language: .html)
@@ -321,7 +331,9 @@ struct ElementDetailView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Spacer()
-                    CopyIconButton(text: innerHTML)
+                    CopyIconButton(text: innerHTML) {
+                        showCopiedFeedback("innerHTML")
+                    }
                 }
 
                 CodeBlock(code: innerHTML, language: .html)
@@ -563,11 +575,26 @@ struct ElementDetailView: View {
         case .attributes:
             let text = node.attributes.map { "\($0.key)=\"\($0.value)\"" }.joined(separator: "\n")
             UIPasteboard.general.string = text
+            showCopiedFeedback("Attributes")
         case .styles:
             let text = computedStyles.map { "\($0.key): \($0.value);" }.joined(separator: "\n")
             UIPasteboard.general.string = text
+            showCopiedFeedback("Styles")
         case .html:
             UIPasteboard.general.string = outerHTML
+            showCopiedFeedback("HTML")
+        }
+    }
+
+    private func showCopiedFeedback(_ label: String) {
+        copiedFeedback = "\(label) copied"
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            await MainActor.run {
+                if copiedFeedback == "\(label) copied" {
+                    copiedFeedback = nil
+                }
+            }
         }
     }
 }

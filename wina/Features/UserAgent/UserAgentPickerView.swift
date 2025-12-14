@@ -376,7 +376,7 @@ private struct PresetDetailRow: View {
 
 private struct PresetDetailPopover: View {
     let preset: UserAgentPreset
-    @State private var copied = false
+    @State private var copiedFeedback: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -391,32 +391,43 @@ private struct PresetDetailPopover: View {
 
             Button {
                 UIPasteboard.general.string = preset.userAgent
-                withAnimation {
-                    copied = true
-                }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    withAnimation {
-                        copied = false
-                    }
-                }
+                showCopiedFeedback()
             } label: {
                 HStack {
                     Spacer()
-                    Image(systemName: copied ? "checkmark" : "doc.on.doc")
-                    Text(copied ? "Copied" : "Copy")
+                    Image(systemName: "doc.on.doc")
+                    Text("Copy")
                     Spacer()
                 }
                 .font(.subheadline.weight(.medium))
-                .foregroundStyle(copied ? .green : .blue)
+                .foregroundStyle(.blue)
                 .padding(.vertical, 10)
-                .background(copied ? Color.green.opacity(0.1) : Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                .background(Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
             }
             .buttonStyle(.plain)
-            .disabled(copied)
         }
         .padding()
         .frame(maxWidth: 320)
         .presentationCompactAdaptation(.popover)
+        .overlay(alignment: .bottom) {
+            if let feedback = copiedFeedback {
+                CopiedFeedbackToast(message: feedback)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: copiedFeedback)
+    }
+
+    private func showCopiedFeedback() {
+        copiedFeedback = "User Agent copied"
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            await MainActor.run {
+                if copiedFeedback == "User Agent copied" {
+                    copiedFeedback = nil
+                }
+            }
+        }
     }
 }
 
