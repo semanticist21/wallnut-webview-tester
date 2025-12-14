@@ -261,7 +261,10 @@ struct NetworkRequest: Identifiable, Equatable {
     }
 
     static func == (lhs: NetworkRequest, rhs: NetworkRequest) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id &&
+        lhs.status == rhs.status &&
+        lhs.endTime == rhs.endTime &&
+        lhs.error == rhs.error
     }
 }
 
@@ -589,6 +592,7 @@ struct NetworkView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     // MARK: - Export
@@ -1533,7 +1537,7 @@ private struct DetailTableRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .center, spacing: 12) {
                 Text(key)
                     .font(.system(size: 12, weight: .medium, design: .monospaced))
                     .foregroundStyle(.blue)
@@ -1705,7 +1709,7 @@ private struct SelectableTextView: UIViewRepresentable {
 // Custom UITextView that properly calculates intrinsic content size
 private class AutoSizingTextView: UITextView {
     override var intrinsicContentSize: CGSize {
-        let fixedWidth = bounds.width > 0 ? bounds.width : UIScreen.main.bounds.width - 64
+        let fixedWidth = bounds.width > 0 ? bounds.width : ScreenUtility.screenSize.width - 64
         let size = sizeThatFits(CGSize(width: fixedWidth, height: .greatestFiniteMagnitude))
         return CGSize(width: UIView.noIntrinsicMetric, height: size.height)
     }

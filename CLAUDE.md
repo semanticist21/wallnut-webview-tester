@@ -267,6 +267,47 @@ DisclosureGroup(isExpanded: $isExpanded) {
 }
 ```
 
+### 13. Equatable에서 id만 비교 시 뷰 갱신 안 됨
+
+변경되는 속성이 있는 struct는 Equatable에 해당 속성 포함 필수
+
+```swift
+// ❌ id만 비교 - 속성 변경 감지 못함
+static func == (lhs: Request, rhs: Request) -> Bool {
+    lhs.id == rhs.id
+}
+
+// ✅ 변경되는 속성도 비교
+static func == (lhs: Request, rhs: Request) -> Bool {
+    lhs.id == rhs.id &&
+    lhs.status == rhs.status &&
+    lhs.endTime == rhs.endTime
+}
+```
+
+### 14. 조건부 뷰 간 Layout Shift
+
+emptyState와 contentList 간 전환 시 frame 제약이 다르면 layout shift 발생
+
+```swift
+// ❌ 서로 다른 sizing 동작
+if items.isEmpty {
+    emptyState  // VStack + Spacer
+} else {
+    ScrollView { ... }  // frame 제약 없음
+}
+
+// ✅ 동일한 frame 제약
+var emptyState: some View {
+    VStack { ... }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+}
+var contentList: some View {
+    ScrollView { ... }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+}
+```
+
 ---
 
 ## Design System

@@ -963,7 +963,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             loadingObservation = nil
         }
 
-        // Track pending document request ID by URL (since WKNavigation doesn't expose URL)
+        // Track pending document request (only one at a time for main frame)
         private var pendingDocumentRequestId: String?
 
         // Handle navigation actions (link clicks, reload, etc.)
@@ -982,6 +982,21 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             // Track document navigation for main frame only
             if navigationAction.targetFrame?.isMainFrame == true,
                let url = navigationAction.request.url?.absoluteString {
+
+                // If there's already a pending request, it must be a redirect
+                // Mark it as 302 before creating the new request
+                if let previousId = pendingDocumentRequestId {
+                    navigator?.networkManager.updateRequest(
+                        id: previousId,
+                        status: 302,
+                        statusText: "Redirect",
+                        responseHeaders: nil,
+                        responseBody: nil,
+                        error: nil
+                    )
+                }
+
+                // Create new request
                 let requestId = UUID().uuidString
                 pendingDocumentRequestId = requestId
 
