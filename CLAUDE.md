@@ -361,6 +361,20 @@ NSLocationWhenInUseUsageDescription  # Geolocation
 - Service Workers, Web Push (Safari/PWA 전용)
 - Vibration, Battery, Bluetooth, USB, NFC (WebKit 정책)
 
+### CORS 제한 (외부 스크립트/리소스)
+
+WKWebView는 CORS 정책을 강제 적용. 외부 스크립트 콘텐츠 fetch 불가.
+
+```swift
+// ❌ 외부 스크립트 fetch 시도 → CORS 에러
+navigator.evaluateJavaScript("fetch('https://cdn.example.com/app.js')")
+
+// ✅ inline 스크립트만 접근 가능
+navigator.evaluateJavaScript("document.scripts[0].textContent")
+```
+
+**DevTools Sources 탭**: 외부 스크립트는 URL/메타데이터만 표시, 콘텐츠 조회 불가 안내
+
 ### Resource Timing API 제한
 
 Cross-origin 리소스(외부 CDN 이미지, 폰트 등)는 보안상 크기 정보 0B 반환
