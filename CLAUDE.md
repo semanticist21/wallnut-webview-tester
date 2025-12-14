@@ -205,7 +205,7 @@ UIDevice.current.isIPad   // Extension
 
 | 용도 | 컴포넌트 |
 |------|----------|
-| 원형 아이콘 버튼 | `GlassIconButton` |
+| 원형 아이콘 버튼 | `GlassIconButton` (.regular 44×44, .small 28×28) |
 | 액션 버튼 | `GlassActionButton` (.default, .destructive, .primary) |
 | 칩/태그 | `ChipButton` |
 | info 버튼 | `InfoPopoverButton` (Generic ShapeStyle) |
@@ -214,6 +214,21 @@ UIDevice.current.isIPad   // Extension
 | 색상 선택 | `ColorPickerRow` (deprecatedInfo 파라미터) |
 | 자동 줄바꿈 | `FlowLayout` |
 | DevTools 헤더 | `DevToolsHeader` |
+
+### DevToolsHeader 레이아웃
+
+2행 구조로 버튼이 많아도 제목이 밀리지 않음:
+
+```
+        [Title]              ← Row 1: 중앙 정렬
+[Left Buttons] ⟷ [Right Buttons]  ← Row 2: 좌우 분리
+```
+
+**버튼 배치 규칙**:
+- Left: Close (xmark.circle.fill) → Actions (trash, share)
+- Right: Toggles (play/pause, settings)
+
+**사용 뷰**: Console, Network, Storage, Performance (모두 동일 패턴)
 
 ### 금지 사항
 
