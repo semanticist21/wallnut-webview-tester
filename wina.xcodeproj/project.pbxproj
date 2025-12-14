@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		4097EBA02EEDC4B500E9A0D9 /* UAParserSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 4097EB262EEDC3C000E9A0D9 /* UAParserSwift */; };
 		4097EBA32EEDC4B600E9A0D9 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = 4097EBA22EEDC4B600E9A0D9 /* SwiftSoup */; };
+		4097F5642EEEB96E00E9A0D9 /* Runestone in Frameworks */ = {isa = PBXBuildFile; productRef = 40A1B0032F0E000000000003 /* Runestone */; };
+		4097F5652EEEB96E00E9A0D9 /* TreeSitterHTMLRunestone in Frameworks */ = {isa = PBXBuildFile; productRef = 40A1B0042F0E000000000004 /* TreeSitterHTMLRunestone */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +46,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4097F5652EEEB96E00E9A0D9 /* TreeSitterHTMLRunestone in Frameworks */,
+				4097F5642EEEB96E00E9A0D9 /* Runestone in Frameworks */,
 				4097EBA02EEDC4B500E9A0D9 /* UAParserSwift in Frameworks */,
 				4097EBA32EEDC4B600E9A0D9 /* SwiftSoup in Frameworks */,
 			);

@@ -53,28 +53,6 @@ struct ContentView: View {
         return heightRatio <= 0.83
     }
 
-    private enum URLValidationState {
-        case empty
-        case valid
-        case invalid
-
-        var iconName: String {
-            switch self {
-            case .empty: return "globe"
-            case .valid: return "checkmark.circle.fill"
-            case .invalid: return "xmark.circle.fill"
-            }
-        }
-
-        var iconColor: Color {
-            switch self {
-            case .empty: return .secondary
-            case .valid: return .green
-            case .invalid: return .red
-            }
-        }
-    }
-
     private func decodeRecentURLs() -> [String] {
         (try? JSONDecoder().decode([String].self, from: recentURLsData)) ?? []
     }
@@ -592,105 +570,6 @@ struct ContentView: View {
             return
         }
         urlValidationState = URLValidator.isValidURL(urlText) ? .valid : .invalid
-    }
-}
-
-// MARK: - Bookmarks Sheet
-
-private struct BookmarksSheet: View {
-    let bookmarkedURLs: [String]
-    let onSelect: (String) -> Void
-    let onDelete: (String) -> Void
-    let onAdd: (String) -> Void
-    let currentURL: String
-
-    @Environment(\.dismiss) private var dismiss
-    @State private var newURL: String = ""
-    @FocusState private var isInputFocused: Bool
-
-    var body: some View {
-        NavigationStack {
-            List {
-                // Add new bookmark section
-                Section {
-                    HStack {
-                        TextField("URL", text: $newURL)
-                            .textInputAutocapitalization(.never)
-                            .autocorrectionDisabled()
-                            .keyboardType(.URL)
-                            .focused($isInputFocused)
-
-                        if !newURL.isEmpty {
-                            Button {
-                                onAdd(newURL)
-                                newURL = ""
-                            } label: {
-                                Image(systemName: "plus.circle.fill")
-                                    .foregroundStyle(.blue)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-
-                    // Quick add current URL
-                    if !currentURL.isEmpty && !bookmarkedURLs.contains(currentURL) {
-                        Button {
-                            onAdd(currentURL)
-                        } label: {
-                            HStack {
-                                Text("Add")
-                                    .foregroundStyle(.blue)
-                                Text(currentURL)
-                                    .foregroundStyle(.secondary)
-                                    .lineLimit(1)
-                            }
-                            .font(.subheadline)
-                        }
-                    }
-                } header: {
-                    Text("Add")
-                }
-
-                // Bookmarks list
-                if bookmarkedURLs.isEmpty {
-                    Section {
-                        Text("No bookmarks")
-                            .foregroundStyle(.secondary)
-                    }
-                } else {
-                    Section {
-                        ForEach(bookmarkedURLs, id: \.self) { url in
-                            Button {
-                                onSelect(url)
-                                dismiss()
-                            } label: {
-                                Text(url)
-                                    .foregroundStyle(.primary)
-                                    .lineLimit(1)
-                            }
-                            .swipeActions(edge: .trailing) {
-                                Button(role: .destructive) {
-                                    onDelete(url)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
-                            }
-                        }
-                    } header: {
-                        Text("Saved")
-                    }
-                }
-            }
-            .navigationTitle("Bookmarks")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-        }
     }
 }
 

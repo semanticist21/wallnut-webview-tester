@@ -5,10 +5,7 @@
 //  Chrome DevTools style Sources panel - DOM Tree, Stylesheets, Scripts.
 //
 
-import Combine
-import Runestone
 import SwiftUI
-import TreeSitterHTMLRunestone
 
 // MARK: - Source Tab
 
@@ -37,311 +34,6 @@ enum ElementsViewMode: String, CaseIterable {
         case .tree: return "list.bullet.indent"
         case .raw: return "doc.plaintext"
         }
-    }
-}
-
-// MARK: - Models
-
-struct DOMNode: Identifiable, Hashable {
-    let id = UUID()
-    let nodeType: Int
-    let nodeName: String
-    let attributes: [String: String]
-    let textContent: String?
-    var children: [DOMNode]
-    var isExpanded: Bool = false
-
-    var isElement: Bool { nodeType == 1 }
-    var isText: Bool { nodeType == 3 }
-
-    var displayName: String {
-        if isText {
-            return textContent ?? ""
-        }
-        var result = nodeName.lowercased()
-        if let id = attributes["id"] {
-            result += "#\(id)"
-        }
-        if let className = attributes["class"], !className.isEmpty {
-            let classes = className.split(separator: " ").prefix(2).joined(separator: ".")
-            result += ".\(classes)"
-        }
-        return result
-    }
-}
-
-struct StylesheetInfo: Identifiable {
-    let id = UUID()
-    let index: Int
-    let href: String?
-    let rulesCount: Int
-    let isExternal: Bool
-    let mediaText: String?
-    let cssContent: String? // For search - inline CSS or fetched rules
-}
-
-struct ScriptInfo: Identifiable {
-    let id = UUID()
-    let index: Int
-    let src: String?
-    let isExternal: Bool
-    let isModule: Bool
-    let isAsync: Bool
-    let isDefer: Bool
-    let content: String? // For search - inline script content only
-}
-
-// MARK: - Sources Manager
-
-@MainActor
-class SourcesManager: ObservableObject {
-    @Published var domTree: DOMNode?
-    @Published var rawHTML: String?
-    @Published var stylesheets: [StylesheetInfo] = []
-    @Published var scripts: [ScriptInfo] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
-
-    private weak var navigator: WebViewNavigator?
-
-    func setNavigator(_ navigator: WebViewNavigator?) {
-        self.navigator = navigator
-    }
-
-    // MARK: - DOM Tree
-
-    static let domTreeScript = """
-    (function() {
-        function serializeNode(node, depth) {
-            if (depth > 50) return null;
-            const obj = {
-                type: node.nodeType,
-                name: node.nodeName,
-                attrs: {},
-                text: null,
-                children: []
-            };
-            if (node.nodeType === 1) {
-                for (const attr of node.attributes) {
-                    obj.attrs[attr.name] = attr.value;
-                }
-            }
-            if (node.nodeType === 3) {
-                const text = node.textContent.trim();
-                if (text.length === 0) return null;
-                obj.text = text.substring(0, 200);
-            }
-            for (const child of node.childNodes) {
-                const serialized = serializeNode(child, depth + 1);
-                if (serialized) obj.children.push(serialized);
-            }
-            return obj;
-        }
-        return JSON.stringify(serializeNode(document.documentElement, 0));
-    })();
-    """
-
-    func fetchDOMTree() async {
-        guard let navigator else {
-            errorMessage = "Navigator not available"
-            return
-        }
-
-        isLoading = true
-        errorMessage = nil
-
-        if let result = await navigator.evaluateJavaScript(Self.domTreeScript) as? String,
-           let data = result.data(using: .utf8) {
-            do {
-                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-                domTree = parseNode(json)
-            } catch {
-                errorMessage = "Failed to parse DOM: \(error.localizedDescription)"
-            }
-        } else {
-            errorMessage = "Failed to fetch DOM tree"
-        }
-
-        isLoading = false
-    }
-
-    // MARK: - Raw HTML
-
-    static let rawHTMLScript = """
-    (function() {
-        const doctype = document.doctype;
-        let doctypeStr = '';
-        if (doctype) {
-            doctypeStr = '<!DOCTYPE ' + doctype.name;
-            if (doctype.publicId) {
-                doctypeStr += ' PUBLIC "' + doctype.publicId + '"';
-            }
-            if (doctype.systemId) {
-                doctypeStr += ' "' + doctype.systemId + '"';
-            }
-            doctypeStr += '>\\n';
-        }
-        return doctypeStr + document.documentElement.outerHTML;
-    })();
-    """
-
-    func fetchRawHTML() async {
-        guard let navigator else {
-            errorMessage = "Navigator not available"
-            return
-        }
-
-        isLoading = true
-        errorMessage = nil
-
-        if let result = await navigator.evaluateJavaScript(Self.rawHTMLScript) as? String {
-            rawHTML = result
-        } else {
-            errorMessage = "Failed to fetch HTML"
-        }
-
-        isLoading = false
-    }
-
-    private func parseNode(_ json: [String: Any]?) -> DOMNode? {
-        guard let json else { return nil }
-
-        let nodeType = json["type"] as? Int ?? 0
-        let nodeName = json["name"] as? String ?? ""
-        let attrs = json["attrs"] as? [String: String] ?? [:]
-        let text = json["text"] as? String
-        let childrenJson = json["children"] as? [[String: Any]] ?? []
-
-        let children = childrenJson.compactMap { parseNode($0) }
-
-        return DOMNode(
-            nodeType: nodeType,
-            nodeName: nodeName,
-            attributes: attrs,
-            textContent: text,
-            children: children
-        )
-    }
-
-    // MARK: - Stylesheets
-
-    static let stylesheetsScript = """
-    (function() {
-        const sheets = [];
-        for (const sheet of document.styleSheets) {
-            let rulesCount = 0;
-            let cssContent = null;
-            try {
-                if (sheet.cssRules) {
-                    rulesCount = sheet.cssRules.length;
-                    // Collect CSS content for search (selectors + properties)
-                    const parts = [];
-                    for (const rule of sheet.cssRules) {
-                        if (rule.cssText) parts.push(rule.cssText);
-                    }
-                    cssContent = parts.join('\\n');
-                }
-            } catch(e) {
-                // CORS: external stylesheets can't access cssRules
-            }
-            sheets.push({
-                href: sheet.href,
-                rulesCount: rulesCount,
-                isExternal: !!sheet.href,
-                media: sheet.media ? sheet.media.mediaText : null,
-                cssContent: cssContent
-            });
-        }
-        return JSON.stringify(sheets);
-    })();
-    """
-
-    func fetchStylesheets() async {
-        guard let navigator else {
-            errorMessage = "Navigator not available"
-            return
-        }
-
-        isLoading = true
-        errorMessage = nil
-
-        if let result = await navigator.evaluateJavaScript(Self.stylesheetsScript) as? String,
-           let data = result.data(using: .utf8),
-           let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-            stylesheets = jsonArray.enumerated().map { idx, item in
-                StylesheetInfo(
-                    index: idx,
-                    href: item["href"] as? String,
-                    rulesCount: item["rulesCount"] as? Int ?? 0,
-                    isExternal: item["isExternal"] as? Bool ?? false,
-                    mediaText: item["media"] as? String,
-                    cssContent: item["cssContent"] as? String
-                )
-            }
-        } else {
-            errorMessage = "Failed to fetch stylesheets"
-        }
-
-        isLoading = false
-    }
-
-    // MARK: - Scripts
-
-    static let scriptsScript = """
-    (function() {
-        const scripts = [];
-        for (const script of document.scripts) {
-            // Only inline scripts have textContent (external scripts are empty)
-            const content = script.src ? null : (script.textContent || null);
-            scripts.push({
-                src: script.src || null,
-                isExternal: !!script.src,
-                isModule: script.type === 'module',
-                isAsync: script.async,
-                isDefer: script.defer,
-                content: content
-            });
-        }
-        return JSON.stringify(scripts);
-    })();
-    """
-
-    func fetchScripts() async {
-        guard let navigator else {
-            errorMessage = "Navigator not available"
-            return
-        }
-
-        isLoading = true
-        errorMessage = nil
-
-        if let result = await navigator.evaluateJavaScript(Self.scriptsScript) as? String,
-           let data = result.data(using: .utf8),
-           let jsonArray = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-            scripts = jsonArray.enumerated().map { idx, item in
-                ScriptInfo(
-                    index: idx,
-                    src: item["src"] as? String,
-                    isExternal: item["isExternal"] as? Bool ?? false,
-                    isModule: item["isModule"] as? Bool ?? false,
-                    isAsync: item["isAsync"] as? Bool ?? false,
-                    isDefer: item["isDefer"] as? Bool ?? false,
-                    content: item["content"] as? String
-                )
-            }
-        } else {
-            errorMessage = "Failed to fetch scripts"
-        }
-
-        isLoading = false
-    }
-
-    func clear() {
-        domTree = nil
-        rawHTML = nil
-        stylesheets = []
-        scripts = []
-        errorMessage = nil
     }
 }
 
@@ -553,7 +245,7 @@ struct SourcesView: View {
             if elementsViewMode == .raw, let html = manager.rawHTML {
                 content = html
             } else if let root = manager.domTree {
-                content = serializeDOMTree(root, depth: 0)
+                content = DOMTreeSerializer.serialize(root)
             }
         case .styles:
             content = filteredStylesheets
@@ -565,32 +257,6 @@ struct SourcesView: View {
                 .joined(separator: "\n")
         }
         shareItem = SourcesShareContent(content: content)
-    }
-
-    private func serializeDOMTree(_ node: DOMNode, depth: Int) -> String {
-        let indent = String(repeating: "  ", count: depth)
-        var result = ""
-
-        if node.isText {
-            if let text = node.textContent {
-                result = "\(indent)\(text)\n"
-            }
-        } else {
-            var tag = "<\(node.nodeName.lowercased())"
-            for (key, value) in node.attributes {
-                tag += " \(key)=\"\(value)\""
-            }
-            tag += ">"
-            result = "\(indent)\(tag)\n"
-
-            for child in node.children {
-                result += serializeDOMTree(child, depth: depth + 1)
-            }
-
-            result += "\(indent)</\(node.nodeName.lowercased())>\n"
-        }
-
-        return result
     }
 
     // MARK: - Header
@@ -689,10 +355,10 @@ struct SourcesView: View {
     @ViewBuilder
     private var treeSearchNavigation: some View {
         if matchingNodePaths.isEmpty {
-            matchCountBadge("0")
+            SearchMatchCountBadge(text: "0")
         } else {
-            matchCountBadge("\(currentMatchIndex + 1)/\(matchingNodePaths.count)")
-            navigationButtons(
+            SearchMatchCountBadge(text: "\(currentMatchIndex + 1)/\(matchingNodePaths.count)")
+            SearchNavigationButtons(
                 onPrevious: navigateToPreviousMatch,
                 onNext: navigateToNextMatch,
                 isDisabled: matchingNodePaths.count <= 1
@@ -703,51 +369,15 @@ struct SourcesView: View {
     @ViewBuilder
     private var rawHTMLSearchNavigation: some View {
         if rawMatchLineIndices.isEmpty {
-            matchCountBadge("0")
+            SearchMatchCountBadge(text: "0")
         } else {
-            matchCountBadge("\(currentRawMatchIndex + 1)/\(rawMatchLineIndices.count)")
-            navigationButtons(
+            SearchMatchCountBadge(text: "\(currentRawMatchIndex + 1)/\(rawMatchLineIndices.count)")
+            SearchNavigationButtons(
                 onPrevious: navigateToPreviousRawMatch,
                 onNext: navigateToNextRawMatch,
                 isDisabled: rawMatchLineIndices.count <= 1
             )
         }
-    }
-
-    private func matchCountBadge(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 6)
-            .padding(.vertical, 2)
-            .background(.secondary.opacity(0.1), in: Capsule())
-    }
-
-    private func navigationButtons(
-        onPrevious: @escaping () -> Void,
-        onNext: @escaping () -> Void,
-        isDisabled: Bool
-    ) -> some View {
-        HStack(spacing: 0) {
-            Button(action: onPrevious) {
-                Image(systemName: "chevron.up")
-                    .font(.system(size: 12, weight: .medium))
-                    .frame(width: 28, height: 28)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(isDisabled)
-
-            Button(action: onNext) {
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 12, weight: .medium))
-                    .frame(width: 28, height: 28)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .disabled(isDisabled)
-        }
-        .foregroundStyle(isDisabled ? .tertiary : .primary)
     }
 
     private func clearSearch() {
@@ -769,33 +399,12 @@ struct SourcesView: View {
 
         // Run search on background thread
         Task.detached(priority: .userInitiated) {
-            let paths = Self.collectMatchingPaths(node: root, currentPath: [], query: query)
+            let paths = SourcesSearchHelper.collectMatchingPaths(node: root, currentPath: [], query: query)
             await MainActor.run {
                 matchingNodePaths = paths
                 currentMatchIndex = paths.isEmpty ? 0 : min(currentMatchIndex, paths.count - 1)
             }
         }
-    }
-
-    private static func collectMatchingPaths(node: DOMNode, currentPath: [String], query: String) -> [[String]] {
-        let nodePath = currentPath + [node.id.uuidString]
-        var paths: [[String]] = []
-
-        let matches =
-            node.nodeName.lowercased().contains(query) ||
-            (node.attributes["id"]?.lowercased().contains(query) ?? false) ||
-            (node.attributes["class"]?.lowercased().contains(query) ?? false) ||
-            (node.textContent?.lowercased().contains(query) ?? false)
-
-        if matches && node.isElement {
-            paths.append(nodePath)
-        }
-
-        for child in node.children {
-            paths.append(contentsOf: collectMatchingPaths(node: child, currentPath: nodePath, query: query))
-        }
-
-        return paths
     }
 
     private func navigateToPreviousMatch() {
@@ -815,15 +424,12 @@ struct SourcesView: View {
             return
         }
 
-        let query = debouncedSearchText.lowercased()
+        let query = debouncedSearchText
         let lines = cachedRawHTMLLines
 
         // Run search on background thread
         Task.detached(priority: .userInitiated) {
-            var indices: [Int] = []
-            for (index, line) in lines.enumerated() where line.lowercased().contains(query) {
-                indices.append(index)
-            }
+            let indices = SourcesSearchHelper.findMatchingLineIndices(lines: lines, query: query)
             await MainActor.run {
                 rawMatchLineIndices = indices
                 currentRawMatchIndex = indices.isEmpty ? 0 : min(currentRawMatchIndex, indices.count - 1)
@@ -889,7 +495,7 @@ struct SourcesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(uiColor: .systemBackground))
         } else if let error = manager.errorMessage {
-            errorView(error)
+            SourcesErrorView(message: error)
         } else {
             switch elementsViewMode {
             case .tree:
@@ -917,7 +523,7 @@ struct SourcesView: View {
                     }
                     .background(Color(uiColor: .systemBackground))
                 } else {
-                    emptyView("No DOM tree available")
+                    SourcesEmptyView(message: "No DOM tree available")
                 }
             case .raw:
                 if let html = manager.rawHTML {
@@ -928,7 +534,7 @@ struct SourcesView: View {
                         matchingLineIndices: rawMatchLineIndices
                     )
                 } else {
-                    emptyView("No HTML available")
+                    SourcesEmptyView(message: "No HTML available")
                 }
             }
         }
@@ -954,11 +560,11 @@ struct SourcesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(uiColor: .systemBackground))
         } else if let error = manager.errorMessage {
-            errorView(error)
+            SourcesErrorView(message: error)
         } else if manager.stylesheets.isEmpty {
-            emptyView("No stylesheets found")
+            SourcesEmptyView(message: "No stylesheets found")
         } else if filteredStylesheets.isEmpty {
-            emptyView(debouncedSearchText.isEmpty ? "No stylesheets found" : "No matches")
+            SourcesEmptyView(message: debouncedSearchText.isEmpty ? "No stylesheets found" : "No matches")
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -985,9 +591,9 @@ struct SourcesView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(uiColor: .systemBackground))
         } else if let error = manager.errorMessage {
-            errorView(error)
+            SourcesErrorView(message: error)
         } else if filteredScripts.isEmpty {
-            emptyView(debouncedSearchText.isEmpty ? "No scripts found" : "No matches")
+            SourcesEmptyView(message: debouncedSearchText.isEmpty ? "No scripts found" : "No matches")
         } else {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -1005,376 +611,6 @@ struct SourcesView: View {
         }
     }
 
-    // MARK: - Helper Views
-
-    private func errorView(_ message: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle")
-                .font(.system(size: 40))
-                .foregroundStyle(.tertiary)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-        .background(Color(uiColor: .systemBackground))
-    }
-
-    private func emptyView(_ message: String) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundStyle(.tertiary)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(uiColor: .systemBackground))
-    }
-}
-
-// MARK: - DOM Node Row
-
-struct DOMNodeRow: View {
-    let node: DOMNode
-    let depth: Int
-    @ObservedObject var manager: SourcesManager
-    let searchText: String
-    let currentMatchPath: [String]?
-    let onSelect: (DOMNode) -> Void
-
-    // HTML, BODY are expanded by default
-    @State private var isExpanded: Bool = false
-
-    private var hasChildren: Bool {
-        !node.children.isEmpty
-    }
-
-    private var shouldExpandByDefault: Bool {
-        let name = node.nodeName.uppercased()
-        return name == "HTML" || name == "BODY"
-    }
-
-    /// Check if this node matches the search text
-    private var matchesSearch: Bool {
-        guard !searchText.isEmpty else { return false }
-        let query = searchText.lowercased()
-        // Match tag name
-        if node.nodeName.lowercased().contains(query) { return true }
-        // Match id
-        if let id = node.attributes["id"], id.lowercased().contains(query) { return true }
-        // Match class
-        if let cls = node.attributes["class"], cls.lowercased().contains(query) { return true }
-        // Match text content
-        if let text = node.textContent, text.lowercased().contains(query) { return true }
-        return false
-    }
-
-    /// Check if this is the currently focused match
-    private var isCurrentMatch: Bool {
-        guard let path = currentMatchPath else { return false }
-        return path.last == node.id.uuidString
-    }
-
-    /// Check if this node is in the path to the current match (for auto-expand)
-    private var isInCurrentMatchPath: Bool {
-        guard let path = currentMatchPath else { return false }
-        return path.contains(node.id.uuidString)
-    }
-
-    /// Check if any descendant matches the search
-    private var hasMatchingDescendant: Bool {
-        guard !searchText.isEmpty else { return false }
-        return node.children.contains { child in
-            nodeOrDescendantMatches(child)
-        }
-    }
-
-    private func nodeOrDescendantMatches(_ node: DOMNode) -> Bool {
-        let query = searchText.lowercased()
-        if node.nodeName.lowercased().contains(query) { return true }
-        if let id = node.attributes["id"], id.lowercased().contains(query) { return true }
-        if let cls = node.attributes["class"], cls.lowercased().contains(query) { return true }
-        if let text = node.textContent, text.lowercased().contains(query) { return true }
-        return node.children.contains { nodeOrDescendantMatches($0) }
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Node itself
-            HStack(spacing: 4) {
-                // Expand/collapse button
-                if hasChildren {
-                    Button {
-                        withAnimation(.easeOut(duration: 0.15)) {
-                            isExpanded.toggle()
-                        }
-                    } label: {
-                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 16, height: 16)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Spacer()
-                        .frame(width: 16)
-                }
-
-                // Node content
-                if node.isText {
-                    Text("\"\(node.textContent ?? "")\"")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                } else {
-                    nodeLabel
-                }
-
-                Spacer()
-
-                // Info button for element nodes
-                if node.isElement {
-                    Button {
-                        onSelect(node)
-                    } label: {
-                        Image(systemName: "info.circle")
-                            .font(.system(size: 12))
-                            .foregroundStyle(.secondary)
-                            .frame(width: 24, height: 24)
-                            .contentShape(Circle())
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.leading, CGFloat(depth) * 16)
-            .padding(.vertical, 4)
-            .background {
-                if isCurrentMatch {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.accentColor.opacity(0.3))
-                } else if matchesSearch {
-                    RoundedRectangle(cornerRadius: 4)
-                        .fill(Color.accentColor.opacity(0.15))
-                }
-            }
-            .id(node.id.uuidString)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                if hasChildren {
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        isExpanded.toggle()
-                    }
-                }
-            }
-
-            // Children
-            if isExpanded {
-                ForEach(node.children) { child in
-                    DOMNodeRow(
-                        node: child,
-                        depth: depth + 1,
-                        manager: manager,
-                        searchText: searchText,
-                        currentMatchPath: currentMatchPath,
-                        onSelect: onSelect
-                    )
-                }
-            }
-        }
-        .onAppear {
-            // Expand HTML, BODY by default
-            if shouldExpandByDefault {
-                isExpanded = true
-            }
-        }
-        .onChange(of: searchText) { _, newValue in
-            // Auto-expand if descendants match
-            if !newValue.isEmpty && hasMatchingDescendant {
-                isExpanded = true
-            }
-        }
-        .onChange(of: currentMatchPath) { _, _ in
-            // Auto-expand if this node is in the path to the current match
-            if isInCurrentMatchPath && !isExpanded {
-                withAnimation(.easeOut(duration: 0.15)) {
-                    isExpanded = true
-                }
-            }
-        }
-    }
-
-    private var nodeLabel: some View {
-        HStack(spacing: 2) {
-            Text("<")
-                .foregroundStyle(.tertiary)
-            Text(node.nodeName.lowercased())
-                .foregroundStyle(.primary)
-
-            // Show id and class
-            if let id = node.attributes["id"] {
-                Text(" id")
-                    .foregroundStyle(.secondary)
-                Text("=\"\(id)\"")
-                    .foregroundStyle(.secondary)
-            }
-            if let className = node.attributes["class"], !className.isEmpty {
-                Text(" class")
-                    .foregroundStyle(.tertiary)
-                Text("=\"\(className.prefix(30))\(className.count > 30 ? "..." : "")\"")
-                    .foregroundStyle(.tertiary)
-            }
-
-            Text(hasChildren ? ">" : "/>")
-                .foregroundStyle(.tertiary)
-        }
-        .font(.system(size: 12, design: .monospaced))
-        .lineLimit(1)
-    }
-}
-
-// MARK: - Stylesheet Row
-
-struct StylesheetRow: View {
-    let sheet: StylesheetInfo
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Icon
-            Image(systemName: sheet.isExternal ? "link" : "doc.text")
-                .font(.system(size: 16))
-                .foregroundStyle(.secondary)
-                .frame(width: 24, height: 24)
-
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                // Title row
-                HStack {
-                    if let href = sheet.href {
-                        Text(URL(string: href)?.lastPathComponent ?? href)
-                            .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .lineLimit(1)
-                    } else {
-                        Text("<style> tag")
-                            .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    Text("\(sheet.rulesCount) rules")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.secondary.opacity(0.1), in: Capsule())
-                }
-
-                // URL (if external)
-                if let href = sheet.href {
-                    Text(href)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
-
-                // Media query
-                if let media = sheet.mediaText, !media.isEmpty {
-                    Text("@media \(media)")
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-}
-
-// MARK: - Script Row
-
-struct ScriptRow: View {
-    let script: ScriptInfo
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            // Icon with lock overlay for external scripts
-            ZStack(alignment: .bottomTrailing) {
-                Image(systemName: script.isExternal ? "link" : "doc.text")
-                    .font(.system(size: 16))
-                    .foregroundStyle(.secondary)
-                    .frame(width: 24, height: 24)
-
-                if script.isExternal {
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 8))
-                        .foregroundStyle(.tertiary)
-                        .offset(x: 2, y: 2)
-                }
-            }
-
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                // Title row
-                HStack {
-                    if let src = script.src {
-                        Text(URL(string: src)?.lastPathComponent ?? src)
-                            .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .lineLimit(1)
-                    } else {
-                        Text("<inline script>")
-                            .font(.system(size: 14, weight: .medium, design: .monospaced))
-                            .foregroundStyle(.secondary)
-                    }
-
-                    Spacer()
-
-                    // Badges
-                    HStack(spacing: 4) {
-                        if script.isModule {
-                            badge("module")
-                        }
-                        if script.isAsync {
-                            badge("async")
-                        }
-                        if script.isDefer {
-                            badge("defer")
-                        }
-                    }
-                }
-
-                // URL (if external)
-                if let src = script.src {
-                    Text(src)
-                        .font(.system(size: 12))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                }
-
-                // CORS notice for external scripts
-                if script.isExternal {
-                    Text("External (view-only metadata)")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.tertiary)
-                }
-            }
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-
-    private func badge(_ text: String) -> some View {
-        Text(text)
-            .font(.system(size: 11, weight: .medium))
-            .foregroundStyle(.secondary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(.secondary.opacity(0.1), in: Capsule())
-    }
 }
 
 // MARK: - Share Content
@@ -1397,166 +633,6 @@ struct SourcesShareSheet: UIViewControllerRepresentable {
     }
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-// MARK: - HTML Syntax View (Runestone with Tree-sitter virtualization)
-
-struct HTMLSyntaxView: View {
-    let html: String
-    let searchText: String
-    let currentMatchLineIndex: Int?
-    let matchingLineIndices: [Int]
-
-    var body: some View {
-        HTMLTextView(
-            text: html,
-            searchText: searchText,
-            currentMatchIndex: currentMatchLineIndex,
-            matchingLineIndices: matchingLineIndices
-        )
-        .background(Color(uiColor: .systemBackground))
-    }
-}
-
-// MARK: - HTML Text View (Runestone with virtualization)
-
-struct HTMLTextView: UIViewRepresentable {
-    let text: String
-    let searchText: String
-    let currentMatchIndex: Int?
-    let matchingLineIndices: [Int]
-
-    func makeUIView(context: Context) -> TextView {
-        let textView = TextView()
-
-        // Read-only mode with text selection
-        textView.isEditable = false
-        textView.isSelectable = true
-
-        // Disable line wrapping for horizontal scroll
-        textView.isLineWrappingEnabled = false
-
-        // Visual settings
-        textView.showLineNumbers = true
-        textView.backgroundColor = .systemBackground
-        textView.lineHeightMultiplier = 1.2
-
-        // Set up theme and state
-        context.coordinator.setupTextView(textView, with: text)
-
-        return textView
-    }
-
-    func updateUIView(_ textView: TextView, context: Context) {
-        let coordinator = context.coordinator
-
-        // Update text if changed
-        if coordinator.lastText != text {
-            coordinator.lastText = text
-            coordinator.setupTextView(textView, with: text)
-        }
-
-        // Handle search - Runestone has built-in search support
-        if coordinator.lastSearchText != searchText {
-            coordinator.lastSearchText = searchText
-
-            if searchText.isEmpty {
-                textView.highlightedRanges = []
-            } else {
-                coordinator.highlightSearchResults(in: textView, searchText: searchText)
-            }
-        }
-
-        // Scroll to current match
-        if coordinator.lastMatchIndex != currentMatchIndex {
-            coordinator.lastMatchIndex = currentMatchIndex
-
-            if let matchIdx = currentMatchIndex, matchIdx < matchingLineIndices.count {
-                let lineIndex = matchingLineIndices[matchIdx]
-                _ = textView.goToLine(lineIndex)
-            }
-        }
-    }
-
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
-    }
-
-    class Coordinator {
-        var lastText: String = ""
-        var lastSearchText: String = ""
-        var lastMatchIndex: Int?
-
-        func setupTextView(_ textView: TextView, with text: String) {
-            // Create state with HTML language for syntax highlighting
-            DispatchQueue.global(qos: .userInitiated).async {
-                let state = TextViewState(text: text, theme: HTMLViewerTheme(), language: .html)
-                DispatchQueue.main.async {
-                    textView.setState(state)
-                }
-            }
-        }
-
-        func highlightSearchResults(in textView: TextView, searchText: String) {
-            // Use Runestone's built-in search
-            let query = SearchQuery(text: searchText, matchMethod: .contains, isCaseSensitive: false)
-            let results = textView.search(for: query)
-
-            // Convert search results to highlighted ranges
-            let highlightedRanges = results.map { result in
-                HighlightedRange(range: result.range, color: .systemYellow.withAlphaComponent(0.4))
-            }
-            textView.highlightedRanges = highlightedRanges
-        }
-    }
-}
-
-// MARK: - HTML Viewer Theme (Runestone Theme)
-
-final class HTMLViewerTheme: Runestone.Theme {
-    let backgroundColor: UIColor = .systemBackground
-    let userInterfaceStyle: UIUserInterfaceStyle = .unspecified
-
-    let font: UIFont = .monospacedSystemFont(ofSize: 12, weight: .regular)
-    let textColor: UIColor = .label
-
-    let gutterBackgroundColor: UIColor = .secondarySystemBackground
-    let gutterHairlineColor: UIColor = .separator
-
-    let lineNumberColor: UIColor = .tertiaryLabel
-    let lineNumberFont: UIFont = .monospacedSystemFont(ofSize: 10, weight: .regular)
-
-    let selectedLineBackgroundColor: UIColor = .systemGray6
-    let selectedLinesLineNumberColor: UIColor = .secondaryLabel
-    let selectedLinesGutterBackgroundColor: UIColor = .tertiarySystemBackground
-
-    let invisibleCharactersColor: UIColor = .tertiaryLabel
-
-    let pageGuideHairlineColor: UIColor = .separator
-    let pageGuideBackgroundColor: UIColor = .secondarySystemBackground
-
-    let markedTextBackgroundColor: UIColor = .systemYellow.withAlphaComponent(0.2)
-
-    func textColor(for highlightName: String) -> UIColor? {
-        switch highlightName {
-        case "tag", "tag.builtin":
-            return UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0)
-        case "attribute":
-            return UIColor(red: 0.6, green: 0.4, blue: 0.8, alpha: 1.0)
-        case "string", "string.special":
-            return UIColor(red: 0.2, green: 0.6, blue: 0.8, alpha: 1.0)
-        case "comment":
-            return .secondaryLabel
-        case "punctuation", "punctuation.bracket", "punctuation.delimiter":
-            return .tertiaryLabel
-        default:
-            return nil
-        }
-    }
-
-    func fontTraits(for highlightName: String) -> FontTraits {
-        []
-    }
 }
 
 // MARK: - Preview
