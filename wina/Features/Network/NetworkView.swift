@@ -343,13 +343,6 @@ private struct NetworkRequestRow: View {
                 .fill(request.isPending ? Color.orange : request.statusColor)
                 .frame(width: 8, height: 8)
 
-            // Security icon (only show for mixed content or insecure)
-            if request.isMixedContent || !request.isSecure {
-                Image(systemName: request.securityIcon)
-                    .font(.system(size: 10))
-                    .foregroundStyle(request.securityIconColor)
-            }
-
             // Method badge
             Text(request.method)
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))

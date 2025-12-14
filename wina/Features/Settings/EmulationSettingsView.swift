@@ -3,6 +3,7 @@
 //  wina
 //
 //  User preference emulation for testing media query responses.
+//  Live setting - applies via JavaScript injection without page reload.
 //
 
 import SwiftUI
@@ -13,7 +14,13 @@ struct EmulationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     let navigator: WebViewNavigator
 
-    // Emulation settings (session-only, not persisted)
+    // Applied state (currently active emulation)
+    @State private var appliedColorScheme: EmulatedColorScheme = .system
+    @State private var appliedReducedMotion: EmulatedReducedMotion = .noPreference
+    @State private var appliedContrast: EmulatedContrast = .noPreference
+    @State private var appliedReducedTransparency: EmulatedReducedTransparency = .noPreference
+
+    // Local state (editing)
     @State private var colorScheme: EmulatedColorScheme = .system
     @State private var reducedMotion: EmulatedReducedMotion = .noPreference
     @State private var contrast: EmulatedContrast = .noPreference
@@ -21,6 +28,20 @@ struct EmulationSettingsView: View {
 
     // Track if emulation is active
     @State private var isEmulating: Bool = false
+
+    private var hasChanges: Bool {
+        colorScheme != appliedColorScheme ||
+        reducedMotion != appliedReducedMotion ||
+        contrast != appliedContrast ||
+        reducedTransparency != appliedReducedTransparency
+    }
+
+    private var isDefault: Bool {
+        colorScheme == .system &&
+        reducedMotion == .noPreference &&
+        contrast == .noPreference &&
+        reducedTransparency == .noPreference
+    }
 
     var body: some View {
         List {
@@ -113,26 +134,27 @@ struct EmulationSettingsView: View {
             }
 
             Section {
-                HStack {
-                    Spacer()
-                    GlassActionButton(
-                        isEmulating ? "Clear Emulation" : "Apply Emulation",
-                        icon: isEmulating ? "xmark.circle" : "checkmark.circle",
-                        style: isEmulating ? .destructive : .primary
-                    ) {
-                        if isEmulating {
-                            clearEmulation()
-                        } else {
-                            applyEmulation()
-                        }
+                Button(role: .destructive) {
+                    resetToDefaults()
+                } label: {
+                    HStack {
+                        Spacer()
+                        Text("Reset to Defaults")
+                        Spacer()
                     }
-                    Spacer()
                 }
-                .listRowBackground(Color.clear)
+                .disabled(isDefault && !isEmulating)
             }
         }
         .navigationTitle("Emulation")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Apply") { applyEmulation() }
+                    .fontWeight(.semibold)
+                    .disabled(!hasChanges)
+            }
+        }
         .safeAreaInset(edge: .top, spacing: 0) {
             if isEmulating {
                 HStack {
@@ -150,33 +172,47 @@ struct EmulationSettingsView: View {
     }
 
     private func applyEmulation() {
+        // Save to applied state
+        appliedColorScheme = colorScheme
+        appliedReducedMotion = reducedMotion
+        appliedContrast = contrast
+        appliedReducedTransparency = reducedTransparency
+
+        // Apply emulation script
         let script = buildEmulationScript()
         Task {
             _ = await navigator.evaluateJavaScript(script)
             await MainActor.run {
-                isEmulating = true
+                isEmulating = !isDefault
             }
         }
     }
 
-    private func clearEmulation() {
-        let script = """
-            (function() {
-                if (window.__winaEmulationCleanup) {
-                    window.__winaEmulationCleanup();
-                }
-            })();
-        """
-        Task {
-            _ = await navigator.evaluateJavaScript(script)
-            await MainActor.run {
-                isEmulating = false
-                colorScheme = .system
-                reducedMotion = .noPreference
-                contrast = .noPreference
-                reducedTransparency = .noPreference
+    private func resetToDefaults() {
+        // Clear emulation first if active
+        if isEmulating {
+            let clearScript = """
+                (function() {
+                    if (window.__winaEmulationCleanup) {
+                        window.__winaEmulationCleanup();
+                    }
+                })();
+            """
+            Task {
+                _ = await navigator.evaluateJavaScript(clearScript)
             }
         }
+
+        // Reset all states to defaults
+        colorScheme = .system
+        reducedMotion = .noPreference
+        contrast = .noPreference
+        reducedTransparency = .noPreference
+        appliedColorScheme = .system
+        appliedReducedMotion = .noPreference
+        appliedContrast = .noPreference
+        appliedReducedTransparency = .noPreference
+        isEmulating = false
     }
 
     private func buildEmulationScript() -> String {

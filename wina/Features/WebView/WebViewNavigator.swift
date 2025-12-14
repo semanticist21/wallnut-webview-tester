@@ -104,6 +104,17 @@ class WebViewNavigator {
         return try? await webView.evaluateJavaScript(script)
     }
 
+    /// Evaluate async JavaScript (supports Promises)
+    func callAsyncJavaScript(_ script: String) async -> Any? {
+        guard let webView else { return nil }
+        return try? await webView.callAsyncJavaScript(
+            script,
+            arguments: [:],
+            in: nil,
+            contentWorld: .page
+        )
+    }
+
     /// Take a screenshot of the WebView and save to Photos
     func takeScreenshot() async -> Bool {
         guard let webView else { return false }

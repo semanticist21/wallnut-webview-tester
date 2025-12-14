@@ -99,4 +99,3 @@ struct SourcesEmptyView: View {
         .background(Color(uiColor: .systemBackground))
     }
 }
-ㄱ

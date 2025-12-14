@@ -2,7 +2,7 @@
 //  AccessibilityAuditView.swift
 //  wina
 //
-//  Accessibility audit tool for detecting a11y issues in web pages.
+//  Accessibility audit tool using axe-core for WCAG compliance checking.
 //
 
 import SwiftUI
@@ -16,11 +16,13 @@ struct AccessibilityIssue: Identifiable, Equatable {
     let message: String
     let element: String  // Simplified element representation
     let selector: String?  // CSS selector for the element
+    let helpUrl: String?  // Link to axe-core documentation
+    let ruleId: String?  // axe-core rule ID
 
     enum Severity: String, CaseIterable {
-        case error
-        case warning
-        case info
+        case error  // critical, serious
+        case warning  // moderate
+        case info  // minor
 
         var icon: String {
             switch self {
@@ -45,6 +47,14 @@ struct AccessibilityIssue: Identifiable, Equatable {
             case .info: return "Info"
             }
         }
+
+        static func from(impact: String) -> Severity {
+            switch impact.lowercased() {
+            case "critical", "serious": return .error
+            case "moderate": return .warning
+            default: return .info
+            }
+        }
     }
 
     enum Category: String, CaseIterable {
@@ -55,6 +65,9 @@ struct AccessibilityIssue: Identifiable, Equatable {
         case headings
         case aria
         case contrast
+        case keyboard
+        case language
+        case structure
         case other
 
         var icon: String {
@@ -66,6 +79,9 @@ struct AccessibilityIssue: Identifiable, Equatable {
             case .headings: return "textformat.size"
             case .aria: return "accessibility"
             case .contrast: return "circle.lefthalf.filled"
+            case .keyboard: return "keyboard"
+            case .language: return "globe"
+            case .structure: return "rectangle.3.group"
             case .other: return "questionmark.circle"
             }
         }
@@ -79,8 +95,56 @@ struct AccessibilityIssue: Identifiable, Equatable {
             case .headings: return "Headings"
             case .aria: return "ARIA"
             case .contrast: return "Contrast"
+            case .keyboard: return "Keyboard"
+            case .language: return "Language"
+            case .structure: return "Structure"
             case .other: return "Other"
             }
+        }
+
+        // swiftlint:disable:next cyclomatic_complexity
+        static func from(tags: [String], ruleId: String) -> Category {
+            // Check rule ID first for specific mappings
+            if ruleId.contains("image") || ruleId.contains("alt") {
+                return .images
+            }
+            if ruleId.contains("link") {
+                return .links
+            }
+            if ruleId.contains("button") {
+                return .buttons
+            }
+            if ruleId.contains("label") || ruleId.contains("input") || ruleId.contains("form") {
+                return .forms
+            }
+            if ruleId.contains("heading") {
+                return .headings
+            }
+            if ruleId.contains("color") || ruleId.contains("contrast") {
+                return .contrast
+            }
+            if ruleId.contains("focus") || ruleId.contains("keyboard") || ruleId.contains("tabindex") {
+                return .keyboard
+            }
+            if ruleId.contains("lang") || ruleId.contains("language") {
+                return .language
+            }
+
+            // Check tags for category
+            for tag in tags {
+                let lowered = tag.lowercased()
+                if lowered.contains("image") { return .images }
+                if lowered.contains("link") { return .links }
+                if lowered.contains("button") { return .buttons }
+                if lowered.contains("form") || lowered.contains("label") { return .forms }
+                if lowered.contains("heading") || lowered.contains("structure") { return .structure }
+                if lowered.contains("aria") { return .aria }
+                if lowered.contains("color") { return .contrast }
+                if lowered.contains("keyboard") { return .keyboard }
+                if lowered.contains("language") { return .language }
+            }
+
+            return .other
         }
     }
 }
@@ -295,39 +359,78 @@ struct AccessibilityAuditView: View {
         isScanning = true
         issues = []
 
-        let script = AccessibilityAuditScripts.fullAudit
+        // Step 1: Inject axe-core if not already loaded
+        let checkAxe = "typeof axe !== 'undefined'"
+        let axeLoaded = await navigator.evaluateJavaScript(checkAxe) as? Bool ?? false
 
-        if let result = await navigator.evaluateJavaScript(script) as? String,
+        if !axeLoaded {
+            guard let axeURL = Bundle.main.url(forResource: "axe.min", withExtension: "js"),
+                  let axeScript = try? String(contentsOf: axeURL, encoding: .utf8) else {
+                // axe.min.js not found - user needs to add Scripts folder to Xcode project
+                isScanning = false
+                hasScanned = true
+                return
+            }
+            _ = await navigator.evaluateJavaScript(axeScript)
+        }
+
+        // Step 2: Run axe-core audit using callAsyncJavaScript (supports Promises)
+        let auditScript = """
+            const results = await axe.run();
+            return JSON.stringify(results.violations);
+        """
+
+        if let result = await navigator.callAsyncJavaScript(auditScript) as? String,
            let data = result.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-            issues = parseIssues(from: parsed)
+           let violations = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
+            issues = parseAxeViolations(violations)
         }
 
         isScanning = false
         hasScanned = true
     }
 
-    private func parseIssues(from jsonArray: [[String: Any]]) -> [AccessibilityIssue] {
-        return jsonArray.compactMap { item -> AccessibilityIssue? in
-            guard let severityStr = item["severity"] as? String,
-                  let categoryStr = item["category"] as? String,
-                  let message = item["message"] as? String,
-                  let element = item["element"] as? String else {
-                return nil
+    private func parseAxeViolations(_ violations: [[String: Any]]) -> [AccessibilityIssue] {
+        var result: [AccessibilityIssue] = []
+
+        for violation in violations {
+            guard let ruleId = violation["id"] as? String,
+                  let impact = violation["impact"] as? String,
+                  let help = violation["help"] as? String,
+                  let nodes = violation["nodes"] as? [[String: Any]] else {
+                continue
             }
 
-            let severity = AccessibilityIssue.Severity(rawValue: severityStr) ?? .info
-            let category = AccessibilityIssue.Category(rawValue: categoryStr) ?? .other
-            let selector = item["selector"] as? String
+            let tags = violation["tags"] as? [String] ?? []
+            let helpUrl = violation["helpUrl"] as? String
+            let severity = AccessibilityIssue.Severity.from(impact: impact)
+            let category = AccessibilityIssue.Category.from(tags: tags, ruleId: ruleId)
 
-            return AccessibilityIssue(
-                severity: severity,
-                category: category,
-                message: message,
-                element: element,
-                selector: selector
-            )
+            for node in nodes {
+                let html = node["html"] as? String ?? ""
+                let targets = node["target"] as? [String] ?? []
+                let selector = targets.first
+                let failureSummary = node["failureSummary"] as? String ?? ""
+
+                // Create readable element representation
+                let element = html.count > 80 ? String(html.prefix(80)) + "..." : html
+
+                // Combine help message with failure summary
+                let message = failureSummary.isEmpty ? help : "\(help): \(failureSummary)"
+
+                result.append(AccessibilityIssue(
+                    severity: severity,
+                    category: category,
+                    message: message,
+                    element: element,
+                    selector: selector,
+                    helpUrl: helpUrl,
+                    ruleId: ruleId
+                ))
+            }
         }
+
+        return result
     }
 }
 
@@ -375,6 +478,7 @@ private struct FilterTab: View {
 
 private struct IssueRow: View {
     let issue: AccessibilityIssue
+    @Environment(\.openURL) private var openURL
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -385,7 +489,7 @@ private struct IssueRow: View {
                 .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 4) {
-                // Category badge + message
+                // Category badge + rule ID
                 HStack(spacing: 6) {
                     Label(issue.category.label, systemImage: issue.category.icon)
                         .font(.system(size: 10, weight: .medium))
@@ -393,6 +497,12 @@ private struct IssueRow: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(issue.severity.color.opacity(0.15), in: Capsule())
+
+                    if let ruleId = issue.ruleId {
+                        Text(ruleId)
+                            .font(.system(size: 9, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                    }
                 }
 
                 // Message
@@ -408,6 +518,20 @@ private struct IssueRow: View {
             }
 
             Spacer()
+
+            // Help link button
+            if let helpUrl = issue.helpUrl, let url = URL(string: helpUrl) {
+                Button {
+                    openURL(url)
+                } label: {
+                    Image(systemName: "questionmark.circle")
+                        .font(.system(size: 16))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 28, height: 28)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
@@ -417,129 +541,6 @@ private struct IssueRow: View {
                 .padding(.leading, 42)
         }
     }
-}
-
-// MARK: - Accessibility Audit Scripts
-
-private enum AccessibilityAuditScripts {
-    static let fullAudit = """
-        (function() {
-            const issues = [];
-
-            function addIssue(severity, category, message, el, selector) {
-                let elementStr = '';
-                if (el) {
-                    const tag = el.tagName.toLowerCase();
-                    const id = el.id ? '#' + el.id : '';
-                    const cls = el.className && typeof el.className === 'string'
-                        ? '.' + el.className.split(' ').filter(c => c).slice(0, 2).join('.')
-                        : '';
-                    elementStr = '<' + tag + id + cls + '>';
-                }
-                issues.push({
-                    severity: severity,
-                    category: category,
-                    message: message,
-                    element: elementStr,
-                    selector: selector || null
-                });
-            }
-
-            // Check images without alt
-            document.querySelectorAll('img').forEach((img, i) => {
-                if (!img.hasAttribute('alt')) {
-                    addIssue('error', 'images', 'Image missing alt attribute', img, 'img:nth-of-type(' + (i+1) + ')');
-                } else if (img.alt.trim() === '' && !img.getAttribute('role')) {
-                    addIssue('warning', 'images', 'Image has empty alt but no role="presentation"', img);
-                }
-            });
-
-            // Check links without accessible name
-            document.querySelectorAll('a').forEach((link, i) => {
-                const text = link.textContent.trim();
-                const ariaLabel = link.getAttribute('aria-label');
-                const title = link.getAttribute('title');
-                if (!text && !ariaLabel && !title && !link.querySelector('img[alt]')) {
-                    addIssue('error', 'links', 'Link has no accessible name', link, 'a:nth-of-type(' + (i+1) + ')');
-                }
-            });
-
-            // Check buttons without accessible name
-            document.querySelectorAll('button, [role="button"]').forEach((btn, i) => {
-                const text = btn.textContent.trim();
-                const ariaLabel = btn.getAttribute('aria-label');
-                const title = btn.getAttribute('title');
-                if (!text && !ariaLabel && !title) {
-                    addIssue('error', 'buttons', 'Button has no accessible name', btn);
-                }
-            });
-
-            // Check form inputs without labels
-            document.querySelectorAll('input, select, textarea').forEach((input, i) => {
-                if (input.type === 'hidden' || input.type === 'submit' || input.type === 'button') return;
-                const id = input.id;
-                const ariaLabel = input.getAttribute('aria-label');
-                const ariaLabelledby = input.getAttribute('aria-labelledby');
-                const placeholder = input.getAttribute('placeholder');
-                const hasLabel = id && document.querySelector('label[for="' + id + '"]');
-
-                if (!hasLabel && !ariaLabel && !ariaLabelledby) {
-                    const msg = placeholder
-                        ? 'Form input relies only on placeholder for label'
-                        : 'Form input has no associated label';
-                    const severity = placeholder ? 'warning' : 'error';
-                    addIssue(severity, 'forms', msg, input);
-                }
-            });
-
-            // Check heading structure
-            const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-            let prevLevel = 0;
-            let h1Count = 0;
-            headings.forEach((h, i) => {
-                const level = parseInt(h.tagName[1]);
-                if (level === 1) h1Count++;
-                if (prevLevel > 0 && level > prevLevel + 1) {
-                    addIssue('warning', 'headings', 'Heading level skipped from h' + prevLevel + ' to h' + level, h);
-                }
-                prevLevel = level;
-            });
-            if (h1Count === 0) {
-                addIssue('warning', 'headings', 'Page has no h1 heading', null);
-            } else if (h1Count > 1) {
-                addIssue('info', 'headings', 'Page has multiple h1 headings (' + h1Count + ')', null);
-            }
-
-            // Check ARIA issues
-            document.querySelectorAll('[aria-hidden="true"]').forEach(el => {
-                if (el.querySelector('a, button, input, [tabindex]:not([tabindex="-1"])')) {
-                    addIssue('error', 'aria', 'aria-hidden contains focusable elements', el);
-                }
-            });
-
-            document.querySelectorAll('[role]').forEach(el => {
-                const role = el.getAttribute('role');
-                const invalidRoles = ['presentation', 'none'];
-                if (invalidRoles.includes(role) && el.hasAttribute('tabindex') && el.tabIndex >= 0) {
-                    addIssue('warning', 'aria', 'Element with role="' + role + '" should not be focusable', el);
-                }
-            });
-
-            // Check for missing lang attribute
-            if (!document.documentElement.hasAttribute('lang')) {
-                addIssue('error', 'other', 'Document missing lang attribute on <html>', document.documentElement);
-            }
-
-            // Check for autoplaying media
-            document.querySelectorAll('video, audio').forEach(media => {
-                if (media.autoplay && !media.muted) {
-                    addIssue('warning', 'other', 'Autoplaying media without muted attribute', media);
-                }
-            });
-
-            return JSON.stringify(issues);
-        })();
-    """
 }
 
 #Preview {

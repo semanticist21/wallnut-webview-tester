@@ -364,28 +364,39 @@ static func == (lhs: Request, rhs: Request) -> Bool {
 }
 ```
 
-### 14. 조건부 뷰 간 Layout Shift
+### 14. 조건부 뷰 간 Layout Shift (Sheet에서 특히 중요)
 
-emptyState와 contentList 간 전환 시 frame 제약이 다르면 layout shift 발생
+emptyState와 contentList 간 전환 시 레이아웃 동작이 다르면 header가 밀리는 등 layout shift 발생
 
 ```swift
-// ❌ 서로 다른 sizing 동작
-if items.isEmpty {
-    emptyState  // VStack + Spacer
-} else {
-    ScrollView { ... }  // frame 제약 없음
+// ❌ VStack + Spacer는 ScrollView와 다른 레이아웃 동작
+var emptyState: some View {
+    VStack {
+        Spacer()
+        Text("No data")
+        Spacer()
+    }
 }
 
-// ✅ 동일한 frame 제약
+// ✅ ScrollView로 감싸서 동일한 레이아웃 동작 보장
 var emptyState: some View {
-    VStack { ... }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-}
-var contentList: some View {
-    ScrollView { ... }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    GeometryReader { geometry in
+        ScrollView {
+            VStack(spacing: 8) {
+                Spacer(minLength: 0)
+                Image(systemName: "tray")
+                Text("No data")
+                Spacer(minLength: 0)
+            }
+            .frame(width: geometry.size.width)
+            .frame(minHeight: geometry.size.height)
+        }
+    }
+    .background(Color(uiColor: .systemBackground))
 }
 ```
+
+**핵심**: `Spacer(minLength: 0)` + `minHeight`로 중앙 정렬, ScrollView로 contentList와 동일한 레이아웃 동작
 
 ### 15. Sheet 내부 스크롤 우선순위
 

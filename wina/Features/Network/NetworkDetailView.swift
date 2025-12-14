@@ -169,6 +169,24 @@ struct NetworkDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
 
+            // Mixed Content warning
+            if request.isMixedContent {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 12))
+                    Text("Mixed Content")
+                        .font(.system(size: 12, weight: .medium))
+                    Text("– insecure request on secure page")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+                .foregroundStyle(.orange)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
+            }
+
             if let error = request.error {
                 Text("Error: \(error)")
                     .font(.system(size: 11))

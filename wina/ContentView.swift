@@ -521,17 +521,26 @@ struct ContentView: View {
             }
         }
 
-        // Clean Start: clear all website data before loading
+        // Clean Start: clear all website data and DevTools logs before loading
         if cleanStart {
             Task {
+                // 1. Clear all WKWebView website data (cookies, localStorage, cache, etc.)
                 let dataStore = WKWebsiteDataStore.default()
                 let allTypes = WKWebsiteDataStore.allWebsiteDataTypes()
                 let records = await dataStore.dataRecords(ofTypes: allTypes)
                 await dataStore.removeData(ofTypes: allTypes, for: records)
 
                 await MainActor.run {
+                    // 2. Clear all DevTools data
+                    webViewNavigator.consoleManager.clear()
+                    webViewNavigator.networkManager.clear()
+                    webViewNavigator.performanceManager.clear()
+
+                    // 3. Create fresh navigator instance for completely new session
+                    webViewNavigator = WebViewNavigator()
+
                     loadedURL = urlText
-                    webViewID = UUID()  // Force new instance after clearing
+                    webViewID = UUID()  // Force new WebView instance
                     withAnimation(.easeOut(duration: 0.2)) {
                         showWebView = true
                     }
