@@ -416,6 +416,41 @@ var color: Color {
 
 **참고**: `.foregroundStyle(.secondary)` 처럼 ShapeStyle 받는 곳에서는 OK
 
+### 18. LazyVStack 양방향 스크롤 + 텍스트 선택 불가
+
+`LazyVStack`은 수직 virtualization만 지원, 좌우 스크롤과 텍스트 드래그 선택 동시 불가
+
+```swift
+// ❌ LazyVStack - 수평 스크롤 안 됨, 중앙 정렬 문제
+ScrollView([.horizontal, .vertical]) {
+    LazyVStack { ForEach(lines) { Text($0) } }
+}
+
+// ❌ LazyVStack + fixedSize - 여전히 수평 스크롤 안 됨
+LazyVStack {
+    Text(line).fixedSize(horizontal: true, vertical: false)
+}
+
+// ✅ UIScrollView + UITextView 조합 (양방향 스크롤 + 텍스트 선택)
+struct HTMLTextView: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIScrollView {
+        let scrollView = UIScrollView()
+        let textView = UITextView()
+        textView.isEditable = false
+        textView.isSelectable = true  // 드래그 선택 가능
+        textView.isScrollEnabled = false  // 외부 스크롤뷰 사용
+        textView.textContainer.widthTracksTextView = false  // 수평 확장
+        textView.textContainer.size.width = .greatestFiniteMagnitude
+        scrollView.addSubview(textView)
+        return scrollView
+    }
+}
+```
+
+**주의**: UITextView는 virtualization 없음 (메모리에 전체 텍스트 로드). 대용량 시 maxLines 제한 필수.
+
+**핵심**: 양방향 스크롤 + 텍스트 선택 필요 시 → UIScrollView + UITextView 조합, 10000줄 이상은 제한
+
 ---
 
 ## Design System
@@ -438,7 +473,7 @@ var color: Color {
 | 원형 아이콘 버튼 | `GlassIconButton` (.regular 44×44, .small 28×28) |
 | 액션 버튼 | `GlassActionButton` (.default, .destructive, .primary) |
 | 헤더 액션 버튼 | `HeaderActionButton` (capsule, section header용) |
-| 복사 버튼 | `CopyButton` (header), `CopyIconButton` (icon only) |
+| 복사 버튼 | `CopyButton` (header), `CopyIconButton` (icon only), `CopiedFeedbackToast` |
 | 타입 배지 | `TypeBadge` (text + color + icon) |
 | 칩/태그 | `ChipButton` |
 | info 버튼 | `InfoPopoverButton` (Generic ShapeStyle) |
