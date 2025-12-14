@@ -29,6 +29,7 @@ struct GlassIconButton: View {
     var size: Size = .regular
     var color: Color = .primary
     var isDisabled: Bool = false
+    var accessibilityLabel: String?
     let action: () -> Void
 
     var body: some View {
@@ -42,6 +43,8 @@ struct GlassIconButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
+        .accessibilityLabel(accessibilityLabel ?? "")
+        .accessibilityAddTraits(.isButton)
     }
 }
 

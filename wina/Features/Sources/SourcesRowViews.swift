@@ -12,7 +12,7 @@ import SwiftUI
 struct DOMNodeRow: View {
     let node: DOMNode
     let depth: Int
-    @ObservedObject var manager: SourcesManager
+    let manager: SourcesManager
     let searchText: String
     let currentMatchPath: [String]?
     let onSelect: (DOMNode) -> Void
@@ -47,13 +47,13 @@ struct DOMNodeRow: View {
     /// Check if this is the currently focused match
     private var isCurrentMatch: Bool {
         guard let path = currentMatchPath else { return false }
-        return path.last == node.id.uuidString
+        return path.last == node.id
     }
 
     /// Check if this node is in the path to the current match (for auto-expand)
     private var isInCurrentMatchPath: Bool {
         guard let path = currentMatchPath else { return false }
-        return path.contains(node.id.uuidString)
+        return path.contains(node.id)
     }
 
     /// Check if any descendant matches the search
@@ -133,7 +133,7 @@ struct DOMNodeRow: View {
                         .fill(Color.accentColor.opacity(0.15))
                 }
             }
-            .id(node.id.uuidString)
+            .id(node.id)
             .contentShape(Rectangle())
             .onTapGesture {
                 if hasChildren {

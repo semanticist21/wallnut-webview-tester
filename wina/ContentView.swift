@@ -30,6 +30,7 @@ struct ContentView: View {
     @State private var cachedRecentURLs: [String] = []
     @State private var validationTask: Task<Void, Never>?
     @State private var webViewNavigator = WebViewNavigator()
+    @State private var storageManager = StorageManager()
     @FocusState private var textFieldFocused: Bool
     @AppStorage("recentURLs") private var recentURLsData = Data()
     @AppStorage("bookmarkedURLs") private var bookmarkedURLsData = Data()
@@ -191,7 +192,7 @@ struct ContentView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showStorage) {
-            StorageView(storageManager: StorageManager(), navigator: webViewNavigator)
+            StorageView(storageManager: storageManager, navigator: webViewNavigator)
                 .presentationDetents([.fraction(0.35), .medium, .large])
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationContentInteraction(.scrolls)
@@ -540,8 +541,10 @@ struct ContentView: View {
                     webViewNavigator.consoleManager.clear()
                     webViewNavigator.networkManager.clear()
                     webViewNavigator.performanceManager.clear()
+                    storageManager.clear()
 
                     // 3. Create fresh navigator instance for completely new session
+                    webViewNavigator.detach()
                     webViewNavigator = WebViewNavigator()
 
                     loadedURL = urlText

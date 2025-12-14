@@ -10,7 +10,10 @@ struct HomeButton: View {
     let action: () -> Void
 
     var body: some View {
-        GlassIconButton(icon: "house") {
+        GlassIconButton(
+            icon: "house",
+            accessibilityLabel: "Go to home"
+        ) {
             action()
         }
     }
@@ -32,6 +35,8 @@ struct WebBackButton: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .accessibilityLabel("Go back")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -51,6 +56,8 @@ struct WebForwardButton: View {
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)
+        .accessibilityLabel("Go forward")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -59,7 +66,10 @@ struct RefreshButton: View {
     let action: () -> Void
 
     var body: some View {
-        GlassIconButton(icon: "arrow.clockwise") {
+        GlassIconButton(
+            icon: "arrow.clockwise",
+            accessibilityLabel: "Refresh page"
+        ) {
             action()
         }
     }

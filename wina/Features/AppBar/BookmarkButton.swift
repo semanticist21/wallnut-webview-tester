@@ -14,6 +14,7 @@ struct BookmarkButton: View {
     var body: some View {
         GlassIconButton(
             icon: hasBookmarks ? "bookmark.fill" : "bookmark",
+            accessibilityLabel: "Bookmarks",
             action: { showBookmarks = true }
         )
     }

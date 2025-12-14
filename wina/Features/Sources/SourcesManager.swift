@@ -5,7 +5,6 @@
 //  Sources panel data manager and models.
 //
 
-import Combine
 import Foundation
 
 // MARK: - Models
@@ -67,13 +66,14 @@ struct ScriptInfo: Identifiable {
 // MARK: - Sources Manager
 
 @MainActor
-class SourcesManager: ObservableObject {
-    @Published var domTree: DOMNode?
-    @Published var rawHTML: String?
-    @Published var stylesheets: [StylesheetInfo] = []
-    @Published var scripts: [ScriptInfo] = []
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
+@Observable
+class SourcesManager {
+    var domTree: DOMNode?
+    var rawHTML: String?
+    var stylesheets: [StylesheetInfo] = []
+    var scripts: [ScriptInfo] = []
+    var isLoading: Bool = false
+    var errorMessage: String?
 
     private weak var navigator: WebViewNavigator?
 

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ChipButton: View {
     let label: String
+    var accessibilityLabel: String?
     let action: () -> Void
 
     var body: some View {
@@ -14,5 +15,7 @@ struct ChipButton: View {
         }
         .buttonStyle(.plain)
         .glassEffect(in: .capsule)
+        .accessibilityLabel(accessibilityLabel ?? "Insert \(label)")
+        .accessibilityAddTraits(.isButton)
     }
 }

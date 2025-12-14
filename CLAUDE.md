@@ -29,6 +29,8 @@ swift format format --in-place wina/SomeFile.swift
 wina/
 ├── winaApp.swift / ContentView.swift    # Entry points
 ├── Features/
+│   ├── Ad/              # AdManager (Google AdMob interstitial)
+│   ├── Accessibility/   # AccessibilityAuditView (axe-core 기반)
 │   ├── AppBar/          # OverlayMenuBars (dual-mode), 버튼들
 │   ├── Settings/        # SettingsView, ConfigurationSettingsView, SafariVCSettingsView
 │   ├── Console/         # ConsoleManager + UI (JS console 캡처)
@@ -167,6 +169,29 @@ final class StoreManager {
 - ✅ `transaction.finish()` 항상 호출
 - ✅ `revocationDate` 체크 (환불 처리)
 - ✅ `Task.detached` 백그라운드 실행
+
+### AdManager 광고 패턴
+
+확률 기반 interstitial 광고. 세션당 id별 1회 표시.
+
+```swift
+// 기본 30% 확률
+await AdManager.shared.showInterstitialAd(
+    options: AdOptions(id: "feature_name"),
+    adUnitId: AdManager.interstitialAdUnitId
+)
+
+// 커스텀 확률 (50%)
+AdOptions(id: "feature_name", probability: 0.5)
+```
+
+**체크 순서**:
+1. `isAdRemoved` (IAP 구매) → true면 skip
+2. `shownAdIds` (세션 내 이미 표시) → skip
+3. 확률 체크 (기본 30%) → 실패 시 skip
+4. 광고 로드 및 표시
+
+**광고 위치**: Info/Settings sheet, DevTools (Console/Network/Storage/Performance/Sources/Accessibility), Screenshot
 
 ### Runestone (Sources Raw HTML View)
 

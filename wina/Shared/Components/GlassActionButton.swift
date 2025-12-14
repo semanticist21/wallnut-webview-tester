@@ -55,6 +55,8 @@ struct GlassActionButton: View {
         }
         .buttonStyle(.plain)
         .glassEffect(in: .capsule)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(.isButton)
     }
 }
 

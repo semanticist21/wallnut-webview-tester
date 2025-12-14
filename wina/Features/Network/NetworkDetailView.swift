@@ -636,13 +636,21 @@ struct DetailSection<Content: View>: View {
 
                     // Share button (optional)
                     if let onShare {
-                        GlassIconButton(icon: "square.and.arrow.up", size: .small) {
+                        GlassIconButton(
+                            icon: "square.and.arrow.up",
+                            size: .small,
+                            accessibilityLabel: "Share"
+                        ) {
                             onShare()
                         }
                     }
 
                     // Copy button
-                    GlassIconButton(icon: "doc.on.doc", size: .small) {
+                    GlassIconButton(
+                        icon: "doc.on.doc",
+                        size: .small,
+                        accessibilityLabel: "Copy to clipboard"
+                    ) {
                         onCopy?(rawText, title)
                     }
                 }

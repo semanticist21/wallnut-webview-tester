@@ -43,7 +43,7 @@ struct SourcesView: View {
     let navigator: WebViewNavigator?
 
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var manager = SourcesManager()
+    @State private var manager = SourcesManager()
     @State private var selectedTab: SourceTab = .elements
     @State private var shareItem: SourcesShareContent?
     @State private var lastURL: URL?

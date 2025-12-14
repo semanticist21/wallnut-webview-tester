@@ -11,7 +11,10 @@ struct InfoButton: View {
     @State private var showInfo = false
 
     var body: some View {
-        GlassIconButton(icon: "info.circle") {
+        GlassIconButton(
+            icon: "info.circle",
+            accessibilityLabel: "API capabilities info"
+        ) {
             showInfo = true
         }
         .sheet(isPresented: $showInfo) {
@@ -29,7 +32,10 @@ struct InfoSheetButton: View {
     @Binding var showInfo: Bool
 
     var body: some View {
-        GlassIconButton(icon: "info.circle") {
+        GlassIconButton(
+            icon: "info.circle",
+            accessibilityLabel: "API capabilities info"
+        ) {
             showInfo = true
         }
     }

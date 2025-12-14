@@ -9,7 +9,10 @@ struct AboutButton: View {
     @Binding var showAbout: Bool
 
     var body: some View {
-        GlassIconButton(icon: "sparkles") {
+        GlassIconButton(
+            icon: "sparkles",
+            accessibilityLabel: "About"
+        ) {
             showAbout = true
         }
     }

@@ -14,6 +14,7 @@ struct HeaderActionButton: View {
     let label: String
     let icon: String
     var isDisabled: Bool = false
+    var accessibilityLabel: String?
     let action: () -> Void
 
     var body: some View {
@@ -29,6 +30,8 @@ struct HeaderActionButton: View {
         .buttonStyle(.plain)
         .glassEffect(in: .capsule)
         .disabled(isDisabled)
+        .accessibilityLabel(accessibilityLabel ?? label)
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -57,6 +60,8 @@ struct CopyButton: View {
         .buttonStyle(.plain)
         .glassEffect(in: .capsule)
         .disabled(text.isEmpty)
+        .accessibilityLabel("Copy to clipboard")
+        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -69,7 +74,11 @@ struct CopyIconButton: View {
     var onCopy: (() -> Void)?
 
     var body: some View {
-        GlassIconButton(icon: "doc.on.doc", size: size) {
+        GlassIconButton(
+            icon: "doc.on.doc",
+            size: size,
+            accessibilityLabel: "Copy to clipboard"
+        ) {
             guard !text.isEmpty else { return }
             UIPasteboard.general.string = text
             onCopy?()
