@@ -91,6 +91,12 @@ wina/
 │   │   └── UserAgentBuilder.swift     # UA 문자열 빌더
 │   ├── Console/               # JavaScript 콘솔 로그 뷰어
 │   │   └── ConsoleView.swift        # 콘솔 UI + ConsoleManager
+│   ├── Network/               # Network 요청 모니터링
+│   │   └── NetworkView.swift        # Network UI + NetworkManager
+│   ├── Storage/               # Web Storage 디버깅
+│   │   └── StorageView.swift        # Storage UI + StorageManager (SWR 패턴)
+│   ├── Performance/           # 성능 모니터링
+│   │   └── PerformanceView.swift    # Web Vitals + Navigation Timing
 │   ├── Info/                  # WKWebView 정보 표시
 │   │   ├── InfoView.swift             # 메인 뷰 + 검색
 │   │   ├── SharedInfoWebView.swift    # WebView 싱글톤 + 캐싱
@@ -115,7 +121,8 @@ wina/
 │   │   ├── InfoPopoverButton.swift    # info/deprecated 버튼 + popover
 │   │   ├── SettingToggleRow.swift     # 설정 토글 (InfoPopoverButton 사용)
 │   │   ├── ColorPickerRow.swift       # 색상 선택기 (InfoPopoverButton 사용)
-│   │   └── WebViewSizeControl.swift   # WebView 크기 조절 컨트롤
+│   │   ├── WebViewSizeControl.swift   # WebView 크기 조절 컨트롤
+│   │   └── DevToolsHeader.swift       # DevTools 공유 헤더 (Console/Network/Storage)
 │   └── Extensions/            # 공유 확장
 │       ├── ColorExtensions.swift      # Color/UIColor hex 변환
 │       └── DeviceUtilities.swift      # UIDevice.isIPad, ScreenUtility, SettingsFormatter
@@ -189,6 +196,85 @@ webViewNavigator.consoleManager
 - 실시간 캡처 일시정지/재개
 - `.presentationContentInteraction(.scrolls)` - sheet 내 스크롤 제스처 우선
 
+### Network 모니터링
+
+**NetworkManager** (`NetworkView.swift`): fetch/XHR 요청을 캡처하는 @Observable 클래스
+
+```swift
+// WebViewNavigator에 포함
+webViewNavigator.networkManager
+
+// 캡처 대상: fetch, XMLHttpRequest
+// 각 요청에 method, URL, status, timing, headers, body 포함
+```
+
+**JavaScript 인젝션**: WKWebView에 userScript로 fetch/XHR을 래핑하여 요청/응답 정보를 `window.webkit.messageHandlers`로 전달.
+
+**UI 특징**:
+- Chrome DevTools Network 탭 스타일
+- 필터: All, XHR, Fetch, Doc, Other
+- 검색 기능 (URL, method, status)
+- Request Details: General, Response Headers, Request Headers, Query Parameters, Request Body, Response Body
+- Raw/Table 토글: 각 섹션마다 Raw 텍스트 보기 지원
+- Copy 버튼: Raw 텍스트 클립보드 복사
+- 실시간 캡처 일시정지/재개
+
+### Storage 디버깅
+
+**StorageManager** (`StorageView.swift`): localStorage/sessionStorage/cookies를 조회하는 @Observable 클래스
+
+```swift
+// WebViewNavigator에 포함
+webViewNavigator.storageManager
+
+// 조회 대상: localStorage, sessionStorage, document.cookie
+// SWR 패턴: 기존 데이터 유지하면서 백그라운드 갱신
+```
+
+**SWR (Stale-While-Revalidate) 패턴**:
+- 로딩 인디케이터 없이 기존 데이터 표시
+- 백그라운드에서 새 데이터 fetch 후 atomic 업데이트
+- `.task` modifier로 시트 열 때 자동 갱신
+
+**UI 특징**:
+- Segmented Control: All, Local, Session, Cookies
+- 검색 기능 (key, value)
+- 아이템별 상세 보기 (key, value, storage type)
+- Copy 버튼: value 클립보드 복사
+- 헤더 새로고침 버튼 (수동 갱신)
+
+### DevTools 공유 헤더
+
+**DevToolsHeader** (`Shared/Components/DevToolsHeader.swift`): Console, Network, Storage에서 공통으로 사용하는 헤더 컴포넌트
+
+```swift
+DevToolsHeader(
+    title: "Console",
+    leftButtons: [
+        .init(icon: "trash", isDisabled: isEmpty) { clear() },
+        .init(icon: "square.and.arrow.up") { export() }
+    ],
+    rightButtons: [
+        .init(
+            icon: "play.fill",
+            activeIcon: "pause.fill",
+            color: .green,
+            activeColor: .red,
+            isActive: isCapturing
+        ) { toggleCapture() }
+    ]
+)
+```
+
+**HeaderButton 구조**:
+- `icon`: SF Symbol 이름
+- `activeIcon`: 활성 상태 아이콘 (optional)
+- `color`: 기본 색상
+- `activeColor`: 활성 상태 색상 (optional)
+- `isActive`: 활성 상태 여부
+- `isDisabled`: 비활성화 여부
+- `action`: 탭 시 실행할 클로저
+
 ## Design System
 
 **Liquid Glass UI** - iOS 26 (Tahoe) 공식 Glass Effect
@@ -222,6 +308,7 @@ webViewNavigator.consoleManager
 | 설정 토글 | `SettingToggleRow` | SettingsView 전체 |
 | 색상 선택 | `ColorPickerRow` | 색상 설정 (deprecatedInfo 파라미터 지원) |
 | 자동 줄바꿈 | `FlowLayout` | 칩 그룹, 태그 목록 |
+| DevTools 헤더 | `DevToolsHeader` | Console, Network, Storage 공통 헤더 |
 
 ### Info 뷰 전용 컴포넌트 (`InfoView.swift` 내 private)
 

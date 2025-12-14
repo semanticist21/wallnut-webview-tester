@@ -48,7 +48,6 @@ struct StorageItem: Identifiable, Equatable {
 @Observable
 class StorageManager {
     var items: [StorageItem] = []
-    var isLoading: Bool = false
     var lastRefreshTime: Date?
     var errorMessage: String?
 
@@ -58,7 +57,7 @@ class StorageManager {
         self.navigator = navigator
     }
 
-    // Fetch all storage data from WebView
+    // SWR: Fetch all storage data from WebView (keep stale data while revalidating)
     @MainActor
     func refresh() async {
         guard let navigator else {
@@ -66,27 +65,29 @@ class StorageManager {
             return
         }
 
-        isLoading = true
         errorMessage = nil
-        items.removeAll()
+
+        // Fetch new data in background (keep existing items visible)
+        var newItems: [StorageItem] = []
 
         // Fetch localStorage
         if let localData = await fetchStorage(type: .localStorage, navigator: navigator) {
-            items.append(contentsOf: localData)
+            newItems.append(contentsOf: localData)
         }
 
         // Fetch sessionStorage
         if let sessionData = await fetchStorage(type: .sessionStorage, navigator: navigator) {
-            items.append(contentsOf: sessionData)
+            newItems.append(contentsOf: sessionData)
         }
 
         // Fetch cookies
         if let cookieData = await fetchCookies(navigator: navigator) {
-            items.append(contentsOf: cookieData)
+            newItems.append(contentsOf: cookieData)
         }
 
+        // Update items atomically
+        items = newItems
         lastRefreshTime = Date()
-        isLoading = false
     }
 
     private func fetchStorage(
@@ -292,9 +293,7 @@ struct StorageView: View {
 
             Divider()
 
-            if storageManager.isLoading {
-                loadingState
-            } else if filteredItems.isEmpty && searchText.isEmpty {
+            if filteredItems.isEmpty && searchText.isEmpty {
                 emptyState
             } else if filteredItems.isEmpty {
                 noMatchState
@@ -336,75 +335,35 @@ struct StorageView: View {
     // MARK: - Storage Header
 
     private var storageHeader: some View {
-        HStack(spacing: 16) {
-            // Left button group: clear + export
-            HStack(spacing: 4) {
-                Button {
+        DevToolsHeader(
+            title: "Storage",
+            leftButtons: [
+                .init(
+                    icon: "trash",
+                    isDisabled: filteredItems.isEmpty
+                ) {
                     Task {
                         if await storageManager.clearStorage(type: selectedType) {
                             await storageManager.refresh()
                         }
                     }
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(filteredItems.isEmpty ? .tertiary : .primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-                .disabled(filteredItems.isEmpty)
-
-                Button {
+                },
+                .init(
+                    icon: "square.and.arrow.up",
+                    isDisabled: filteredItems.isEmpty
+                ) {
                     shareItem = StorageShareContent(content: exportAsText())
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(filteredItems.isEmpty ? .tertiary : .primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
                 }
-                .disabled(filteredItems.isEmpty)
-            }
-            .padding(.horizontal, 6)
-            .glassEffect(in: .capsule)
-
-            Spacer()
-
-            Text("Storage")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            // Right button group: add + refresh
-            HStack(spacing: 4) {
-                Button {
+            ],
+            rightButtons: [
+                .init(icon: "plus") {
                     showAddSheet = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(.primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-
-                Button {
+                },
+                .init(icon: "arrow.clockwise", color: .blue) {
                     Task { await storageManager.refresh() }
-                } label: {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(storageManager.isLoading ? Color.secondary : Color.blue)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
                 }
-                .disabled(storageManager.isLoading)
-            }
-            .padding(.horizontal, 6)
-            .glassEffect(in: .capsule)
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
+            ]
+        )
     }
 
     // MARK: - Search Bar
@@ -438,10 +397,10 @@ struct StorageView: View {
 
     // MARK: - Table Header
 
-    private let keyColumnWidth: CGFloat = 100
+    private let keyColumnWidth: CGFloat = 140
 
     private var tableHeader: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 12) {
             Text("Key")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
@@ -464,18 +423,6 @@ struct StorageView: View {
 
     // MARK: - States
 
-    private var loadingState: some View {
-        VStack(spacing: 12) {
-            Spacer()
-            ProgressView()
-            Text("Loading storage data...")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Spacer()
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
     private var emptyState: some View {
         VStack(spacing: 8) {
             Spacer()
@@ -492,13 +439,6 @@ struct StorageView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
-            Button {
-                Task { await storageManager.refresh() }
-            } label: {
-                Label("Refresh", systemImage: "arrow.clockwise")
-                    .font(.subheadline)
-            }
-            .padding(.top, 8)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -570,7 +510,7 @@ private struct StorageItemRow: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 12) {
             // Key column
             Text(item.key)
                 .font(.system(size: 13, weight: .medium, design: .monospaced))
@@ -642,21 +582,19 @@ private struct StorageEditSheet: View {
                 }
 
                 Section {
-                    Button(role: .destructive) {
-                        showDeleteConfirm = true
-                    } label: {
-                        HStack {
-                            Spacer()
-                            if isDeleting {
-                                ProgressView()
-                            } else {
-                                Label("Delete", systemImage: "trash")
+                    HStack {
+                        Spacer()
+                        if isDeleting {
+                            ProgressView()
+                        } else {
+                            GlassActionButton("Delete", icon: "trash", style: .destructive) {
+                                showDeleteConfirm = true
                             }
-                            Spacer()
                         }
+                        Spacer()
                     }
-                    .disabled(isDeleting)
                 }
+                .listRowBackground(Color.clear)
             }
             .navigationTitle("Edit Item")
             .navigationBarTitleDisplayMode(.inline)

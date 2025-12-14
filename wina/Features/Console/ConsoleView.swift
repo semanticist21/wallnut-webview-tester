@@ -293,71 +293,43 @@ struct ConsoleView: View {
     // MARK: - Console Header
 
     private var consoleHeader: some View {
-        HStack(spacing: 16) {
-            // Left button group: trash + export
-            HStack(spacing: 4) {
-                Button {
+        DevToolsHeader(
+            title: "Console",
+            leftButtons: [
+                .init(
+                    icon: "trash",
+                    isDisabled: consoleManager.logs.isEmpty
+                ) {
                     consoleManager.clear()
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(consoleManager.logs.isEmpty ? .tertiary : .primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-                .disabled(consoleManager.logs.isEmpty)
-
-                Button {
+                },
+                .init(
+                    icon: "square.and.arrow.up",
+                    isDisabled: filteredLogs.isEmpty
+                ) {
                     shareItem = ShareContent(content: ConsoleExporter.exportAsText(filteredLogs))
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(filteredLogs.isEmpty ? .tertiary : .primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
                 }
-                .disabled(filteredLogs.isEmpty)
-            }
-            .padding(.horizontal, 6)
-            .glassEffect(in: .capsule)
-
-            Spacer()
-
-            // Center: Title
-            Text("Console")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            // Right button group: pause/play + settings
-            HStack(spacing: 4) {
-                Button {
+            ],
+            rightButtons: [
+                .init(
+                    icon: "play.fill",
+                    activeIcon: "pause.fill",
+                    color: .green,
+                    activeColor: .red,
+                    isActive: consoleManager.isCapturing
+                ) {
                     consoleManager.isCapturing.toggle()
-                } label: {
-                    Image(systemName: consoleManager.isCapturing ? "pause.fill" : "play.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(consoleManager.isCapturing ? .red : .green)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-
-                Button {
+                },
+                .init(
+                    icon: "gearshape",
+                    activeIcon: "gearshape.fill",
+                    color: .secondary,
+                    activeColor: .blue,
+                    isActive: settingsActive
+                ) {
                     showSettings = true
-                } label: {
-                    Image(systemName: settingsActive ? "gearshape.fill" : "gearshape")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(settingsActive ? .blue : .secondary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
                 }
-            }
-            .padding(.horizontal, 6)
-            .glassEffect(in: .capsule)
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
+            ]
+        )
     }
 
     // MARK: - Search Bar

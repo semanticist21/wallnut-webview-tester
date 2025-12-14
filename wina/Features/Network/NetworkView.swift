@@ -311,70 +311,43 @@ struct NetworkView: View {
     // MARK: - Network Header
 
     private var networkHeader: some View {
-        HStack(spacing: 16) {
-            // Left button group: trash + export
-            HStack(spacing: 4) {
-                Button {
+        DevToolsHeader(
+            title: "Network",
+            leftButtons: [
+                .init(
+                    icon: "trash",
+                    isDisabled: networkManager.requests.isEmpty
+                ) {
                     networkManager.clear()
-                } label: {
-                    Image(systemName: "trash")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(networkManager.requests.isEmpty ? .tertiary : .primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-                .disabled(networkManager.requests.isEmpty)
-
-                Button {
+                },
+                .init(
+                    icon: "square.and.arrow.up",
+                    isDisabled: networkManager.requests.isEmpty
+                ) {
                     shareItem = NetworkShareContent(content: exportAsText())
-                } label: {
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(networkManager.requests.isEmpty ? .tertiary : .primary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
                 }
-                .disabled(networkManager.requests.isEmpty)
-            }
-            .padding(.horizontal, 6)
-            .glassEffect(in: .capsule)
-
-            Spacer()
-
-            Text("Network")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(.primary)
-
-            Spacer()
-
-            // Right button group: pause/play + settings
-            HStack(spacing: 4) {
-                Button {
+            ],
+            rightButtons: [
+                .init(
+                    icon: "play.fill",
+                    activeIcon: "pause.fill",
+                    color: .green,
+                    activeColor: .red,
+                    isActive: networkManager.isCapturing
+                ) {
                     networkManager.isCapturing.toggle()
-                } label: {
-                    Image(systemName: networkManager.isCapturing ? "pause.fill" : "play.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(networkManager.isCapturing ? .red : .green)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
-                }
-
-                Button {
+                },
+                .init(
+                    icon: "gearshape",
+                    activeIcon: "gearshape.fill",
+                    color: .secondary,
+                    activeColor: .blue,
+                    isActive: settingsActive
+                ) {
                     showSettings = true
-                } label: {
-                    Image(systemName: settingsActive ? "gearshape.fill" : "gearshape")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(settingsActive ? .blue : .secondary)
-                        .frame(width: 44, height: 44)
-                        .contentShape(Circle())
                 }
-            }
-            .padding(.horizontal, 6)
-            .glassEffect(in: .capsule)
-        }
-        .padding(.horizontal, 16)
-        .padding(.top, 16)
-        .padding(.bottom, 8)
+            ]
+        )
     }
 
     // MARK: - Search Bar
@@ -818,7 +791,7 @@ private struct NetworkDetailView: View {
     private var headersContent: some View {
         VStack(alignment: .leading, spacing: 20) {
             // General info section
-            DetailSection(title: "General") {
+            DetailSection(title: "General", rawText: generalRawText, onCopy: copyToClipboard) {
                 DetailTableRow(key: "Request URL", value: request.url, onCopy: copyToClipboard)
                 DetailTableRow(key: "Request Method", value: request.method, onCopy: copyToClipboard)
                 if let status = request.status, let statusText = request.statusText {
@@ -831,7 +804,11 @@ private struct NetworkDetailView: View {
 
             // Response headers
             if let headers = request.responseHeaders, !headers.isEmpty {
-                DetailSection(title: "Response Headers") {
+                DetailSection(
+                    title: "Response Headers",
+                    rawText: formatHeadersForCopy(headers),
+                    onCopy: copyToClipboard
+                ) {
                     ForEach(headers.sorted(by: { $0.key.lowercased() < $1.key.lowercased() }), id: \.key) { key, value in
                         DetailTableRow(key: key, value: value, onCopy: copyToClipboard)
                     }
@@ -840,7 +817,11 @@ private struct NetworkDetailView: View {
 
             // Request headers
             if let headers = request.requestHeaders, !headers.isEmpty {
-                DetailSection(title: "Request Headers") {
+                DetailSection(
+                    title: "Request Headers",
+                    rawText: formatHeadersForCopy(headers),
+                    onCopy: copyToClipboard
+                ) {
                     ForEach(headers.sorted(by: { $0.key.lowercased() < $1.key.lowercased() }), id: \.key) { key, value in
                         DetailTableRow(key: key, value: value, onCopy: copyToClipboard)
                     }
@@ -854,6 +835,19 @@ private struct NetworkDetailView: View {
         .padding()
     }
 
+    private var generalRawText: String {
+        var lines: [String] = []
+        lines.append("Request URL: \(request.url)")
+        lines.append("Request Method: \(request.method)")
+        if let status = request.status, let statusText = request.statusText {
+            lines.append("Status Code: \(status) \(statusText)")
+        } else if let status = request.status {
+            lines.append("Status Code: \(status)")
+        }
+        lines.append("Type: \(request.requestType.rawValue.capitalized)")
+        return lines.joined(separator: "\n")
+    }
+
     // MARK: - Request Tab
 
     @ViewBuilder
@@ -861,7 +855,7 @@ private struct NetworkDetailView: View {
         VStack(alignment: .leading, spacing: 20) {
             // URL breakdown
             if let urlComponents = URLComponents(string: request.url) {
-                DetailSection(title: "URL") {
+                DetailSection(title: "URL", rawText: urlRawText(urlComponents), onCopy: copyToClipboard) {
                     if let scheme = urlComponents.scheme {
                         DetailTableRow(key: "Scheme", value: scheme, onCopy: copyToClipboard)
                     }
@@ -880,7 +874,11 @@ private struct NetworkDetailView: View {
 
                 // Query parameters
                 if let queryItems = urlComponents.queryItems, !queryItems.isEmpty {
-                    DetailSection(title: "Query Parameters") {
+                    DetailSection(
+                        title: "Query Parameters",
+                        rawText: queryParametersRawText(queryItems),
+                        onCopy: copyToClipboard
+                    ) {
                         ForEach(queryItems, id: \.name) { item in
                             DetailTableRow(key: item.name, value: item.value ?? "(empty)", onCopy: copyToClipboard)
                         }
@@ -892,7 +890,7 @@ private struct NetworkDetailView: View {
             if let body = request.requestBody, !body.isEmpty {
                 let contentType = detectContentType(body: body, headers: request.requestHeaders)
                 let bodySize = body.data(using: .utf8)?.count ?? 0
-                DetailSection(title: "Request Body") {
+                DetailSection(title: "Request Body", rawText: body, onCopy: copyToClipboard) {
                     BodyHeaderView(contentType: contentType, size: bodySize)
                     FormattedBodyView(bodyText: body, contentType: contentType)
                 }
@@ -903,6 +901,25 @@ private struct NetworkDetailView: View {
         .padding()
     }
 
+    private func urlRawText(_ components: URLComponents) -> String {
+        var lines: [String] = []
+        if let scheme = components.scheme {
+            lines.append("Scheme: \(scheme)")
+        }
+        if let host = components.host {
+            lines.append("Host: \(host)")
+        }
+        if let port = components.port {
+            lines.append("Port: \(port)")
+        }
+        lines.append("Path: \(components.path.isEmpty ? "/" : components.path)")
+        return lines.joined(separator: "\n")
+    }
+
+    private func queryParametersRawText(_ items: [URLQueryItem]) -> String {
+        items.map { "\($0.name)=\($0.value ?? "")" }.joined(separator: "&")
+    }
+
     // MARK: - Response Tab
 
     @ViewBuilder
@@ -911,7 +928,7 @@ private struct NetworkDetailView: View {
             if let body = request.responseBody, !body.isEmpty {
                 let contentType = detectContentType(body: body, headers: request.responseHeaders)
                 let bodySize = body.data(using: .utf8)?.count ?? 0
-                DetailSection(title: "Response Body") {
+                DetailSection(title: "Response Body", rawText: body, onCopy: copyToClipboard) {
                     BodyHeaderView(contentType: contentType, size: bodySize)
                     FormattedBodyView(bodyText: body, contentType: contentType)
                 }
@@ -1104,16 +1121,76 @@ private enum ContentType: String {
 
 private struct DetailSection<Content: View>: View {
     let title: String
+    let rawText: String?
+    var onCopy: ((String, String) -> Void)?
     @ViewBuilder let content: () -> Content
+    @State private var showRaw: Bool = false
+
+    init(
+        title: String,
+        rawText: String? = nil,
+        onCopy: ((String, String) -> Void)? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.title = title
+        self.rawText = rawText
+        self.onCopy = onCopy
+        self.content = content
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(.secondary)
+            // Section header with Raw toggle and Copy button
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.secondary)
+
+                Spacer()
+
+                if let rawText, !rawText.isEmpty {
+                    // Raw/Table toggle button
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            showRaw.toggle()
+                        }
+                    } label: {
+                        Text(showRaw ? "Table" : "Raw")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(in: .capsule)
+
+                    // Copy button
+                    Button {
+                        onCopy?(rawText, title)
+                    } label: {
+                        Image(systemName: "doc.on.doc")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.primary)
+                            .frame(width: 28, height: 28)
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .glassEffect(in: .circle)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 0) {
-                content()
+                if showRaw, let rawText {
+                    // Raw text view
+                    Text(rawText)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(.primary)
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                } else {
+                    content()
+                }
             }
             .background(Color(uiColor: .secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 10))
@@ -1147,7 +1224,8 @@ private struct DetailTableRow: View {
                 Text(key)
                     .font(.system(size: 12, weight: .medium, design: .monospaced))
                     .foregroundStyle(.blue)
-                    .frame(minWidth: 100, alignment: .leading)
+                    .frame(width: 100, alignment: .leading)
+                    .fixedSize(horizontal: true, vertical: false)
 
                 if isLongValue && !isExpanded {
                     Text(value.replacingOccurrences(of: "\n", with: " "))
@@ -1155,19 +1233,21 @@ private struct DetailTableRow: View {
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.tail)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     Text(value)
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundStyle(.primary)
                         .textSelection(.enabled)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-
-                Spacer(minLength: 0)
 
                 if isLongValue {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .font(.system(size: 10))
                         .foregroundStyle(.tertiary)
+                        .frame(width: 16)
                 }
             }
             .contentShape(Rectangle())
