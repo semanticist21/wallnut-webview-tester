@@ -60,7 +60,7 @@ struct ResourceDetailView: View {
                             .font(.subheadline)
                         Spacer()
                         InfoPopoverButton(
-                            message: "Detailed timing data is unavailable for cross-origin resources unless the server includes a Timing-Allow-Origin header."
+                            text: "Detailed timing data is unavailable for cross-origin resources unless the server includes a Timing-Allow-Origin header."
                         )
                     }
                     .padding(.horizontal, 12)
@@ -140,10 +140,9 @@ struct ResourceDetailView: View {
 
     // MARK: - Timing Waterfall
 
+    @ViewBuilder
     private var timingWaterfall: some View {
         let total = resource.duration
-        guard total > 0 else { return AnyView(EmptyView()) }
-
         let phases: [(String, Double, Color)] = [
             ("DNS", resource.dnsTime, .cyan),
             ("TCP", resource.tcpTime, .blue),
@@ -152,7 +151,7 @@ struct ResourceDetailView: View {
             ("Res", resource.responseTime, .orange)
         ].filter { $0.1 > 0 }
 
-        return AnyView(
+        if total > 0 {
             VStack(alignment: .leading, spacing: 4) {
                 GeometryReader { geo in
                     HStack(spacing: 1) {
@@ -183,7 +182,7 @@ struct ResourceDetailView: View {
             }
             .padding(12)
             .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
-        )
+        }
     }
 
     // MARK: - Helper Views
@@ -265,7 +264,7 @@ struct ResourceDetailView: View {
 }
 
 #Preview {
-    let resource = ResourceEntry(
+    ResourceDetailView(resource: ResourceEntry(
         id: UUID(),
         name: "https://cdn.example.com/images/hero-banner.png",
         initiatorType: .img,
@@ -280,7 +279,5 @@ struct ResourceDetailView: View {
         requestTime: 40,
         responseTime: 250,
         timestamp: Date()
-    )
-
-    return ResourceDetailView(resource: resource)
+    ))
 }

@@ -427,22 +427,28 @@ private struct ResourceShareSheet: View {
 }
 
 #Preview {
-    let manager = ResourceManager()
-    manager.addResource(
-        name: "https://example.com/logo.png",
-        initiatorType: "img",
-        startTime: 100,
-        duration: 250,
-        transferSize: 15_000,
-        encodedBodySize: 15_000,
-        decodedBodySize: 18_000,
-        dnsTime: 10,
-        tcpTime: 20,
-        tlsTime: 15,
-        requestTime: 50,
-        responseTime: 155
-    )
+    @Previewable @State var manager = ResourceManager()
 
-    return ResourceView(resourceManager: manager)
+    ResourceView(resourceManager: manager)
         .presentationDetents([.fraction(0.35), .medium, .large])
+        .onAppear {
+            manager.resources = [
+                ResourceEntry(
+                    id: UUID(),
+                    name: "https://example.com/logo.png",
+                    initiatorType: .img,
+                    startTime: 100,
+                    duration: 250,
+                    transferSize: 15_000,
+                    encodedBodySize: 15_000,
+                    decodedBodySize: 18_000,
+                    dnsTime: 10,
+                    tcpTime: 20,
+                    tlsTime: 15,
+                    requestTime: 50,
+                    responseTime: 155,
+                    timestamp: Date()
+                )
+            ]
+        }
 }
