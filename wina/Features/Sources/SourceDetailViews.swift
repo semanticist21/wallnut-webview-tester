@@ -82,6 +82,7 @@ struct ElementDetailView: View {
     @State private var isLoading: Bool = true
     @State private var selectedSection: ElementSection = .attributes
     @State private var showMatchedRules: Bool = true  // Toggle between matched/computed
+    @State private var computedStylesFilter: String = ""
     @State private var copiedFeedback: String?
 
     enum ElementSection: String, CaseIterable {
@@ -287,20 +288,67 @@ struct ElementDetailView: View {
             .sorted { $0.source.sortOrder < $1.source.sortOrder }
     }
 
+    private var filteredComputedStyles: [(key: String, value: String)] {
+        let sorted = computedStyles.sorted { $0.key < $1.key }
+        if computedStylesFilter.isEmpty {
+            return sorted.map { (key: $0.key, value: $0.value) }
+        }
+        let filter = computedStylesFilter.lowercased()
+        return sorted
+            .filter { $0.key.lowercased().contains(filter) || $0.value.lowercased().contains(filter) }
+            .map { (key: $0.key, value: $0.value) }
+    }
+
     private var computedStylesContent: some View {
-        Group {
+        VStack(alignment: .leading, spacing: 8) {
+            // Search filter
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12))
+                TextField("Filter properties", text: $computedStylesFilter)
+                    .font(.system(size: 13))
+                    .textFieldStyle(.plain)
+                if !computedStylesFilter.isEmpty {
+                    Button {
+                        computedStylesFilter = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                            .font(.system(size: 12))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
+
+            // Count indicator
+            HStack {
+                Text("\(filteredComputedStyles.count) properties")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+            }
+
+            // Properties list
             if computedStyles.isEmpty {
                 Text("No computed styles")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
+            } else if filteredComputedStyles.isEmpty {
+                Text("No matching properties")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
             } else {
                 LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(Array(computedStyles.keys.sorted()), id: \.self) { property in
-                        if let value = computedStyles[property] {
-                            CSSPropertyRow(property: property, value: value)
-                        }
+                    ForEach(filteredComputedStyles, id: \.key) { item in
+                        CSSPropertyRow(property: item.key, value: item.value)
                     }
                 }
             }
@@ -470,7 +518,7 @@ struct ElementDetailView: View {
 
 /// JavaScript scripts for element detail fetching
 private enum ElementDetailScripts {
-    /// Script to fetch computed styles
+    /// Script to fetch all computed styles
     static func computedStyles(selector: String) -> String {
         """
         (function() {
@@ -478,11 +526,11 @@ private enum ElementDetailScripts {
             if (!el) return '{}';
             const styles = window.getComputedStyle(el);
             const result = {};
-            const important = ['display', 'position', 'width', 'height', 'margin', 'padding',
-                'color', 'background', 'font-size', 'font-family', 'border', 'flex', 'grid'];
-            for (const prop of important) {
+            // Get all CSS properties
+            for (let i = 0; i < styles.length; i++) {
+                const prop = styles[i];
                 const val = styles.getPropertyValue(prop);
-                if (val && val !== 'none' && val !== 'auto' && val !== 'normal') {
+                if (val && val.trim()) {
                     result[prop] = val;
                 }
             }

@@ -19,6 +19,7 @@ struct ContentView: View {
     @State private var showStorage: Bool = false
     @State private var showPerformance: Bool = false
     @State private var showEditor: Bool = false
+    @State private var showAccessibility: Bool = false
     @State private var urlValidationState: URLValidationState = .empty
     @State private var useSafariWebView: Bool = false
     @State private var showWebView: Bool = false
@@ -100,6 +101,17 @@ struct ContentView: View {
                     useSafariVC: useSafariWebView,
                     isOverlayMode: !shouldBarsBeExpanded,
                     onHome: {
+                        // Close all DevTools sheets before going home
+                        showConsole = false
+                        showNetwork = false
+                        showStorage = false
+                        showPerformance = false
+                        showEditor = false
+                        showAccessibility = false
+                        showSettings = false
+                        showBookmarks = false
+                        showInfo = false
+
                         withAnimation(.easeOut(duration: 0.2)) {
                             showWebView = false
                         }
@@ -122,7 +134,8 @@ struct ContentView: View {
                     showNetwork: $showNetwork,
                     showStorage: $showStorage,
                     showPerformance: $showPerformance,
-                    showEditor: $showEditor
+                    showEditor: $showEditor,
+                    showAccessibility: $showAccessibility
                 )
             } else {
                 topBar
@@ -219,6 +232,13 @@ struct ContentView: View {
         .sheet(isPresented: $showEditor) {
             SourcesView(navigator: webViewNavigator)
                 .presentationDetents([.fraction(0.35), .medium, .large])
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+                .presentationContentInteraction(.scrolls)
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showAccessibility) {
+            AccessibilityAuditView(navigator: webViewNavigator)
+                .presentationDetents([.medium, .large], selection: .constant(.medium))
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationContentInteraction(.scrolls)
                 .presentationDragIndicator(.visible)

@@ -80,15 +80,23 @@ struct SourcesEmptyView: View {
     let message: String
 
     var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: "doc.text.magnifyingglass")
-                .font(.system(size: 40))
-                .foregroundStyle(.tertiary)
-            Text(message)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 12) {
+                    Spacer(minLength: 0)
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.tertiary)
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geometry.size.width)
+                .frame(minHeight: geometry.size.height)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: .systemBackground))
     }
 }
+ㄱ

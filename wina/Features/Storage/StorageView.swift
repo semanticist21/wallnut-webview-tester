@@ -484,39 +484,49 @@ struct StorageView: View {
     // MARK: - States
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Spacer()
-            Image(systemName: selectedType.icon)
-                .font(.system(size: 36))
-                .foregroundStyle(.tertiary)
-            Text("No \(selectedType.label.lowercased()) data")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            if let error = storageManager.errorMessage {
-                Text(error)
-                    .font(.caption)
-                    .foregroundStyle(.red)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 32)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    Image(systemName: selectedType.icon)
+                        .font(.system(size: 36))
+                        .foregroundStyle(.tertiary)
+                    Text("No \(selectedType.label.lowercased()) data")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if let error = storageManager.errorMessage {
+                        Text(error)
+                            .font(.caption)
+                            .foregroundStyle(.red)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 32)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geometry.size.width)
+                .frame(minHeight: geometry.size.height)
             }
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: .systemBackground))
     }
 
     private var noMatchState: some View {
-        VStack(spacing: 8) {
-            Spacer()
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 36))
-                .foregroundStyle(.tertiary)
-            Text("No matches")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            Spacer()
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.tertiary)
+                    Text("No matches")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geometry.size.width)
+                .frame(minHeight: geometry.size.height)
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: .systemBackground))
     }
 

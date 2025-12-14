@@ -404,22 +404,27 @@ extension ConsoleView {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Spacer()
-            Image(systemName: "terminal")
-                .font(.system(size: 36))
-                .foregroundStyle(.tertiary)
-            Text(consoleManager.logs.isEmpty ? "No logs" : "No matches")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            if !consoleManager.isCapturing {
-                Label("Paused", systemImage: "pause.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    Image(systemName: "terminal")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.tertiary)
+                    Text(consoleManager.logs.isEmpty ? "No logs" : "No matches")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if !consoleManager.isCapturing {
+                        Label("Paused", systemImage: "pause.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geometry.size.width)
+                .frame(minHeight: geometry.size.height)
             }
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: .systemBackground))
     }
 

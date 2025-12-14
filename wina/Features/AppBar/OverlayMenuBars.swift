@@ -24,6 +24,7 @@ struct OverlayMenuBars: View {
     @Binding var showStorage: Bool
     @Binding var showPerformance: Bool
     @Binding var showEditor: Bool
+    @Binding var showAccessibility: Bool
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
@@ -241,6 +242,18 @@ struct OverlayMenuBars: View {
                         .buttonStyle(.plain)
 
                         Button {
+                            showAccessibility = true
+                        } label: {
+                            Image(systemName: "accessibility")
+                                .font(.system(size: 15))
+                                .foregroundStyle(.primary)
+                                .padding(8)
+                                .background(.ultraThinMaterial, in: Circle())
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+
+                        Button {
                             takeScreenshotWithFeedback()
                         } label: {
                             Image(systemName: "camera")
@@ -438,7 +451,8 @@ struct OverlayMenuBars: View {
             showNetwork: .constant(false),
             showStorage: .constant(false),
             showPerformance: .constant(false),
-            showEditor: .constant(false)
+            showEditor: .constant(false),
+            showAccessibility: .constant(false)
         )
     }
 }
@@ -463,7 +477,8 @@ struct OverlayMenuBars: View {
             showNetwork: .constant(false),
             showStorage: .constant(false),
             showPerformance: .constant(false),
-            showEditor: .constant(false)
+            showEditor: .constant(false),
+            showAccessibility: .constant(false)
         )
     }
 }

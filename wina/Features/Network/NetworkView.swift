@@ -27,6 +27,8 @@ struct NetworkView: View {
 
         if showErrorsOnly {
             result = result.filter { $0.error != nil || ($0.status ?? 0) >= 400 }
+        } else if showMixedOnly {
+            result = result.filter { $0.isMixedContent }
         } else if let filterType {
             result = result.filter { $0.requestType == filterType }
         }
@@ -140,31 +142,47 @@ struct NetworkView: View {
                 NetworkFilterTab(
                     label: "All",
                     count: networkManager.requests.count,
-                    isSelected: filterType == nil && !showErrorsOnly
+                    isSelected: filterType == nil && !showErrorsOnly && !showMixedOnly
                 ) {
                     filterType = nil
                     showErrorsOnly = false
+                    showMixedOnly = false
                 }
 
                 ForEach(NetworkRequest.RequestType.allCases, id: \.self) { type in
                     NetworkFilterTab(
                         label: type.label,
                         count: networkManager.requests.filter { $0.requestType == type }.count,
-                        isSelected: filterType == type && !showErrorsOnly
+                        isSelected: filterType == type && !showErrorsOnly && !showMixedOnly
                     ) {
                         filterType = type
                         showErrorsOnly = false
+                        showMixedOnly = false
                     }
                 }
 
                 NetworkFilterTab(
                     label: "Errors",
                     count: networkManager.errorCount,
-                    isSelected: showErrorsOnly,
+                    isSelected: showErrorsOnly && !showMixedOnly,
                     color: .red
                 ) {
                     filterType = nil
                     showErrorsOnly = true
+                    showMixedOnly = false
+                }
+
+                if networkManager.pageIsSecure {
+                    NetworkFilterTab(
+                        label: "Mixed",
+                        count: networkManager.mixedContentCount,
+                        isSelected: showMixedOnly,
+                        color: .orange
+                    ) {
+                        filterType = nil
+                        showErrorsOnly = false
+                        showMixedOnly = true
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -176,22 +194,27 @@ struct NetworkView: View {
     // MARK: - Empty State
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Spacer()
-            Image(systemName: "network")
-                .font(.system(size: 36))
-                .foregroundStyle(.tertiary)
-            Text(networkManager.requests.isEmpty ? "No requests" : "No matches")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            if !networkManager.isCapturing {
-                Label("Paused", systemImage: "pause.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    Image(systemName: "network")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.tertiary)
+                    Text(networkManager.requests.isEmpty ? "No requests" : "No matches")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    if !networkManager.isCapturing {
+                        Label("Paused", systemImage: "pause.fill")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geometry.size.width)
+                .frame(minHeight: geometry.size.height)
             }
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(uiColor: .systemBackground))
     }
 
@@ -319,6 +342,13 @@ private struct NetworkRequestRow: View {
             Circle()
                 .fill(request.isPending ? Color.orange : request.statusColor)
                 .frame(width: 8, height: 8)
+
+            // Security icon (only show for mixed content or insecure)
+            if request.isMixedContent || !request.isSecure {
+                Image(systemName: request.securityIcon)
+                    .font(.system(size: 10))
+                    .foregroundStyle(request.securityIconColor)
+            }
 
             // Method badge
             Text(request.method)

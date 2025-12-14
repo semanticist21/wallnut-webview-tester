@@ -248,6 +248,17 @@ struct LoadedSettingsView: View {
 
                 Section {
                     NavigationLink {
+                        EmulationSettingsView(navigator: navigator)
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "wand.and.stars",
+                            iconColor: .purple,
+                            title: "Emulation",
+                            description: "Dark mode, Reduced motion, Contrast"
+                        )
+                    }
+
+                    NavigationLink {
                         PermissionsSettingsView()
                     } label: {
                         SettingsCategoryRow(
