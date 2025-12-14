@@ -437,6 +437,9 @@ var color: Color {
 |------|----------|
 | 원형 아이콘 버튼 | `GlassIconButton` (.regular 44×44, .small 28×28) |
 | 액션 버튼 | `GlassActionButton` (.default, .destructive, .primary) |
+| 헤더 액션 버튼 | `HeaderActionButton` (capsule, section header용) |
+| 복사 버튼 | `CopyButton` (header), `CopyIconButton` (icon only) |
+| 타입 배지 | `TypeBadge` (text + color + icon) |
 | 칩/태그 | `ChipButton` |
 | info 버튼 | `InfoPopoverButton` (Generic ShapeStyle) |
 | deprecated 경고 | `DeprecatedPopoverButton` |

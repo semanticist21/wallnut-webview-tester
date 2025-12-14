@@ -8,6 +8,32 @@
 
 import SwiftUI
 
+// MARK: - Cookie Metadata
+
+struct CookieMetadata: Equatable {
+    let domain: String
+    let path: String
+    let expiresDate: Date?
+    let isSecure: Bool
+    let isHTTPOnly: Bool
+    let sameSitePolicy: String?
+
+    var isSession: Bool { expiresDate == nil }
+
+    init(from cookie: HTTPCookie) {
+        self.domain = cookie.domain
+        self.path = cookie.path
+        self.expiresDate = cookie.expiresDate
+        self.isSecure = cookie.isSecure
+        self.isHTTPOnly = cookie.isHTTPOnly
+        if let policy = cookie.sameSitePolicy {
+            self.sameSitePolicy = policy.rawValue
+        } else {
+            self.sameSitePolicy = nil
+        }
+    }
+}
+
 // MARK: - Storage Item Model
 
 struct StorageItem: Identifiable, Equatable {
@@ -15,6 +41,7 @@ struct StorageItem: Identifiable, Equatable {
     var key: String
     var value: String
     let storageType: StorageType
+    var cookieMetadata: CookieMetadata?
 
     enum StorageType: String, CaseIterable {
         case localStorage
@@ -74,7 +101,9 @@ enum StorageValueType {
             return TypeBadge(text: "Number", color: .blue, icon: "number")
         case .bool:
             return TypeBadge(text: "Boolean", color: .green, icon: "checkmark")
-        case .empty, .string:
+        case .string:
+            return TypeBadge(text: "Text", color: .gray, icon: "textformat")
+        case .empty:
             return nil
         }
     }
@@ -84,7 +113,7 @@ enum StorageValueType {
         case .json: return "JSON"
         case .number: return "Number"
         case .bool: return "Boolean"
-        case .string: return "String"
+        case .string: return "Text"
         case .empty: return "Empty"
         }
     }
@@ -183,45 +212,16 @@ class StorageManager {
     }
 
     private func fetchCookies(navigator: WebViewNavigator) async -> [StorageItem]? {
-        let script = """
-            (function() {
-                try {
-                    var cookies = document.cookie;
-                    if (!cookies) return JSON.stringify([]);
-                    var result = cookies.split(';').map(function(c) {
-                        var parts = c.trim().split('=');
-                        var key = parts[0];
-                        var value = parts.slice(1).join('=');
-                        return { key: key, value: decodeURIComponent(value) };
-                    });
-                    return JSON.stringify(result);
-                } catch(e) {
-                    return JSON.stringify({ error: e.message });
-                }
-            })();
-            """
+        // Use native WKHTTPCookieStore for full cookie metadata
+        let cookies = await navigator.getAllCookies()
 
-        guard let result = await navigator.evaluateJavaScript(script) as? String,
-              let data = result.data(using: .utf8) else {
-            return nil
-        }
-
-        // Check for error
-        if let errorDict = try? JSONSerialization.jsonObject(with: data) as? [String: String],
-           let error = errorDict["error"] {
-            await MainActor.run {
-                self.errorMessage = "Cookies: \(error)"
-            }
-            return nil
-        }
-
-        guard let items = try? JSONSerialization.jsonObject(with: data) as? [[String: String]] else {
-            return nil
-        }
-
-        return items.compactMap { dict in
-            guard let key = dict["key"], let value = dict["value"] else { return nil }
-            return StorageItem(key: key, value: value, storageType: .cookies)
+        return cookies.map { cookie in
+            StorageItem(
+                key: cookie.name,
+                value: cookie.value,
+                storageType: .cookies,
+                cookieMetadata: CookieMetadata(from: cookie)
+            )
         }
     }
 
@@ -258,6 +258,12 @@ class StorageManager {
     func removeItem(key: String, type: StorageItem.StorageType) async -> Bool {
         guard let navigator else { return false }
 
+        // Use native WKHTTPCookieStore for cookies (more reliable)
+        if type == .cookies {
+            await navigator.deleteCookie(name: key)
+            return true
+        }
+
         let escapedKey = key.replacingOccurrences(of: "'", with: "\\'")
 
         let script: String
@@ -267,7 +273,7 @@ class StorageManager {
         case .sessionStorage:
             script = "sessionStorage.removeItem('\(escapedKey)'); true;"
         case .cookies:
-            script = "document.cookie = '\(escapedKey)=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'; true;"
+            return false  // Handled above
         }
 
         let result = await navigator.evaluateJavaScript(script)
@@ -279,6 +285,12 @@ class StorageManager {
     func clearStorage(type: StorageItem.StorageType) async -> Bool {
         guard let navigator else { return false }
 
+        // Use native WKHTTPCookieStore for cookies (more reliable)
+        if type == .cookies {
+            await navigator.deleteAllCookies()
+            return true
+        }
+
         let script: String
         switch type {
         case .localStorage:
@@ -286,16 +298,7 @@ class StorageManager {
         case .sessionStorage:
             script = "sessionStorage.clear(); true;"
         case .cookies:
-            // Clear all cookies
-            script = """
-                (function() {
-                    document.cookie.split(';').forEach(function(c) {
-                        var key = c.trim().split('=')[0];
-                        document.cookie = key + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
-                    });
-                    return true;
-                })();
-                """
+            return false  // Handled above
         }
 
         let result = await navigator.evaluateJavaScript(script)
@@ -482,8 +485,9 @@ struct StorageView: View {
 
     private var emptyState: some View {
         VStack(spacing: 8) {
+            Spacer()
             Image(systemName: selectedType.icon)
-                .font(.system(size: 32))
+                .font(.system(size: 36))
                 .foregroundStyle(.tertiary)
             Text("No \(selectedType.label.lowercased()) data")
                 .font(.subheadline)
@@ -495,22 +499,25 @@ struct StorageView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
             }
+            Spacer()
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemBackground))
     }
 
     private var noMatchState: some View {
         VStack(spacing: 8) {
+            Spacer()
             Image(systemName: "magnifyingglass")
-                .font(.system(size: 32))
+                .font(.system(size: 36))
                 .foregroundStyle(.tertiary)
             Text("No matches")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+            Spacer()
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(uiColor: .systemBackground))
     }
 
     // MARK: - Item List
@@ -676,7 +683,7 @@ private struct StorageItemRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // Type label (colored text only in list)
-            if valueType != .string && valueType != .empty {
+            if valueType != .empty {
                 Text(valueType.label)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(valueType.color)
@@ -803,6 +810,41 @@ private struct StorageEditSheet: View {
                     }
                 }
 
+                // Cookie metadata section
+                if let metadata = item.cookieMetadata {
+                    Section("Cookie Attributes") {
+                        LabeledContent("Domain", value: metadata.domain)
+                        LabeledContent("Path", value: metadata.path)
+
+                        if let expires = metadata.expiresDate {
+                            LabeledContent("Expires") {
+                                Text(expires, style: .date)
+                                    .foregroundStyle(.secondary)
+                                +
+                                Text(" ")
+                                +
+                                Text(expires, style: .time)
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            LabeledContent("Expires", value: "Session")
+                        }
+
+                        if let sameSite = metadata.sameSitePolicy {
+                            LabeledContent("SameSite", value: sameSite)
+                        }
+
+                        HStack {
+                            if metadata.isSecure {
+                                TypeBadge(text: "Secure", color: .green, icon: "lock.fill")
+                            }
+                            if metadata.isHTTPOnly {
+                                TypeBadge(text: "HttpOnly", color: .orange, icon: "server.rack")
+                            }
+                        }
+                    }
+                }
+
                 Section {
                     TextField("Key", text: $editedKey)
                         .font(.system(size: 14, design: .monospaced))
@@ -827,28 +869,21 @@ private struct StorageEditSheet: View {
                         .frame(minHeight: 120)
 
                     if isCookie {
-                        HStack(spacing: 12) {
-                            Button {
+                        HStack(spacing: 8) {
+                            HeaderActionButton(label: "Encode", icon: "arrow.right.circle") {
                                 if let encoded = editedValue.addingPercentEncoding(
                                     withAllowedCharacters: .urlQueryAllowed
                                 ) {
                                     editedValue = encoded
                                 }
-                            } label: {
-                                Label("Encode", systemImage: "arrow.right.circle")
-                                    .font(.caption.weight(.medium))
                             }
 
-                            Button {
+                            HeaderActionButton(label: "Decode", icon: "arrow.left.circle") {
                                 if let decoded = editedValue.removingPercentEncoding {
                                     editedValue = decoded
                                 }
-                            } label: {
-                                Label("Decode", systemImage: "arrow.left.circle")
-                                    .font(.caption.weight(.medium))
                             }
                         }
-                        .foregroundStyle(.blue)
                     }
                 } header: {
                     HStack {
@@ -856,19 +891,9 @@ private struct StorageEditSheet: View {
                         Spacer()
                         CopyButton(text: editedValue)
                         if isValueJson {
-                            Button {
+                            HeaderActionButton(label: "Edit", icon: "pencil") {
                                 showJsonEditor = true
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "pencil")
-                                    Text("Edit")
-                                }
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(.fill.tertiary, in: Capsule())
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -934,6 +959,8 @@ private struct StorageEditSheet: View {
         isSaving = true
         Task {
             var success = false
+            // Minify JSON before saving (storage typically stores compact JSON)
+            let valueToSave = JsonParser.minify(editedValue) ?? editedValue
 
             if keyChanged {
                 // Key changed: remove old key first, then set new key
@@ -941,7 +968,7 @@ private struct StorageEditSheet: View {
                 if removed {
                     success = await storageManager.setItem(
                         key: editedKey,
-                        value: editedValue,
+                        value: valueToSave,
                         type: item.storageType
                     )
                 }
@@ -949,7 +976,7 @@ private struct StorageEditSheet: View {
                 // Only value changed
                 success = await storageManager.setItem(
                     key: editedKey,
-                    value: editedValue,
+                    value: valueToSave,
                     type: item.storageType
                 )
             }
@@ -994,12 +1021,15 @@ private struct StorageAddSheet: View {
     @State private var value: String = ""
     @State private var isSaving: Bool = false
     @State private var showJsonEditor: Bool = false
+    @State private var didSave: Bool = false
 
     private var isValueJson: Bool {
         JsonParser.isValidJson(value)
     }
 
     private var isDuplicateKey: Bool {
+        // Skip duplicate check after successful save (items already updated)
+        guard !didSave else { return false }
         let existingKeys = storageManager.items
             .filter { $0.storageType == storageType }
             .map(\.key)
@@ -1032,19 +1062,9 @@ private struct StorageAddSheet: View {
                         Text("Value")
                         Spacer()
                         if isValueJson {
-                            Button {
+                            HeaderActionButton(label: "Edit", icon: "pencil") {
                                 showJsonEditor = true
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "pencil")
-                                    Text("Edit")
-                                }
-                                .font(.caption.weight(.medium))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(.fill.tertiary, in: Capsule())
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -1090,7 +1110,10 @@ private struct StorageAddSheet: View {
     private func addItem() {
         isSaving = true
         Task {
-            if await storageManager.setItem(key: key, value: value, type: storageType) {
+            // Minify JSON before saving (storage typically stores compact JSON)
+            let valueToSave = JsonParser.minify(value) ?? value
+            if await storageManager.setItem(key: key, value: valueToSave, type: storageType) {
+                didSave = true
                 onSave()
                 dismiss()
             }

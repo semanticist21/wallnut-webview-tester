@@ -932,8 +932,8 @@ private struct NetworkDetailView: View {
                 Spacer()
 
                 // Quick copy URL button
-                GlassIconButton(icon: "doc.on.doc", size: .small) {
-                    copyToClipboard(request.url, label: "URL")
+                CopyIconButton(text: request.url) {
+                    showCopiedFeedback("URL")
                 }
             }
 
@@ -1226,6 +1226,10 @@ private struct NetworkDetailView: View {
 
     private func copyToClipboard(_ text: String, label: String) {
         UIPasteboard.general.string = text
+        showCopiedFeedback(label)
+    }
+
+    private func showCopiedFeedback(_ label: String) {
         copiedFeedback = "\(label) copied"
         Task {
             try? await Task.sleep(for: .seconds(1.5))

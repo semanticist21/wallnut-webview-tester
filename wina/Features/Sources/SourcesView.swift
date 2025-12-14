@@ -335,6 +335,7 @@ struct SourcesView: View {
     @State private var shareItem: SourcesShareContent?
     @State private var lastURL: URL?
     @State private var searchText: String = ""
+    @State private var debouncedSearchText: String = ""
 
     // Elements view mode (tree vs raw HTML)
     @State private var elementsViewMode: ElementsViewMode = .tree
@@ -347,8 +348,6 @@ struct SourcesView: View {
     @State private var currentRawMatchIndex: Int = 0
     @State private var rawMatchLineIndices: [Int] = []
     @State private var cachedRawHTMLLines: [String] = []
-    @State private var searchTask: Task<Void, Never>?
-    @State private var isSearching: Bool = false
 
     // Detail view selections
     @State private var selectedNode: DOMNode?
@@ -384,6 +383,16 @@ struct SourcesView: View {
             Task {
                 await fetchCurrentTab()
             }
+        }
+        .task(id: searchText) {
+            // Debounce search: wait 200ms before processing
+            guard !searchText.isEmpty else {
+                debouncedSearchText = ""
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(200))
+            guard !Task.isCancelled else { return }
+            debouncedSearchText = searchText
         }
         .onChange(of: selectedTab) { _, _ in
             // Clear search when switching tabs
@@ -1339,7 +1348,7 @@ struct SourcesShareSheet: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
-// MARK: - HTML Syntax View
+// MARK: - HTML Syntax View (UITextView-based)
 
 struct HTMLSyntaxView: View {
     let html: String
@@ -1347,11 +1356,12 @@ struct HTMLSyntaxView: View {
     let currentMatchLineIndex: Int?
     let matchingLineIndices: [Int]
 
-    @State private var lines: [HTMLLine] = []
+    @State private var attributedText: NSAttributedString?
     @State private var isProcessing = true
     @State private var totalLines = 0
+    @State private var scrollToMatch: Int?
 
-    static let maxLines = 10000
+    nonisolated static let maxLines = 10000
 
     var body: some View {
         Group {
@@ -1363,50 +1373,32 @@ struct HTMLSyntaxView: View {
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if lines.isEmpty {
+            } else if attributedText == nil {
                 Text("No HTML content")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                GeometryReader { geometry in
-                    ScrollViewReader { proxy in
-                        ScrollView([.horizontal, .vertical]) {
-                            LazyVStack(alignment: .leading, spacing: 0) {
-                                if totalLines > Self.maxLines {
-                                    VStack(alignment: .leading, spacing: 2) {
-                                        HStack(spacing: 4) {
-                                            Image(systemName: "exclamationmark.triangle.fill")
-                                                .foregroundStyle(.orange)
-                                            Text("Showing \(Self.maxLines) of \(totalLines) lines")
-                                                .fontWeight(.medium)
-                                        }
-                                        Text("Remaining \(totalLines - Self.maxLines) lines not loaded (not searchable)")
-                                            .foregroundStyle(.tertiary)
-                                    }
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .background(.ultraThinMaterial)
-                                }
-
-                                ForEach(lines) { line in
-                                    HTMLLineView(
-                                        line: line,
-                                        searchText: searchText,
-                                        isCurrentMatch: currentLineIndex == line.id
-                                    )
-                                    .id(line.id)
-                                }
-                            }
-                            .padding(12)
-                            .frame(minWidth: geometry.size.width, alignment: .topLeading)
+                VStack(spacing: 0) {
+                    if totalLines > Self.maxLines {
+                        HStack(spacing: 4) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundStyle(.orange)
+                            Text("Showing \(Self.maxLines) of \(totalLines) lines")
+                                .fontWeight(.medium)
                         }
-                        .onChange(of: currentMatchLineIndex) { _, newIndex in
-                            scrollToLine(proxy: proxy, index: newIndex)
-                        }
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.ultraThinMaterial)
                     }
+
+                    HTMLTextView(
+                        attributedText: attributedText!,
+                        searchText: searchText,
+                        scrollToMatch: scrollToMatch
+                    )
                 }
             }
         }
@@ -1414,23 +1406,8 @@ struct HTMLSyntaxView: View {
         .task(id: html) {
             await processHTML()
         }
-    }
-
-    private var currentLineIndex: Int? {
-        guard let matchIndex = currentMatchLineIndex,
-              matchIndex < matchingLineIndices.count else { return nil }
-        return matchingLineIndices[matchIndex]
-    }
-
-    private func scrollToLine(proxy: ScrollViewProxy, index: Int?) {
-        guard let matchIndex = index,
-              matchIndex < matchingLineIndices.count else { return }
-        let lineIndex = matchingLineIndices[matchIndex]
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(50))
-            withAnimation(.easeOut(duration: 0.2)) {
-                proxy.scrollTo(lineIndex, anchor: .center)
-            }
+        .onChange(of: currentMatchLineIndex) { _, newIndex in
+            scrollToMatch = newIndex
         }
     }
 
@@ -1442,76 +1419,156 @@ struct HTMLSyntaxView: View {
         let maxLines = Self.maxLines
 
         let result = await Task.detached(priority: .userInitiated) {
-            HTMLProcessor.processToLines(html: htmlCopy, maxLines: maxLines)
+            HTMLProcessor.processToNSAttributedString(html: htmlCopy, maxLines: maxLines)
         }.value
 
-        lines = result.lines
+        attributedText = result.attributedString
         totalLines = result.totalLines
         isProcessing = false
     }
 }
 
+// MARK: - HTML Text View (UIViewRepresentable)
+
+struct HTMLTextView: UIViewRepresentable {
+    let attributedText: NSAttributedString
+    let searchText: String
+    let scrollToMatch: Int?
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isScrollEnabled = true
+        textView.showsHorizontalScrollIndicator = true
+        textView.showsVerticalScrollIndicator = true
+        textView.backgroundColor = .systemBackground
+        textView.textContainerInset = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+
+        // Set initial text
+        textView.attributedText = attributedText
+        context.coordinator.lastAttributedText = attributedText
+        context.coordinator.lastSearchText = ""
+
+        return textView
+    }
+
+    func updateUIView(_ textView: UITextView, context: Context) {
+        let coordinator = context.coordinator
+
+        // Check if attributed text changed (new HTML loaded)
+        let textChanged = coordinator.lastAttributedText != attributedText
+        if textChanged {
+            coordinator.lastAttributedText = attributedText
+            coordinator.lastSearchText = ""
+            textView.attributedText = attributedText
+        }
+
+        // Debounce search highlighting
+        let searchChanged = coordinator.lastSearchText != searchText
+        if searchChanged {
+            coordinator.lastSearchText = searchText
+            coordinator.highlightTask?.cancel()
+
+            if searchText.isEmpty {
+                // Clear highlighting immediately
+                if !textChanged {
+                    textView.attributedText = attributedText
+                }
+            } else {
+                // Debounce highlighting
+                let text = attributedText
+                let query = searchText
+                coordinator.highlightTask = Task {
+                    try? await Task.sleep(for: .milliseconds(200))
+                    guard !Task.isCancelled else { return }
+
+                    let highlighted = Self.highlightSearchResults(in: text, searchText: query)
+
+                    await MainActor.run {
+                        guard !Task.isCancelled else { return }
+                        textView.attributedText = highlighted
+                    }
+                }
+            }
+        }
+
+        // Scroll to match if requested
+        if let matchIndex = scrollToMatch, matchIndex != coordinator.lastScrollMatch {
+            coordinator.lastScrollMatch = matchIndex
+            scrollToMatchIndex(textView: textView, matchIndex: matchIndex)
+        }
+    }
+
+    class Coordinator {
+        var lastAttributedText: NSAttributedString?
+        var lastSearchText: String = ""
+        var lastScrollMatch: Int?
+        var highlightTask: Task<Void, Never>?
+    }
+
+    private static func highlightSearchResults(in text: NSAttributedString, searchText: String) -> NSAttributedString {
+        let mutable = NSMutableAttributedString(attributedString: text)
+        let searchLower = searchText.lowercased()
+        let textLower = mutable.string.lowercased()
+
+        var searchRange = textLower.startIndex
+        while let range = textLower.range(of: searchLower, range: searchRange..<textLower.endIndex) {
+            let nsRange = NSRange(range, in: textLower)
+            mutable.addAttribute(.backgroundColor, value: UIColor.yellow.withAlphaComponent(0.3), range: nsRange)
+            searchRange = range.upperBound
+        }
+
+        return mutable
+    }
+
+    private func scrollToMatchIndex(textView: UITextView, matchIndex: Int) {
+        guard !searchText.isEmpty else { return }
+        let searchLower = searchText.lowercased()
+        let textLower = textView.text.lowercased()
+
+        var currentIndex = 0
+        var searchRange = textLower.startIndex
+
+        while let range = textLower.range(of: searchLower, range: searchRange..<textLower.endIndex) {
+            if currentIndex == matchIndex {
+                let nsRange = NSRange(range, in: textLower)
+                DispatchQueue.main.async {
+                    textView.scrollRangeToVisible(nsRange)
+                }
+                return
+            }
+            currentIndex += 1
+            searchRange = range.upperBound
+        }
+    }
+}
+
 // MARK: - HTML Line Model
 
-struct HTMLLine: Identifiable {
+struct HTMLLine: Identifiable, Sendable {
     let id: Int
     let content: AttributedString
 }
 
-// MARK: - HTML Line View
-
-struct HTMLLineView: View {
-    let line: HTMLLine
-    let searchText: String
-    var isCurrentMatch: Bool = false
-
-    var body: some View {
-        Text(highlightedContent)
-            .font(.system(size: 12, design: .monospaced))
-            .textSelection(.enabled)
-            .fixedSize(horizontal: true, vertical: false)
-            .frame(height: 16, alignment: .leading)
-            .padding(.horizontal, 4)
-            .background {
-                if isCurrentMatch {
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(Color.accentColor.opacity(0.3))
-                }
-            }
-    }
-
-    private var highlightedContent: AttributedString {
-        guard !searchText.isEmpty else { return line.content }
-
-        var result = line.content
-        let plainText = String(result.characters).lowercased()
-        let query = searchText.lowercased()
-
-        var searchStart = plainText.startIndex
-        while let range = plainText.range(of: query, range: searchStart..<plainText.endIndex) {
-            let startOffset = plainText.distance(from: plainText.startIndex, to: range.lowerBound)
-            let endOffset = plainText.distance(from: plainText.startIndex, to: range.upperBound)
-
-            let attrStart = result.index(result.startIndex, offsetByCharacters: startOffset)
-            let attrEnd = result.index(result.startIndex, offsetByCharacters: endOffset)
-            result[attrStart..<attrEnd].backgroundColor = Color.yellow.opacity(0.3)
-
-            searchStart = range.upperBound
-        }
-
-        return result
-    }
-}
-
 // MARK: - HTML Processor (Background Thread Safe)
 
-enum HTMLProcessor {
-    struct ProcessResult {
+enum HTMLProcessor: Sendable {
+    struct ProcessResult: Sendable {
         let lines: [HTMLLine]
         let totalLines: Int
     }
 
-    static func processToLines(html: String, maxLines: Int) -> ProcessResult {
+    struct NSAttributedResult: Sendable {
+        let attributedString: NSAttributedString
+        let totalLines: Int
+    }
+
+    nonisolated static func processToLines(html: String, maxLines: Int) -> ProcessResult {
         let rawLines = formatHTMLToLines(html)
         let totalLines = rawLines.count
         let limitedLines = Array(rawLines.prefix(maxLines))
@@ -1523,7 +1580,157 @@ enum HTMLProcessor {
         return ProcessResult(lines: htmlLines, totalLines: totalLines)
     }
 
-    static func formatHTMLToLines(_ html: String) -> [String] {
+    nonisolated static func processToNSAttributedString(html: String, maxLines: Int) -> NSAttributedResult {
+        let rawLines = formatHTMLToLines(html)
+        let totalLines = rawLines.count
+        let limitedLines = Array(rawLines.prefix(maxLines))
+
+        let result = NSMutableAttributedString()
+        let font = UIFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+
+        for (index, lineStr) in limitedLines.enumerated() {
+            let highlighted = highlightLineNS(lineStr, font: font)
+            result.append(highlighted)
+            if index < limitedLines.count - 1 {
+                result.append(NSAttributedString(string: "\n"))
+            }
+        }
+
+        return NSAttributedResult(attributedString: result, totalLines: totalLines)
+    }
+
+    nonisolated private static func highlightLineNS(_ lineStr: String, font: UIFont) -> NSAttributedString {
+        let bracketColor = UIColor.secondaryLabel
+        let tagNameColor = UIColor(red: 0.8, green: 0.2, blue: 0.4, alpha: 1.0)
+        let attrNameColor = UIColor(red: 0.6, green: 0.4, blue: 0.8, alpha: 1.0)
+        let attrValueColor = UIColor(red: 0.2, green: 0.6, blue: 0.8, alpha: 1.0)
+
+        let baseAttrs: [NSAttributedString.Key: Any] = [.font: font]
+
+        guard let tagStart = lineStr.firstIndex(of: "<"),
+              let tagEnd = lineStr.lastIndex(of: ">") else {
+            return NSAttributedString(string: lineStr, attributes: baseAttrs.merging([.foregroundColor: UIColor.label]) { _, new in new })
+        }
+
+        let result = NSMutableAttributedString()
+
+        // Indentation
+        let indent = String(lineStr[..<tagStart])
+        if !indent.isEmpty {
+            result.append(NSAttributedString(string: indent, attributes: baseAttrs))
+        }
+
+        // Tag
+        let tag = String(lineStr[tagStart...tagEnd])
+        result.append(highlightTagNS(tag, font: font, bracketColor: bracketColor, tagNameColor: tagNameColor, attrNameColor: attrNameColor, attrValueColor: attrValueColor))
+
+        return result
+    }
+
+    nonisolated private static func highlightTagNS(
+        _ tag: String,
+        font: UIFont,
+        bracketColor: UIColor,
+        tagNameColor: UIColor,
+        attrNameColor: UIColor,
+        attrValueColor: UIColor
+    ) -> NSAttributedString {
+        let baseAttrs: [NSAttributedString.Key: Any] = [.font: font]
+
+        // Special cases
+        if tag.hasPrefix("<!--") || tag.hasPrefix("<!DOCTYPE") || tag.hasPrefix("<?") {
+            return NSAttributedString(string: tag, attributes: baseAttrs.merging([.foregroundColor: UIColor.secondaryLabel]) { _, new in new })
+        }
+
+        let result = NSMutableAttributedString()
+        var state: ParseState = .bracket
+        var buffer = ""
+
+        func flushBuffer(color: UIColor) {
+            if !buffer.isEmpty {
+                let attrs = baseAttrs.merging([.foregroundColor: color]) { _, new in new }
+                result.append(NSAttributedString(string: buffer, attributes: attrs))
+                buffer = ""
+            }
+        }
+
+        for char in tag {
+            switch state {
+            case .bracket:
+                buffer.append(char)
+                if char == "<" {
+                    flushBuffer(color: bracketColor)
+                    state = .tagName
+                }
+
+            case .tagName:
+                if char == "/" {
+                    buffer.append(char)
+                    flushBuffer(color: bracketColor)
+                } else if char == ">" {
+                    flushBuffer(color: tagNameColor)
+                    result.append(NSAttributedString(string: ">", attributes: baseAttrs.merging([.foregroundColor: bracketColor]) { _, new in new }))
+                    state = .bracket
+                } else if char == " " {
+                    flushBuffer(color: tagNameColor)
+                    result.append(NSAttributedString(string: " ", attributes: baseAttrs))
+                    state = .attrName
+                } else {
+                    buffer.append(char)
+                }
+
+            case .attrName:
+                if char == "=" {
+                    flushBuffer(color: attrNameColor)
+                    result.append(NSAttributedString(string: "=", attributes: baseAttrs.merging([.foregroundColor: UIColor.secondaryLabel]) { _, new in new }))
+                    state = .attrValue
+                } else if char == ">" {
+                    flushBuffer(color: attrNameColor)
+                    result.append(NSAttributedString(string: ">", attributes: baseAttrs.merging([.foregroundColor: bracketColor]) { _, new in new }))
+                    state = .bracket
+                } else if char == "/" {
+                    flushBuffer(color: attrNameColor)
+                    result.append(NSAttributedString(string: "/", attributes: baseAttrs.merging([.foregroundColor: bracketColor]) { _, new in new }))
+                } else if char == " " {
+                    flushBuffer(color: attrNameColor)
+                    result.append(NSAttributedString(string: " ", attributes: baseAttrs))
+                } else {
+                    buffer.append(char)
+                }
+
+            case .attrValue:
+                if char == "\"" || char == "'" {
+                    buffer.append(char)
+                    state = .inQuote(char)
+                } else if char == " " {
+                    flushBuffer(color: attrValueColor)
+                    result.append(NSAttributedString(string: " ", attributes: baseAttrs))
+                    state = .attrName
+                } else if char == ">" {
+                    flushBuffer(color: attrValueColor)
+                    result.append(NSAttributedString(string: ">", attributes: baseAttrs.merging([.foregroundColor: bracketColor]) { _, new in new }))
+                    state = .bracket
+                } else if char == "/" {
+                    flushBuffer(color: attrValueColor)
+                    result.append(NSAttributedString(string: "/", attributes: baseAttrs.merging([.foregroundColor: bracketColor]) { _, new in new }))
+                } else {
+                    buffer.append(char)
+                }
+
+            case .inQuote(let quote):
+                buffer.append(char)
+                if char == quote {
+                    flushBuffer(color: attrValueColor)
+                    state = .attrName
+                }
+            }
+        }
+
+        flushBuffer(color: .label)
+        return result
+    }
+
+    nonisolated static func formatHTMLToLines(_ html: String) -> [String] {
         var lines: [String] = []
         var depth = 0
         var inTag = false
@@ -1565,14 +1772,14 @@ enum HTMLProcessor {
         return lines
     }
 
-    private static func isVoidTag(_ tag: String) -> Bool {
+    nonisolated private static func isVoidTag(_ tag: String) -> Bool {
         let voidTags = ["area", "base", "br", "col", "embed", "hr", "img",
                         "input", "link", "meta", "source", "track", "wbr"]
         let lower = tag.lowercased()
         return voidTags.contains { lower.hasPrefix("<\($0)") || lower.hasPrefix("<\($0) ") }
     }
 
-    private static func highlightLine(_ lineStr: String) -> AttributedString {
+    nonisolated private static func highlightLine(_ lineStr: String) -> AttributedString {
         let bracketColor = Color.secondary
         let tagNameColor = Color(red: 0.8, green: 0.2, blue: 0.4)
         let attrNameColor = Color(red: 0.6, green: 0.4, blue: 0.8)
@@ -1602,7 +1809,7 @@ enum HTMLProcessor {
         }
     }
 
-    private static func highlightTag(
+    nonisolated private static func highlightTag(
         _ tag: String,
         bracketColor: Color,
         tagNameColor: Color,
