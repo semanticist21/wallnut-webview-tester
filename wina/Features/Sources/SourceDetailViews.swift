@@ -68,6 +68,45 @@ struct MatchedCSSRule: Identifiable {
     }
 }
 
+// MARK: - Box Model Data
+
+/// Represents CSS box model dimensions for visualization
+struct BoxModelData {
+    let width: Int
+    let height: Int
+    let marginTop: Int
+    let marginRight: Int
+    let marginBottom: Int
+    let marginLeft: Int
+    let paddingTop: Int
+    let paddingRight: Int
+    let paddingBottom: Int
+    let paddingLeft: Int
+    let borderTop: Int
+    let borderRight: Int
+    let borderBottom: Int
+    let borderLeft: Int
+
+    init?(from dict: [String: Any]) {
+        guard let width = dict["width"] as? Int,
+              let height = dict["height"] as? Int else { return nil }
+        self.width = width
+        self.height = height
+        self.marginTop = dict["marginTop"] as? Int ?? 0
+        self.marginRight = dict["marginRight"] as? Int ?? 0
+        self.marginBottom = dict["marginBottom"] as? Int ?? 0
+        self.marginLeft = dict["marginLeft"] as? Int ?? 0
+        self.paddingTop = dict["paddingTop"] as? Int ?? 0
+        self.paddingRight = dict["paddingRight"] as? Int ?? 0
+        self.paddingBottom = dict["paddingBottom"] as? Int ?? 0
+        self.paddingLeft = dict["paddingLeft"] as? Int ?? 0
+        self.borderTop = dict["borderTop"] as? Int ?? 0
+        self.borderRight = dict["borderRight"] as? Int ?? 0
+        self.borderBottom = dict["borderBottom"] as? Int ?? 0
+        self.borderLeft = dict["borderLeft"] as? Int ?? 0
+    }
+}
+
 // MARK: - Element Detail View
 
 struct ElementDetailView: View {
@@ -76,6 +115,7 @@ struct ElementDetailView: View {
 
     @Environment(\.dismiss) private var dismiss
     @State private var computedStyles: [String: String] = [:]
+    @State private var boxModel: BoxModelData?
     @State private var matchedRules: [MatchedCSSRule] = []
     @State private var innerHTML: String = ""
     @State private var outerHTML: String = ""
@@ -331,8 +371,67 @@ struct ElementDetailView: View {
             .map { (key: $0.key, value: $0.value) }
     }
 
+    private static let styleCategories: [(name: String, props: [String])] = [
+        ("Layout", layoutProperties),
+        ("Box Model", boxModelProperties),
+        ("Typography", typographyProperties),
+        ("Visual", visualProperties)
+    ]
+
+    private static let layoutProperties = [
+        "display", "position", "top", "right", "bottom", "left", "flex", "flex-direction",
+        "flex-wrap", "flex-grow", "flex-shrink", "flex-basis", "justify-content", "align-items",
+        "align-self", "align-content", "grid-template-columns", "grid-template-rows", "gap",
+        "float", "clear", "z-index", "overflow", "overflow-x", "overflow-y"
+    ]
+
+    private static let boxModelProperties = [
+        "width", "height", "min-width", "min-height", "max-width", "max-height",
+        "margin-top", "margin-right", "margin-bottom", "margin-left",
+        "padding-top", "padding-right", "padding-bottom", "padding-left",
+        "border-top-width", "border-right-width", "border-bottom-width", "border-left-width", "box-sizing"
+    ]
+
+    private static let typographyProperties = [
+        "font-family", "font-size", "font-weight", "font-style", "line-height",
+        "letter-spacing", "text-align", "text-decoration", "text-transform",
+        "white-space", "word-break", "word-wrap"
+    ]
+
+    private static let visualProperties = [
+        "color", "background-color", "background-image", "border-color", "border-style",
+        "border-radius", "opacity", "visibility", "cursor", "pointer-events",
+        "box-shadow", "text-shadow", "transform", "filter"
+    ]
+
+    /// Categorized computed styles for display
+    private var categorizedStyles: [(category: String, properties: [(key: String, value: String)])] {
+        let filter = computedStylesFilter.lowercased()
+        var result: [(category: String, properties: [(key: String, value: String)])] = []
+
+        for (name, props) in Self.styleCategories {
+            var categoryProps: [(key: String, value: String)] = []
+            for prop in props {
+                if let value = computedStyles[prop] {
+                    if filter.isEmpty || prop.contains(filter) || value.lowercased().contains(filter) {
+                        categoryProps.append((key: prop, value: value))
+                    }
+                }
+            }
+            if !categoryProps.isEmpty {
+                result.append((category: name, properties: categoryProps))
+            }
+        }
+        return result
+    }
+
     private var computedStylesContent: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
+            // Box Model Visualization (Chrome DevTools style)
+            if let box = boxModel {
+                BoxModelView(data: box)
+            }
+
             // Search filter
             HStack {
                 Image(systemName: "magnifyingglass")
@@ -356,31 +455,26 @@ struct ElementDetailView: View {
             .padding(.vertical, 6)
             .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
 
-            // Count indicator
-            HStack {
-                Text("\(filteredComputedStyles.count) properties")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-
-            // Properties list
+            // Categorized properties
             if computedStyles.isEmpty {
                 Text("No computed styles")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
-            } else if filteredComputedStyles.isEmpty {
+            } else if categorizedStyles.isEmpty {
                 Text("No matching properties")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
             } else {
-                LazyVStack(alignment: .leading, spacing: 4) {
-                    ForEach(filteredComputedStyles, id: \.key) { item in
-                        CSSPropertyRow(property: item.key, value: item.value)
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    ForEach(categorizedStyles, id: \.category) { group in
+                        ComputedStylesCategoryView(
+                            category: group.category,
+                            properties: group.properties
+                        )
                     }
                 }
             }
@@ -436,11 +530,22 @@ struct ElementDetailView: View {
         async let htmlResult = navigator.evaluateJavaScript(ElementDetailScripts.htmlContent(selector: selector))
         async let matchedResult = navigator.evaluateJavaScript(ElementDetailScripts.matchedRules(selector: selector))
 
-        // Parse computed styles
+        // Parse computed styles (now includes _boxModel object and categorized properties)
         if let stylesJSON = await stylesResult as? String,
            let data = stylesJSON.data(using: .utf8),
-           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
-            computedStyles = parsed
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+            // Extract box model data
+            if let boxModelDict = parsed["_boxModel"] as? [String: Any] {
+                boxModel = BoxModelData(from: boxModelDict)
+            }
+            // Extract CSS properties (excluding _boxModel)
+            var styles: [String: String] = [:]
+            for (key, value) in parsed where !key.hasPrefix("_") {
+                if let stringValue = value as? String {
+                    styles[key] = stringValue
+                }
+            }
+            computedStyles = styles
         }
 
         // Parse HTML content
@@ -513,10 +618,21 @@ struct ElementDetailView: View {
     }
 
     private func buildSelector() -> String {
+        // Prefer ID for most specific match
         if let id = node.attributes["id"], !id.isEmpty {
             return "#\(id)"
         }
-        return node.nodeName.lowercased()
+        // Build selector with tag name and classes for better matching
+        var selector = node.nodeName.lowercased()
+        if let classAttr = node.attributes["class"], !classAttr.isEmpty {
+            let classes = classAttr.split(separator: " ")
+                .map { String($0).trimmingCharacters(in: .whitespaces) }
+                .filter { !$0.isEmpty }
+            if !classes.isEmpty {
+                selector += "." + classes.joined(separator: ".")
+            }
+        }
+        return selector
     }
 
     private func copyToClipboard() {
@@ -552,39 +668,76 @@ struct ElementDetailView: View {
 
 /// JavaScript scripts for element detail fetching
 private enum ElementDetailScripts {
-    /// Script to fetch computed styles that differ from defaults
+    /// Script to fetch computed styles - returns categorized important properties
+    /// Chrome DevTools style: shows actual computed values for layout, box model, typography, etc.
     static func computedStyles(selector: String) -> String {
         """
         (function() {
             const el = document.querySelector('\(selector)');
             if (!el) return '{}';
 
-            // Create a reference element of the same tag to compare defaults
-            const tagName = el.tagName.toLowerCase();
-            const ref = document.createElement(tagName);
-            ref.style.cssText = 'position:absolute;visibility:hidden;pointer-events:none;';
-            document.body.appendChild(ref);
-
             const styles = window.getComputedStyle(el);
-            const refStyles = window.getComputedStyle(ref);
-            const result = {};
+            const rect = el.getBoundingClientRect();
 
-            // Compare and keep only non-default values
-            for (let i = 0; i < styles.length; i++) {
-                const prop = styles[i];
-                const val = styles.getPropertyValue(prop);
-                const refVal = refStyles.getPropertyValue(prop);
+            // Important CSS properties organized by category (Chrome DevTools style)
+            const categories = {
+                'Box Model': [
+                    'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+                    'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
+                    'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
+                    'border-top-width', 'border-right-width', 'border-bottom-width', 'border-left-width',
+                    'box-sizing'
+                ],
+                'Layout': [
+                    'display', 'position', 'top', 'right', 'bottom', 'left',
+                    'flex', 'flex-direction', 'flex-wrap', 'flex-grow', 'flex-shrink', 'flex-basis',
+                    'justify-content', 'align-items', 'align-self', 'align-content',
+                    'grid-template-columns', 'grid-template-rows', 'gap',
+                    'float', 'clear', 'z-index', 'overflow', 'overflow-x', 'overflow-y'
+                ],
+                'Typography': [
+                    'font-family', 'font-size', 'font-weight', 'font-style',
+                    'line-height', 'letter-spacing', 'text-align', 'text-decoration',
+                    'text-transform', 'white-space', 'word-break', 'word-wrap'
+                ],
+                'Visual': [
+                    'color', 'background-color', 'background-image',
+                    'border-color', 'border-style', 'border-radius',
+                    'opacity', 'visibility', 'cursor', 'pointer-events',
+                    'box-shadow', 'text-shadow', 'transform', 'filter'
+                ]
+            };
 
-                // Keep if different from default or is a custom property
-                if (val !== refVal || prop.startsWith('--')) {
+            const result = {
+                _boxModel: {
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height),
+                    offsetWidth: el.offsetWidth,
+                    offsetHeight: el.offsetHeight,
+                    marginTop: parseInt(styles.marginTop) || 0,
+                    marginRight: parseInt(styles.marginRight) || 0,
+                    marginBottom: parseInt(styles.marginBottom) || 0,
+                    marginLeft: parseInt(styles.marginLeft) || 0,
+                    paddingTop: parseInt(styles.paddingTop) || 0,
+                    paddingRight: parseInt(styles.paddingRight) || 0,
+                    paddingBottom: parseInt(styles.paddingBottom) || 0,
+                    paddingLeft: parseInt(styles.paddingLeft) || 0,
+                    borderTop: parseInt(styles.borderTopWidth) || 0,
+                    borderRight: parseInt(styles.borderRightWidth) || 0,
+                    borderBottom: parseInt(styles.borderBottomWidth) || 0,
+                    borderLeft: parseInt(styles.borderLeftWidth) || 0
+                }
+            };
+
+            // Collect properties by category
+            for (const [category, props] of Object.entries(categories)) {
+                for (const prop of props) {
+                    const val = styles.getPropertyValue(prop);
                     if (val && val.trim()) {
                         result[prop] = val;
                     }
                 }
             }
-
-            // Cleanup
-            document.body.removeChild(ref);
 
             return JSON.stringify(result);
         })();
@@ -605,7 +758,7 @@ private enum ElementDetailScripts {
         """
     }
 
-    /// Script to fetch matched CSS rules
+    /// Script to fetch matched CSS rules - improved with better filtering
     static func matchedRules(selector: String) -> String {
         """
         (function() {
@@ -614,31 +767,48 @@ private enum ElementDetailScripts {
 
             const rules = [];
             let ruleId = 0;
+            const elementClasses = Array.from(el.classList);
 
             function calcSpecificity(sel) {
                 if (!sel) return 0;
-                const ids = (sel.match(/#/g) || []).length;
-                const classes = (sel.match(/\\./g) || []).length + (sel.match(/\\[/g) || []).length;
-                const tags = (sel.match(/^[a-z]/gi) || []).length;
-                return ids * 100 + classes * 10 + tags;
+                const ids = (sel.match(/#[\\w-]+/g) || []).length;
+                const classes = (sel.match(/\\.[\\w-]+/g) || []).length + (sel.match(/\\[[^\\]]+\\]/g) || []).length;
+                const pseudoClasses = (sel.match(/:[\\w-]+/g) || []).length;
+                const tags = sel.replace(/[#.\\[][^\\s]*/g, '').trim().split(/\\s+/).filter(s => /^[a-z]/i.test(s)).length;
+                return ids * 100 + (classes + pseudoClasses) * 10 + tags;
             }
 
-            function parseProps(cssText) {
+            function parseProps(rule) {
                 const props = [];
-                const match = cssText.match(/\\{([^}]*)\\}/);
-                if (!match) return props;
-                const decls = match[1].split(';');
-                for (const decl of decls) {
-                    const parts = decl.split(':');
-                    if (parts.length >= 2) {
-                        const prop = parts[0].trim();
-                        const val = parts.slice(1).join(':').trim();
-                        if (prop && val) props.push({p: prop, v: val});
+                const style = rule.style;
+                for (let i = 0; i < style.length; i++) {
+                    const prop = style[i];
+                    const val = style.getPropertyValue(prop);
+                    const priority = style.getPropertyPriority(prop);
+                    if (val) {
+                        props.push({p: prop, v: priority ? val + ' !important' : val});
                     }
                 }
                 return props;
             }
 
+            // Check if selector is relevant (not just universal reset)
+            function isRelevantSelector(sel) {
+                // Skip pure universal selectors or pseudo-only selectors
+                if (/^[*]?\\s*$/.test(sel)) return false;
+                if (/^[*]?\\s*,\\s*::/.test(sel) && !sel.includes('.') && !sel.includes('#')) return false;
+
+                // Prioritize selectors that include element's classes or tag
+                const tagName = el.tagName.toLowerCase();
+                if (sel.includes('.' + elementClasses.join('.')) ||
+                    sel.includes(tagName) ||
+                    elementClasses.some(c => sel.includes('.' + c))) {
+                    return true;
+                }
+                return true; // Still include other matching rules
+            }
+
+            // Inline styles (highest priority)
             if (el.style.length > 0) {
                 const inlineProps = [];
                 for (let i = 0; i < el.style.length; i++) {
@@ -652,7 +822,8 @@ private enum ElementDetailScripts {
                         selector: 'element.style',
                         source: {type: 'inline'},
                         properties: inlineProps,
-                        specificity: 1000
+                        specificity: 1000,
+                        isInline: true
                     });
                 }
             }
@@ -677,14 +848,18 @@ private enum ElementDetailScripts {
 
                         try {
                             if (el.matches(rule.selectorText)) {
-                                const props = parseProps(rule.cssText);
+                                const props = parseProps(rule);
                                 if (props.length > 0) {
+                                    const specificity = calcSpecificity(rule.selectorText);
+                                    const isRelevant = isRelevantSelector(rule.selectorText);
+
                                     rules.push({
                                         id: ruleId++,
                                         selector: rule.selectorText,
                                         source: sourceInfo,
                                         properties: props,
-                                        specificity: calcSpecificity(rule.selectorText)
+                                        specificity: specificity,
+                                        isRelevant: isRelevant
                                     });
                                 }
                             }
@@ -703,6 +878,14 @@ private enum ElementDetailScripts {
                     }
                 }
             }
+
+            // Sort by specificity (highest first), prioritize relevant selectors
+            rules.sort((a, b) => {
+                if (a.isInline) return -1;
+                if (b.isInline) return 1;
+                if (a.isRelevant !== b.isRelevant) return a.isRelevant ? -1 : 1;
+                return b.specificity - a.specificity;
+            });
 
             return JSON.stringify(rules.slice(0, 50));
         })();
@@ -837,6 +1020,174 @@ private struct MatchedRuleRowView: View {
                 .padding(.bottom, 2)
             }
         }
+    }
+}
+
+// MARK: - Box Model View
+
+/// Chrome DevTools style box model visualization
+private struct BoxModelView: View {
+    let data: BoxModelData
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Margin layer (orange)
+            boxLayer(
+                label: "margin",
+                color: Color.orange.opacity(0.3),
+                values: (data.marginTop, data.marginRight, data.marginBottom, data.marginLeft)
+            ) {
+                // Border layer (yellow)
+                boxLayer(
+                    label: "border",
+                    color: Color.yellow.opacity(0.3),
+                    values: (data.borderTop, data.borderRight, data.borderBottom, data.borderLeft)
+                ) {
+                    // Padding layer (green)
+                    boxLayer(
+                        label: "padding",
+                        color: Color.green.opacity(0.3),
+                        values: (data.paddingTop, data.paddingRight, data.paddingBottom, data.paddingLeft)
+                    ) {
+                        // Content (blue)
+                        VStack(spacing: 2) {
+                            Text("\(data.width) × \(data.height)")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundStyle(.primary)
+                        }
+                        .frame(minWidth: 60, minHeight: 30)
+                        .background(Color.blue.opacity(0.3))
+                    }
+                }
+            }
+        }
+        .padding(8)
+        .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    @ViewBuilder
+    private func boxLayer<Content: View>(
+        label: String,
+        color: Color,
+        values: (top: Int, right: Int, bottom: Int, left: Int),
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(spacing: 0) {
+            // Top value
+            Text(values.top == 0 ? "-" : "\(values.top)")
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(height: 14)
+
+            HStack(spacing: 0) {
+                // Left value
+                Text(values.left == 0 ? "-" : "\(values.left)")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20)
+
+                content()
+
+                // Right value
+                Text(values.right == 0 ? "-" : "\(values.right)")
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 20)
+            }
+
+            // Bottom value
+            Text(values.bottom == 0 ? "-" : "\(values.bottom)")
+                .font(.system(size: 9, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(height: 14)
+        }
+        .padding(4)
+        .background(color)
+        .overlay(alignment: .topLeading) {
+            Text(label)
+                .font(.system(size: 8))
+                .foregroundStyle(.tertiary)
+                .padding(.horizontal, 2)
+                .padding(.top, 1)
+        }
+    }
+}
+
+// MARK: - Computed Styles Category View
+
+/// Displays a category of computed CSS properties
+private struct ComputedStylesCategoryView: View {
+    let category: String
+    let properties: [(key: String, value: String)]
+
+    @State private var isExpanded: Bool = true
+
+    private var categoryIcon: String {
+        switch category {
+        case "Layout": return "square.grid.2x2"
+        case "Box Model": return "square.dashed"
+        case "Typography": return "textformat"
+        case "Visual": return "paintpalette"
+        default: return "circle"
+        }
+    }
+
+    private var categoryColor: Color {
+        switch category {
+        case "Layout": return .blue
+        case "Box Model": return .orange
+        case "Typography": return .purple
+        case "Visual": return .pink
+        default: return .gray
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+
+                    Image(systemName: categoryIcon)
+                        .font(.system(size: 10))
+                        .foregroundStyle(categoryColor)
+
+                    Text(category)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.primary)
+
+                    Spacer()
+
+                    Text("\(properties.count)")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.secondary.opacity(0.1), in: Capsule())
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 2) {
+                    ForEach(properties, id: \.key) { prop in
+                        CSSPropertyRow(property: prop.key, value: prop.value)
+                    }
+                }
+                .padding(.leading, 16)
+                .padding(.top, 6)
+            }
+        }
+        .padding(10)
+        .background(Color.secondary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
     }
 }
 
