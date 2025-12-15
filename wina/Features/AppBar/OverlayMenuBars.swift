@@ -33,6 +33,7 @@ struct OverlayMenuBars: View {
     @State private var urlInputText: String = ""
     // WKWebView 내부 input 필드의 키보드 표시 상태를 추적한다
     @State private var isKeyboardVisible: Bool = false
+    @State private var showPhotoPermissionAlert: Bool = false
     @FocusState private var urlInputFocused: Bool
 
     private let topBarHeight: CGFloat = 64
@@ -102,6 +103,16 @@ struct OverlayMenuBars: View {
                 urlInputOverlay
             }
         }
+        .alert("Photo Access Required", isPresented: $showPhotoPermissionAlert) {
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Please allow photo library access in Settings to save screenshots.")
+        }
     }
 
     // MARK: - Top Bar
@@ -159,120 +170,123 @@ struct OverlayMenuBars: View {
 
     private var bottomBar: some View {
         GeometryReader { geometry in
-            HStack(spacing: 8) {
-                if showWebView {
-                    // URL button
-                    Button {
-                        urlInputText = navigator?.currentURL?.absoluteString ?? ""
-                        showURLInput = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "link")
-                                .font(.system(size: 13))
-                            Text(navigator?.currentURL?.host() ?? "URL")
-                                .font(.subheadline)
-                                .lineLimit(1)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    if showWebView {
+                        // URL button
+                        Button {
+                            urlInputText = navigator?.currentURL?.absoluteString ?? ""
+                            showURLInput = true
+                        } label: {
+                            HStack(spacing: 6) {
+                                Image(systemName: "link")
+                                    .font(.system(size: 13))
+                                Text(navigator?.currentURL?.host() ?? "URL")
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+                            }
+                            .foregroundStyle(.primary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(.ultraThinMaterial, in: Capsule())
                         }
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(.ultraThinMaterial, in: Capsule())
+                        .buttonStyle(.plain)
+
+                        // Console and Network buttons (only for WKWebView)
+                        if !useSafariVC {
+                            Button {
+                                showConsole = true
+                            } label: {
+                                Image(systemName: "terminal")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                showEditor = true
+                            } label: {
+                                Image(systemName: "chevron.left.forwardslash.chevron.right")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                showNetwork = true
+                            } label: {
+                                Image(systemName: "network")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                showStorage = true
+                            } label: {
+                                Image(systemName: "externaldrive")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                showPerformance = true
+                            } label: {
+                                Image(systemName: "gauge.with.dots.needle.bottom.50percent")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                showAccessibility = true
+                            } label: {
+                                Image(systemName: "accessibility")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                takeScreenshotWithFeedback()
+                            } label: {
+                                Image(systemName: "camera")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(.primary)
+                                    .padding(8)
+                                    .background(.ultraThinMaterial, in: Circle())
+                                    .contentShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                    .buttonStyle(.plain)
-
-                    // Console and Network buttons (only for WKWebView)
-                    if !useSafariVC {
-                        Button {
-                            showConsole = true
-                        } label: {
-                            Image(systemName: "terminal")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            showEditor = true
-                        } label: {
-                            Image(systemName: "chevron.left.forwardslash.chevron.right")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            showNetwork = true
-                        } label: {
-                            Image(systemName: "network")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            showStorage = true
-                        } label: {
-                            Image(systemName: "externaldrive")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            showPerformance = true
-                        } label: {
-                            Image(systemName: "gauge.with.dots.needle.bottom.50percent")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            showAccessibility = true
-                        } label: {
-                            Image(systemName: "accessibility")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-
-                        Button {
-                            takeScreenshotWithFeedback()
-                        } label: {
-                            Image(systemName: "camera")
-                                .font(.system(size: 15))
-                                .foregroundStyle(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial, in: Circle())
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-
-                    Spacer()
                 }
+                .padding(.horizontal, 16)
+                .frame(height: bottomBarHeight)
+                .contentShape(Rectangle())  // 전체 높이를 터치 영역으로
             }
-            .padding(.horizontal, 16)
+            .scrollBounceBehavior(.basedOnSize)  // overscroll 방지
             .frame(height: bottomBarHeight)
-            .frame(maxWidth: .infinity)
+            .frame(width: geometry.size.width - 16)  // 기기 너비 - 좌우 padding
             .backport.glassEffect(in: .capsule)
             .padding(.horizontal, 8)
             // Dynamic: push down by half of safe area to sit nicely above home indicator
@@ -375,10 +389,26 @@ struct OverlayMenuBars: View {
 
     private func takeScreenshotWithFeedback() {
         Task {
-            // Play shutter sound
+            // Check permission first (before any feedback)
+            let permission = navigator?.checkPhotoLibraryPermission() ?? .denied
+
+            switch permission {
+            case .notDetermined:
+                let granted = await navigator?.requestPhotoLibraryPermission() ?? false
+                if !granted {
+                    await MainActor.run { showPhotoPermissionAlert = true }
+                    return
+                }
+            case .denied:
+                await MainActor.run { showPhotoPermissionAlert = true }
+                return
+            case .authorized:
+                break
+            }
+
+            // Permission granted - now play feedback and capture
             AudioServicesPlaySystemSound(1108)
 
-            // Flash effect on WebView
             await MainActor.run {
                 withAnimation(.easeIn(duration: 0.05)) {
                     navigator?.showScreenshotFlash = true
@@ -391,12 +421,10 @@ struct OverlayMenuBars: View {
                 }
             }
 
-            // Take screenshot (after flash starts)
             try? await Task.sleep(for: .milliseconds(50))
-            let success = await navigator?.takeScreenshot() ?? false
+            let result = await navigator?.takeScreenshot() ?? .failed
 
-            // Show saved toast on success
-            if success {
+            if result == .success {
                 await MainActor.run {
                     withAnimation(.easeOut(duration: 0.2)) {
                         navigator?.showScreenshotSavedToast = true

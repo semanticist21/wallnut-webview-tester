@@ -5,7 +5,22 @@
 //  WebView navigation controller with KVO observation.
 //
 
+import Photos
 import WebKit
+
+// MARK: - Screenshot Types
+
+enum ScreenshotResult {
+    case success
+    case permissionDenied
+    case failed
+}
+
+enum PhotoPermissionStatus {
+    case authorized
+    case denied
+    case notDetermined
+}
 
 // MARK: - WebView Navigator
 
@@ -117,25 +132,66 @@ class WebViewNavigator {
         )
     }
 
-    /// Take a screenshot of the WebView and save to Photos
-    func takeScreenshot() async -> Bool {
-        guard let webView else { return false }
+    /// Check photo library permission without requesting
+    func checkPhotoLibraryPermission() -> PhotoPermissionStatus {
+        let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        switch status {
+        case .notDetermined:
+            return .notDetermined
+        case .authorized, .limited:
+            return .authorized
+        case .denied, .restricted:
+            return .denied
+        @unknown default:
+            return .authorized
+        }
+    }
 
-        return await withCheckedContinuation { continuation in
+    /// Request photo library permission
+    func requestPhotoLibraryPermission() async -> Bool {
+        let newStatus = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+        return newStatus == .authorized || newStatus == .limited
+    }
+
+    /// Take a screenshot of the WebView and save to Photos
+    /// Assumes permission is already granted (call checkPhotoLibraryPermission first)
+    func takeScreenshot() async -> ScreenshotResult {
+        guard let webView else { return .failed }
+
+        // Double-check permission (in case called directly)
+        let status = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        guard status == .authorized || status == .limited else {
+            return .permissionDenied
+        }
+
+        // Take snapshot
+        guard let image = await captureSnapshot(from: webView) else {
+            return .failed
+        }
+
+        // Convert to opaque image (removes unnecessary alpha channel)
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = true
+        let renderer = UIGraphicsImageRenderer(size: image.size, format: format)
+        let opaqueImage = renderer.image { _ in
+            image.draw(at: .zero)
+        }
+
+        // Save to Photos
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetCreationRequest.creationRequestForAsset(from: opaqueImage)
+            }
+            return .success
+        } catch {
+            return .failed
+        }
+    }
+
+    private func captureSnapshot(from webView: WKWebView) async -> UIImage? {
+        await withCheckedContinuation { continuation in
             webView.takeSnapshot(with: nil) { image, _ in
-                guard let image else {
-                    continuation.resume(returning: false)
-                    return
-                }
-                // Convert to opaque image (removes unnecessary alpha channel)
-                let format = UIGraphicsImageRendererFormat()
-                format.opaque = true
-                let renderer = UIGraphicsImageRenderer(size: image.size, format: format)
-                let opaqueImage = renderer.image { _ in
-                    image.draw(at: .zero)
-                }
-                UIImageWriteToSavedPhotosAlbum(opaqueImage, nil, nil, nil)
-                continuation.resume(returning: true)
+                continuation.resume(returning: image)
             }
         }
     }
