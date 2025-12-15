@@ -108,12 +108,8 @@ struct AccessibilityInfo: Sendable {
             return cached
         }
 
-        // Initialize shared WebView
+        // Initialize shared WebView (or use live WebView if available)
         await shared.initialize(onStatusUpdate: onStatusUpdate)
-        guard let webView = shared.webView else {
-            onStatusUpdate("WebView initialization failed")
-            return AccessibilityInfo.empty
-        }
 
         onStatusUpdate("Detecting accessibility preferences...")
         let script = """
@@ -170,7 +166,7 @@ struct AccessibilityInfo: Sendable {
         })()
         """
 
-        let result = await webView.evaluateJavaScriptAsync(script) as? [String: String] ?? [:]
+        let result = await shared.evaluateJavaScript(script) as? [String: String] ?? [:]
 
         let a11yResult = AccessibilityInfo(
             reducedMotion: result["reducedMotion"] ?? "Unknown",

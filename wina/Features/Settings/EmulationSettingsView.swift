@@ -40,13 +40,6 @@ struct EmulationSettingsView: View {
         storedReducedTransparency
     }
 
-    private var isDefault: Bool {
-        colorScheme == .system &&
-        !reducedMotion &&
-        !highContrast &&
-        !reducedTransparency
-    }
-
     var body: some View {
         List {
             Section {
@@ -81,7 +74,6 @@ struct EmulationSettingsView: View {
                     GlassActionButton("Reset", icon: "arrow.counterclockwise", style: .destructive) {
                         resetToDefaults()
                     }
-                    .disabled(isDefault && !isEmulationActive)
                     Spacer()
                 }
                 .listRowBackground(Color.clear)

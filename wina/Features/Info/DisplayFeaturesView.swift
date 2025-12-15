@@ -138,14 +138,11 @@ struct DisplayInfo: Sendable {
             return cached
         }
 
+        // Initialize shared WebView (or use live WebView if available)
         await shared.initialize(onStatusUpdate: onStatusUpdate)
-        guard let webView = shared.webView else {
-            onStatusUpdate("WebView initialization failed")
-            return DisplayInfo.empty
-        }
 
         onStatusUpdate("Detecting display features...")
-        let result = await webView.evaluateJavaScriptAsync(detectionScript) as? [String: Any] ?? [:]
+        let result = await shared.evaluateJavaScript(detectionScript) as? [String: Any] ?? [:]
 
         let displayResult = parseResult(from: result)
         shared.cachedDisplayInfo = displayResult
