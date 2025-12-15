@@ -19,7 +19,6 @@ struct ContentView: View {
     @State var showInfo: Bool = false
     @State private var showConsole: Bool = false
     @State private var showNetwork: Bool = false
-    @State private var showResources: Bool = false
     @State private var showStorage: Bool = false
     @State private var showPerformance: Bool = false
     @State private var showEditor: Bool = false
@@ -110,7 +109,6 @@ struct ContentView: View {
                         // Close all DevTools sheets before going home
                         showConsole = false
                         showNetwork = false
-                        showResources = false
                         showStorage = false
                         showPerformance = false
                         showEditor = false
@@ -139,7 +137,6 @@ struct ContentView: View {
                     showInfo: $showInfo,
                     showConsole: $showConsole,
                     showNetwork: $showNetwork,
-                    showResources: $showResources,
                     showStorage: $showStorage,
                     showPerformance: $showPerformance,
                     showEditor: $showEditor,
@@ -191,18 +188,14 @@ struct ContentView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showNetwork) {
-            NetworkView(networkManager: webViewNavigator.networkManager)
-                .presentationDetents([.fraction(0.35), .medium, .large])
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationContentInteraction(.scrolls)
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showResources) {
-            ResourceView(resourceManager: webViewNavigator.resourceManager)
-                .presentationDetents([.fraction(0.35), .medium, .large])
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationContentInteraction(.scrolls)
-                .presentationDragIndicator(.visible)
+            NetworkView(
+                networkManager: webViewNavigator.networkManager,
+                resourceManager: webViewNavigator.resourceManager
+            )
+            .presentationDetents([.fraction(0.35), .medium, .large])
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+            .presentationContentInteraction(.scrolls)
+            .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showStorage) {
             StorageView(storageManager: storageManager, navigator: webViewNavigator)
@@ -318,6 +311,7 @@ struct ContentView: View {
                     // 2. Clear all DevTools data
                     webViewNavigator.consoleManager.clear()
                     webViewNavigator.networkManager.clear()
+                    webViewNavigator.resourceManager.clear()
                     webViewNavigator.performanceManager.clear()
                     storageManager.clear()
 

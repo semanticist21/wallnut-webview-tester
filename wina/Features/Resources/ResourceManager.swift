@@ -47,7 +47,7 @@ class ResourceManager {
         let entry = ResourceEntry(
             id: UUID(),
             name: name,
-            initiatorType: .init(rawString: initiatorType),
+            initiatorType: .init(rawString: initiatorType, url: name),
             startTime: startTime,
             duration: duration,
             transferSize: transferSize,

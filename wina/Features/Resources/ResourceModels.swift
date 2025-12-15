@@ -123,8 +123,61 @@ extension ResourceEntry {
             }
         }
 
-        init(rawString: String) {
-            self = InitiatorType(rawValue: rawString.lowercased()) ?? .other
+        /// Initialize from raw initiatorType string, with optional URL for file extension detection
+        init(rawString: String, url: String? = nil) {
+            // First try direct mapping
+            if let direct = InitiatorType(rawValue: rawString.lowercased()) {
+                // CSS-loaded fonts have initiatorType "css" but URL ends with font extension
+                if direct == .css || direct == .link || direct == .other, let url {
+                    if Self.isFontURL(url) {
+                        self = .font
+                        return
+                    }
+                }
+                self = direct
+                return
+            }
+
+            // Fallback: check URL extension for common types
+            if let url {
+                if Self.isFontURL(url) {
+                    self = .font
+                } else if Self.isImageURL(url) {
+                    self = .img
+                } else if Self.isVideoURL(url) {
+                    self = .video
+                } else if Self.isAudioURL(url) {
+                    self = .audio
+                } else {
+                    self = .other
+                }
+            } else {
+                self = .other
+            }
+        }
+
+        private static func isFontURL(_ url: String) -> Bool {
+            let fontExtensions = [".woff2", ".woff", ".ttf", ".otf", ".eot"]
+            let lowercased = url.lowercased()
+            return fontExtensions.contains { lowercased.contains($0) }
+        }
+
+        private static func isImageURL(_ url: String) -> Bool {
+            let extensions = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".ico", ".avif"]
+            let lowercased = url.lowercased()
+            return extensions.contains { lowercased.contains($0) }
+        }
+
+        private static func isVideoURL(_ url: String) -> Bool {
+            let extensions = [".mp4", ".webm", ".mov", ".avi", ".mkv"]
+            let lowercased = url.lowercased()
+            return extensions.contains { lowercased.contains($0) }
+        }
+
+        private static func isAudioURL(_ url: String) -> Bool {
+            let extensions = [".mp3", ".wav", ".ogg", ".aac", ".flac"]
+            let lowercased = url.lowercased()
+            return extensions.contains { lowercased.contains($0) }
         }
     }
 }

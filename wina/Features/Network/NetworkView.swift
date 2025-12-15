@@ -2,35 +2,122 @@
 //  NetworkView.swift
 //  wina
 //
-//  Network request monitoring view for WKWebView.
-//  Captures fetch/XMLHttpRequest via JavaScript injection.
+//  Network and resource monitoring view for WKWebView.
+//  Captures fetch/XMLHttpRequest via JavaScript injection and resources via Resource Timing API.
 //
 
 import SwiftUI
+
+// MARK: - Combined Filter
+
+enum NetworkResourceFilter: String, CaseIterable, Identifiable {
+    // Network filters
+    case all
+    case fetch
+    case xhr
+    case doc
+    // Resource filters
+    case img
+    case js
+    case css
+    case font
+    case media
+    case other
+    // Status filters
+    case errors
+    case mixed
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .all: "All"
+        case .fetch: "Fetch"
+        case .xhr: "XHR"
+        case .doc: "Doc"
+        case .img: "Img"
+        case .js: "JS"
+        case .css: "CSS"
+        case .font: "Font"
+        case .media: "Media"
+        case .other: "Other"
+        case .errors: "Errors"
+        case .mixed: "Mixed"
+        }
+    }
+
+    var isNetworkFilter: Bool {
+        switch self {
+        case .all, .fetch, .xhr, .doc, .errors, .mixed: true
+        default: false
+        }
+    }
+
+    var isResourceFilter: Bool {
+        switch self {
+        case .img, .js, .css, .font, .media, .other: true
+        default: false
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .errors: .red
+        case .mixed: .orange
+        default: .primary
+        }
+    }
+
+    func matchesNetworkRequest(_ request: NetworkRequest) -> Bool {
+        switch self {
+        case .all: true
+        case .fetch: request.requestType == .fetch
+        case .xhr: request.requestType == .xhr
+        case .doc: request.requestType == .document
+        case .errors: request.error != nil || (request.status ?? 0) >= 400
+        case .mixed: request.isMixedContent
+        default: false
+        }
+    }
+
+    func matchesResource(_ resource: ResourceEntry) -> Bool {
+        switch self {
+        case .all: true
+        case .img: resource.initiatorType == .img
+        case .js: resource.initiatorType == .script
+        case .css: resource.initiatorType == .link || resource.initiatorType == .css
+        case .font: resource.initiatorType == .font
+        case .media: resource.initiatorType == .video || resource.initiatorType == .audio
+        case .other: resource.initiatorType == .other || resource.initiatorType == .beacon
+        default: false
+        }
+    }
+}
 
 // MARK: - Network View
 
 struct NetworkView: View {
     let networkManager: NetworkManager
+    let resourceManager: ResourceManager
     @Environment(\.dismiss) private var dismiss
-    @State private var filterType: NetworkRequest.RequestType?
-    @State private var showErrorsOnly: Bool = false
-    @State private var showMixedOnly: Bool = false
+    @State private var filter: NetworkResourceFilter = .all
     @State private var searchText: String = ""
     @State private var shareItem: NetworkShareContent?
     @State private var showSettings: Bool = false
     @State private var selectedRequest: NetworkRequest?
+    @State private var selectedResource: ResourceEntry?
     @AppStorage("networkPreserveLog") private var preserveLog: Bool = false
+    @AppStorage("resourcePreserveLog") private var resourcePreserveLog: Bool = false
+
+    // MARK: - Filtered Data
 
     private var filteredRequests: [NetworkRequest] {
+        guard filter.isNetworkFilter || filter == .all else { return [] }
+
         var result = networkManager.requests
 
-        if showErrorsOnly {
-            result = result.filter { $0.error != nil || ($0.status ?? 0) >= 400 }
-        } else if showMixedOnly {
-            result = result.filter { $0.isMixedContent }
-        } else if let filterType {
-            result = result.filter { $0.requestType == filterType }
+        if filter != .all {
+            result = result.filter { filter.matchesNetworkRequest($0) }
         }
 
         if !searchText.isEmpty {
@@ -44,8 +131,78 @@ struct NetworkView: View {
         return result
     }
 
+    private var filteredResources: [ResourceEntry] {
+        guard filter.isResourceFilter || filter == .all else { return [] }
+
+        var result = resourceManager.resources
+
+        if filter != .all {
+            result = result.filter { filter.matchesResource($0) }
+        }
+
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+                    || $0.displayName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        return result
+    }
+
+    private var showingNetworkData: Bool {
+        filter == .all || filter.isNetworkFilter
+    }
+
+    private var showingResourceData: Bool {
+        filter == .all || filter.isResourceFilter
+    }
+
+    private var hasAnyData: Bool {
+        !networkManager.requests.isEmpty || !resourceManager.resources.isEmpty
+    }
+
+    private var hasFilteredData: Bool {
+        !filteredRequests.isEmpty || !filteredResources.isEmpty
+    }
+
     private var settingsActive: Bool {
-        preserveLog
+        preserveLog || resourcePreserveLog
+    }
+
+    private var isCapturing: Bool {
+        networkManager.isCapturing && resourceManager.isCapturing
+    }
+
+    // MARK: - Counts
+
+    private func count(for filterType: NetworkResourceFilter) -> Int {
+        switch filterType {
+        case .all:
+            networkManager.requests.count + resourceManager.resources.count
+        case .fetch:
+            networkManager.requests.filter { $0.requestType == .fetch }.count
+        case .xhr:
+            networkManager.requests.filter { $0.requestType == .xhr }.count
+        case .doc:
+            networkManager.requests.filter { $0.requestType == .document }.count
+        case .img:
+            resourceManager.count(for: .img)
+        case .js:
+            resourceManager.count(for: .script)
+        case .css:
+            resourceManager.count(for: .css)
+        case .font:
+            resourceManager.count(for: .font)
+        case .media:
+            resourceManager.count(for: .media)
+        case .other:
+            resourceManager.count(for: .other) + networkManager.requests.filter { $0.requestType == .other }.count
+        case .errors:
+            networkManager.errorCount
+        case .mixed:
+            networkManager.mixedContentCount
+        }
     }
 
     var body: some View {
@@ -56,20 +213,23 @@ struct NetworkView: View {
 
             Divider()
 
-            if filteredRequests.isEmpty {
+            if !hasFilteredData {
                 emptyState
             } else {
-                requestList
+                contentList
             }
         }
         .sheet(item: $shareItem) { item in
-            NetworkShareSheet(content: item.content)
+            ExportContentSheet(content: item.content)
         }
         .sheet(isPresented: $showSettings) {
             NetworkSettingsSheet()
         }
         .sheet(item: $selectedRequest) { request in
             NetworkDetailView(request: request)
+        }
+        .sheet(item: $selectedResource) { resource in
+            ResourceDetailView(resource: resource)
         }
         .task {
             await AdManager.shared.showInterstitialAd(
@@ -90,13 +250,14 @@ struct NetworkView: View {
                 },
                 .init(
                     icon: "trash",
-                    isDisabled: networkManager.requests.isEmpty
+                    isDisabled: !hasAnyData
                 ) {
                     networkManager.clear()
+                    resourceManager.clear()
                 },
                 .init(
                     icon: "square.and.arrow.up",
-                    isDisabled: networkManager.requests.isEmpty
+                    isDisabled: !hasAnyData
                 ) {
                     shareItem = NetworkShareContent(content: exportAsText())
                 }
@@ -107,9 +268,10 @@ struct NetworkView: View {
                     activeIcon: "pause.fill",
                     color: .green,
                     activeColor: .red,
-                    isActive: networkManager.isCapturing
+                    isActive: isCapturing
                 ) {
                     networkManager.isCapturing.toggle()
+                    resourceManager.isCapturing.toggle()
                 },
                 .init(
                     icon: "gearshape",
@@ -145,49 +307,67 @@ struct NetworkView: View {
     private var filterTabs: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 0) {
+                // All tab
                 NetworkFilterTab(
                     label: "All",
-                    count: networkManager.requests.count,
-                    isSelected: filterType == nil && !showErrorsOnly && !showMixedOnly
+                    count: count(for: .all),
+                    isSelected: filter == .all
                 ) {
-                    filterType = nil
-                    showErrorsOnly = false
-                    showMixedOnly = false
+                    filter = .all
                 }
 
-                ForEach(NetworkRequest.RequestType.allCases, id: \.self) { type in
+                // Network request tabs
+                ForEach([NetworkResourceFilter.fetch, .xhr, .doc], id: \.self) { filterType in
                     NetworkFilterTab(
-                        label: type.label,
-                        count: networkManager.requests.filter { $0.requestType == type }.count,
-                        isSelected: filterType == type && !showErrorsOnly && !showMixedOnly
+                        label: filterType.displayName,
+                        count: count(for: filterType),
+                        isSelected: filter == filterType
                     ) {
-                        filterType = type
-                        showErrorsOnly = false
-                        showMixedOnly = false
+                        filter = filterType
                     }
                 }
 
+                // Separator
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.3))
+                    .frame(width: 1, height: 16)
+                    .padding(.horizontal, 4)
+
+                // Resource tabs
+                ForEach([NetworkResourceFilter.img, .js, .css, .font, .media], id: \.self) { filterType in
+                    NetworkFilterTab(
+                        label: filterType.displayName,
+                        count: count(for: filterType),
+                        isSelected: filter == filterType
+                    ) {
+                        filter = filterType
+                    }
+                }
+
+                // Separator
+                Rectangle()
+                    .fill(Color.secondary.opacity(0.3))
+                    .frame(width: 1, height: 16)
+                    .padding(.horizontal, 4)
+
+                // Status tabs
                 NetworkFilterTab(
                     label: "Errors",
-                    count: networkManager.errorCount,
-                    isSelected: showErrorsOnly && !showMixedOnly,
+                    count: count(for: .errors),
+                    isSelected: filter == .errors,
                     color: .red
                 ) {
-                    filterType = nil
-                    showErrorsOnly = true
-                    showMixedOnly = false
+                    filter = .errors
                 }
 
                 if networkManager.pageIsSecure {
                     NetworkFilterTab(
                         label: "Mixed",
-                        count: networkManager.mixedContentCount,
-                        isSelected: showMixedOnly,
+                        count: count(for: .mixed),
+                        isSelected: filter == .mixed,
                         color: .orange
                     ) {
-                        filterType = nil
-                        showErrorsOnly = false
-                        showMixedOnly = true
+                        filter = .mixed
                     }
                 }
             }
@@ -207,10 +387,10 @@ struct NetworkView: View {
                     Image(systemName: "network")
                         .font(.system(size: 36))
                         .foregroundStyle(.tertiary)
-                    Text(networkManager.requests.isEmpty ? "No requests" : "No matches")
+                    Text(!hasAnyData ? "No activity" : "No matches")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    if !networkManager.isCapturing {
+                    if !isCapturing {
                         Label("Paused", systemImage: "pause.fill")
                             .font(.caption)
                             .foregroundStyle(.orange)
@@ -224,18 +404,49 @@ struct NetworkView: View {
         .background(Color(uiColor: .systemBackground))
     }
 
-    // MARK: - Request List
+    // MARK: - Content List
 
-    private var requestList: some View {
+    private var contentList: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    ForEach(filteredRequests) { request in
-                        NetworkRequestRow(request: request)
-                            .id(request.id)
-                            .onTapGesture {
-                                selectedRequest = request
+                    // Show network requests for network filters
+                    if showingNetworkData {
+                        ForEach(filteredRequests) { request in
+                            NetworkRequestRow(request: request)
+                                .id("request-\(request.id)")
+                                .onTapGesture {
+                                    selectedRequest = request
+                                }
+                        }
+                    }
+
+                    // Show resources for resource filters (but not for "All" to avoid duplication with XHR/Fetch)
+                    if showingResourceData && filter != .all {
+                        ForEach(filteredResources) { resource in
+                            ResourceRow(resource: resource)
+                                .id("resource-\(resource.id)")
+                                .onTapGesture {
+                                    selectedResource = resource
+                                }
+                        }
+                    }
+
+                    // For "All" filter, only show resources that aren't captured by Network (exclude fetch/xhr)
+                    if filter == .all {
+                        ForEach(resourceManager.resources.filter { resource in
+                            // Exclude fetch/xhr since those are already in network requests
+                            resource.initiatorType != .fetch && resource.initiatorType != .xmlhttprequest
+                        }) { resource in
+                            // Apply search filter
+                            if searchText.isEmpty || resource.name.localizedCaseInsensitiveContains(searchText) || resource.displayName.localizedCaseInsensitiveContains(searchText) {
+                                ResourceRow(resource: resource)
+                                    .id("resource-\(resource.id)")
+                                    .onTapGesture {
+                                        selectedResource = resource
+                                    }
                             }
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -243,14 +454,34 @@ struct NetworkView: View {
             .background(Color(uiColor: .systemBackground))
             .scrollContentBackground(.hidden)
             .onChange(of: networkManager.requests.count) { _, _ in
-                if let lastRequest = filteredRequests.last {
-                    withAnimation(.easeOut(duration: 0.15)) {
-                        proxy.scrollTo(lastRequest.id, anchor: .bottom)
-                    }
-                }
+                scrollToBottom(proxy: proxy)
+            }
+            .onChange(of: resourceManager.resources.count) { _, _ in
+                scrollToBottom(proxy: proxy)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private func scrollToBottom(proxy: ScrollViewProxy) {
+        // Get the last item ID based on current filter
+        var lastID: String?
+
+        if showingNetworkData, let lastRequest = filteredRequests.last {
+            lastID = "request-\(lastRequest.id)"
+        }
+
+        if showingResourceData || filter == .all {
+            if let lastResource = filteredResources.last {
+                lastID = "resource-\(lastResource.id)"
+            }
+        }
+
+        if let lastID {
+            withAnimation(.easeOut(duration: 0.15)) {
+                proxy.scrollTo(lastID, anchor: .bottom)
+            }
+        }
     }
 
     // MARK: - Export
@@ -260,32 +491,58 @@ struct NetworkView: View {
         dateFormatter.dateFormat = "HH:mm:ss.SSS"
 
         // Build header with filter info
-        var header = "Network Log Export"
-        if let filterType {
-            header += " (Filter: \(filterType.label))"
+        var header = "Network & Resources Export"
+        if filter != .all {
+            header += " (Filter: \(filter.displayName))"
         }
         if !searchText.isEmpty {
             header += " (Search: \(searchText))"
         }
         header += "\nExported: \(DateFormatter.localizedString(from: Date(), dateStyle: .medium, timeStyle: .medium))"
-        header += "\nTotal: \(filteredRequests.count) requests"
+        header += "\nRequests: \(filteredRequests.count), Resources: \(filteredResources.count)"
         header += "\n" + String(repeating: "─", count: 50) + "\n\n"
 
-        let body = filteredRequests
-            .map { req in
-                var line = "[\(dateFormatter.string(from: req.startTime))] \(req.method) \(req.url)"
-                if let status = req.status {
-                    line += " → \(status)"
+        // Network requests
+        var body = ""
+        if !filteredRequests.isEmpty {
+            body += "=== NETWORK REQUESTS ===\n\n"
+            body += filteredRequests
+                .map { req in
+                    var line = "[\(dateFormatter.string(from: req.startTime))] \(req.method) \(req.url)"
+                    if let status = req.status {
+                        line += " → \(status)"
+                    }
+                    if let duration = req.duration {
+                        line += " (\(String(format: "%.0fms", duration * 1000)))"
+                    }
+                    if let error = req.error {
+                        line += " ERROR: \(error)"
+                    }
+                    return line
                 }
-                if let duration = req.duration {
-                    line += " (\(String(format: "%.0fms", duration * 1000)))"
+                .joined(separator: "\n\n")
+        }
+
+        // Resources
+        let resourcesToExport = filter == .all
+            ? resourceManager.resources.filter { $0.initiatorType != .fetch && $0.initiatorType != .xmlhttprequest }
+            : filteredResources
+
+        if !resourcesToExport.isEmpty {
+            if !body.isEmpty { body += "\n\n" }
+            body += "=== RESOURCES ===\n\n"
+            body += resourcesToExport
+                .map { res in
+                    var line = "[\(res.initiatorType.displayName)] \(res.name)"
+                    line += "\n  Duration: \(res.displayDuration)"
+                    line += ", Size: \(res.displaySize)"
+                    if res.isCrossOriginRestricted {
+                        line += " (cross-origin)"
+                    }
+                    return line
                 }
-                if let error = req.error {
-                    line += " ERROR: \(error)"
-                }
-                return line
-            }
-            .joined(separator: "\n\n")
+                .joined(separator: "\n\n")
+        }
 
         return header + body
     }
@@ -335,12 +592,6 @@ private struct NetworkFilterTab: View {
 
 private struct NetworkRequestRow: View {
     let request: NetworkRequest
-
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "HH:mm:ss.SSS"
-        return formatter
-    }()
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -422,17 +673,83 @@ private struct NetworkRequestRow: View {
     }
 }
 
+// MARK: - Resource Row
+
+private struct ResourceRow: View {
+    let resource: ResourceEntry
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            // Type icon
+            Image(systemName: resource.initiatorType.icon)
+                .font(.system(size: 12))
+                .foregroundStyle(resource.initiatorType.color)
+                .frame(width: 24, height: 24)
+
+            // Resource info
+            VStack(alignment: .leading, spacing: 2) {
+                Text(resource.displayName)
+                    .font(.system(size: 12, design: .monospaced))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+
+                if let host = resource.host {
+                    Text(host)
+                        .font(.system(size: 10))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+            }
+
+            Spacer()
+
+            // Right side info
+            VStack(alignment: .trailing, spacing: 2) {
+                Text(resource.displayDuration)
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundStyle(.primary)
+
+                Text(resource.displaySize)
+                    .font(.system(size: 9, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+            }
+
+            // Type badge
+            Text(resource.initiatorType.displayName)
+                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .foregroundStyle(resource.initiatorType.color)
+                .frame(width: 40, alignment: .trailing)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(resource.isCrossOriginRestricted ? Color.orange.opacity(0.05) : Color.clear)
+        .contentShape(Rectangle())
+        .overlay(alignment: .bottom) {
+            Divider()
+                .padding(.leading, 12)
+        }
+    }
+}
+
 // MARK: - Network Settings Sheet
 
 private struct NetworkSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("networkPreserveLog") private var preserveLog: Bool = false
+    @AppStorage("networkPreserveLog") private var networkPreserveLog: Bool = false
+    @AppStorage("resourcePreserveLog") private var resourcePreserveLog: Bool = false
 
     var body: some View {
         NavigationStack {
             List {
                 Section("Logging") {
-                    Toggle("Preserve Log on Reload", isOn: $preserveLog)
+                    Toggle("Preserve Network Log", isOn: $networkPreserveLog)
+                    Toggle("Preserve Resource Log", isOn: $resourcePreserveLog)
+                }
+
+                Section {
+                    Text("Network requests (Fetch/XHR) and resources (images, scripts, styles) are captured separately. Resources are collected using the Resource Timing API.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
             .navigationTitle("Network Settings")
@@ -448,9 +765,43 @@ private struct NetworkSettingsSheet: View {
     }
 }
 
+// MARK: - Export Content Sheet
+
+private struct ExportContentSheet: View {
+    let content: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(content)
+                    .font(.system(size: 11, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+            .navigationTitle("Export")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    ShareLink(item: content) {
+                        Image(systemName: "square.and.arrow.up")
+                    }
+                }
+            }
+        }
+    }
+}
+
 #Preview {
-    let manager = NetworkManager()
-    manager.addRequest(
+    let networkManager = NetworkManager()
+    let resourceManager = ResourceManager()
+
+    networkManager.addRequest(
         id: UUID().uuidString,
         method: "GET",
         url: "https://api.example.com/users",
@@ -459,6 +810,6 @@ private struct NetworkSettingsSheet: View {
         body: nil
     )
 
-    return NetworkView(networkManager: manager)
+    return NetworkView(networkManager: networkManager, resourceManager: resourceManager)
         .presentationDetents([.fraction(0.35), .medium, .large])
 }
