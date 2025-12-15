@@ -162,6 +162,8 @@ struct AccessibilityAuditView: View {
     @State private var hasScanned: Bool = false
     @State private var filterSeverity: AccessibilityIssue.Severity?
     @State private var searchText: String = ""
+    @State private var copiedFeedback: String?
+    @State private var showingShareSheet: Bool = false
 
     private var filteredIssues: [AccessibilityIssue] {
         var result = issues
@@ -204,11 +206,27 @@ struct AccessibilityAuditView: View {
                 issuesList
             }
         }
+        .overlay(alignment: .bottom) {
+            if let feedback = copiedFeedback {
+                CopiedFeedbackToast(message: feedback)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            AccessibilityShareSheet(content: generateShareText())
+        }
         .task {
             await AdManager.shared.showInterstitialAd(
                 options: AdOptions(id: "accessibility_devtools"),
                 adUnitId: AdManager.interstitialAdUnitId
             )
+        }
+    }
+
+    private func showCopiedFeedback(_ message: String) {
+        withAnimation { copiedFeedback = message }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            withAnimation { copiedFeedback = nil }
         }
     }
 
@@ -232,7 +250,7 @@ struct AccessibilityAuditView: View {
                     icon: "square.and.arrow.up",
                     isDisabled: issues.isEmpty || isScanning
                 ) {
-                    shareAllIssues()
+                    showingShareSheet = true
                 }
             ],
             rightButtons: [
@@ -244,23 +262,6 @@ struct AccessibilityAuditView: View {
                 }
             ]
         )
-    }
-
-    private func shareAllIssues() {
-        let summary = generateShareText()
-        let activityVC = UIActivityViewController(
-            activityItems: [summary],
-            applicationActivities: nil
-        )
-
-        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let rootVC = windowScene.windows.first?.rootViewController {
-            if let popover = activityVC.popoverPresentationController {
-                popover.sourceView = rootVC.view
-                popover.sourceRect = CGRect(x: rootVC.view.bounds.midX, y: 100, width: 0, height: 0)
-            }
-            rootVC.present(activityVC, animated: true)
-        }
     }
 
     private func generateShareText() -> String {
@@ -445,7 +446,9 @@ struct AccessibilityAuditView: View {
         ScrollView {
             LazyVStack(spacing: 0) {
                 ForEach(filteredIssues) { issue in
-                    IssueRow(issue: issue)
+                    IssueRow(issue: issue) {
+                        showCopiedFeedback("Copied")
+                    }
                 }
             }
         }
@@ -578,8 +581,13 @@ private struct FilterTab: View {
 
 private struct IssueRow: View {
     let issue: AccessibilityIssue
+    let onCopy: () -> Void
     @Environment(\.openURL) private var openURL
     @State private var isExpanded: Bool = false
+
+    private var fullMessage: String {
+        issue.failureSummary.isEmpty ? issue.help : "\(issue.help): \(issue.failureSummary)"
+    }
 
     private var copyText: String {
         var parts: [String] = []
@@ -640,8 +648,8 @@ private struct IssueRow: View {
                             .rotationEffect(.degrees(isExpanded ? 90 : 0))
                     }
 
-                    // Help message (title)
-                    Text(issue.help)
+                    // Help message (compact when collapsed, full when expanded)
+                    Text(isExpanded ? fullMessage : issue.help)
                         .font(.system(size: 13))
                         .foregroundStyle(.primary)
                         .lineLimit(isExpanded ? nil : 1)
@@ -651,7 +659,7 @@ private struct IssueRow: View {
                     Text(isExpanded ? issue.fullHtml : issue.element)
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.secondary)
-                        .lineLimit(isExpanded ? 6 : 1)
+                        .lineLimit(isExpanded ? 12 : 1)
                         .multilineTextAlignment(.leading)
 
                     // Expanded details
@@ -676,41 +684,26 @@ private struct IssueRow: View {
 
     @ViewBuilder
     private var expandedDetails: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            // Failure summary
-            if !issue.failureSummary.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Details")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.tertiary)
-                    Text(issue.failureSummary)
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(4)
-                }
+        // Selector only (failureSummary is now shown in fullMessage)
+        if let selector = issue.selector {
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Selector")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                Text(selector)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
             }
-
-            // Selector
-            if let selector = issue.selector {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Selector")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(.tertiary)
-                    Text(selector)
-                        .font(.system(size: 11, design: .monospaced))
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
-                }
-            }
+            .padding(.top, 4)
         }
-        .padding(.top, 4)
     }
 
     @ViewBuilder
     private var actionButtons: some View {
         VStack(spacing: 4) {
             // Copy button
-            CopyIconButton(copyText)
+            CopyIconButton(text: copyText, onCopy: onCopy)
 
             // Help link button
             if let helpUrl = issue.helpUrl, let url = URL(string: helpUrl) {
@@ -727,6 +720,18 @@ private struct IssueRow: View {
             }
         }
     }
+}
+
+// MARK: - Share Sheet
+
+private struct AccessibilityShareSheet: UIViewControllerRepresentable {
+    let content: String
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [content], applicationActivities: nil)
+    }
+
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {
