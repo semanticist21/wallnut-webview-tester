@@ -43,10 +43,11 @@ wina/
 │   ├── AppBar/          # OverlayMenuBars (dual-mode), 버튼들
 │   ├── Settings/        # SettingsView, ConfigurationSettingsView, SafariVCSettingsView
 │   ├── Console/         # ConsoleManager + UI (JS console 캡처)
-│   ├── Network/         # NetworkManager + UI (fetch/XHR 모니터링)
+│   ├── Network/         # NetworkManager + UI (fetch/XHR 모니터링 + 리소스 목록 통합)
 │   ├── Storage/         # StorageManager + UI (localStorage/sessionStorage/cookies, SWR 패턴)
 │   ├── Performance/     # Web Vitals + Navigation Timing
 │   ├── Sources/         # DOM Tree, Stylesheets, Scripts (Chrome DevTools 스타일)
+│   ├── Resources/       # Network 탭 내부 모듈 (리소스 크기, 타이밍)
 │   ├── Info/            # SharedInfoWebView, API Capability 감지, 벤치마크
 │   ├── UserAgent/       # UA 커스터마이징
 │   ├── WebView/         # WebViewContainer, WebViewNavigator

@@ -123,19 +123,19 @@ extension ContentView {
                 }
                 .animation(.easeOut(duration: 0.25), value: urlValidationState)
                 .overlay(alignment: .bottom) {
+                    // Quick options (lower layer)
+                    quickOptionsOverlay
+                        .alignmentGuide(.bottom) { $0[.top] }
+                        .animation(.easeOut(duration: 0.15), value: useSafariWebView)
+                }
+                .overlay(alignment: .bottom) {
+                    // Dropdown (higher layer, overlays quick options)
                     dropdownOverlay
                         .alignmentGuide(.bottom) { $0[.top] }
                 }
                 .zIndex(1)
-
-                // Quick options (WKWebView only)
-                if !useSafariWebView {
-                    quickOptionsRow
-                }
             }
-            // Offset to keep URL input position stable:
-            // When quick options visible, shift down to compensate for VStack height increase
-            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32 + (useSafariWebView ? 0 : 30))
+            .position(x: geometry.size.width / 2, y: geometry.size.height * 0.32)
             .onChange(of: textFieldFocused) { _, newValue in
                 withAnimation(.easeOut(duration: 0.15)) {
                     showDropdown = newValue && !filteredURLs.isEmpty
@@ -211,13 +211,17 @@ extension ContentView {
         }
     }
 
-    var quickOptionsRow: some View {
-        VStack(spacing: 8) {
-            ToggleChipButton(isOn: $cleanStart, label: "Start with fresh data")
-            ToggleChipButton(isOn: $privateBrowsing, label: "Browse in private session")
+    @ViewBuilder
+    var quickOptionsOverlay: some View {
+        if !useSafariWebView {
+            VStack(spacing: 8) {
+                ToggleChipButton(isOn: $cleanStart, label: "Start with fresh data")
+                ToggleChipButton(isOn: $privateBrowsing, label: "Browse in private session")
+            }
+            .frame(width: inputWidth)
+            .padding(.top, 12)
+            .transition(.opacity.combined(with: .move(edge: .top)))
         }
-        .frame(width: inputWidth)
-        .padding(.top, 12)
     }
 
     var topBar: some View {
