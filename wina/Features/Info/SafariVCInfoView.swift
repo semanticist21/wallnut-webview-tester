@@ -108,7 +108,7 @@ struct SafariVCInfoView: View {
                     menuView
                 }
             }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search all info")
+            .searchable(text: $searchText, prompt: "Search all info")
             .navigationTitle("SafariVC Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

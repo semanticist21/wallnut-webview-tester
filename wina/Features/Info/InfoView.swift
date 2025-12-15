@@ -81,7 +81,7 @@ struct InfoView: View {
                     defaultMenuView
                 }
             }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search all info")
+            .searchable(text: $searchText, prompt: "Search all info")
             .navigationTitle("WKWebView Info")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
