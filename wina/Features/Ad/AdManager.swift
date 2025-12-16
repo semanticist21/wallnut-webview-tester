@@ -29,8 +29,8 @@ final class AdManager: NSObject {
 
     // MARK: - Ad Unit IDs
 
-    /// Test interstitial ad unit ID (replace with production ID before release)
-    static let interstitialAdUnitId = "ca-app-pub-3940256099942544/4411468910"
+    /// Interstitial ad unit ID
+    static let interstitialAdUnitId = "ca-app-pub-6737616702687889/5962304852"
 
     private var interstitialAd: InterstitialAd?
     private var shownAdIds: Set<String> = []

@@ -30,13 +30,19 @@ xcodebuild test -project wina.xcodeproj -scheme wina -only-testing:winaTests/URL
 
 # SwiftLint Analyzer (unused imports/declarations)
 swiftlint analyze --compiler-log-path /tmp/xcodebuild.log
+
+# Check for print() statements (custom SwiftLint rule)
+swiftlint lint | grep "no_print_in_production"
 ```
 
 ## Architecture
 
 ```
 wina/
-├── winaApp.swift / ContentView.swift    # Entry points
+├── winaApp.swift                        # App entry point
+├── ContentView.swift                    # Main view (split into extensions below)
+├── ContentView+URLInput.swift           # URL input handling extension
+├── ContentViewSheets.swift              # Sheet presentations extension
 ├── Features/
 │   ├── Ad/              # AdManager (Google AdMob interstitial)
 │   ├── Accessibility/   # AccessibilityAuditView (axe-core 기반)
@@ -614,7 +620,9 @@ struct HTMLTextView: UIViewRepresentable {
 | 파일명, 타입 | PascalCase |
 | 변수, 함수 | camelCase |
 | 에셋 | kebab-case |
+| 테스트 파일 | `winaTests/[Feature]Tests.swift` |
 
+- **Logging**: `os_log` 또는 `Logger` 사용 (`print()` 금지 - SwiftLint 규칙)
 - 1파일 1컴포넌트, 150줄 이하 권장
 - Feature 전용 helper는 같은 파일에 `private`
 - Extension으로 프로토콜 준수 분리
