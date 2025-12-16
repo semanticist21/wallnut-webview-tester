@@ -213,7 +213,7 @@ struct AccessibilityAuditView: View {
             }
         }
         .sheet(isPresented: $showingShareSheet) {
-            AccessibilityShareSheet(content: generateShareText())
+            ShareSheet(content: generateShareText())
         }
         .task {
             await AdManager.shared.showInterstitialAd(
@@ -720,18 +720,6 @@ private struct IssueRow: View {
             }
         }
     }
-}
-
-// MARK: - Share Sheet
-
-private struct AccessibilityShareSheet: UIViewControllerRepresentable {
-    let content: String
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [content], applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 #Preview {

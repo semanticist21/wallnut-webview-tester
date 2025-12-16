@@ -85,10 +85,10 @@ struct NetworkDetailView: View {
             }
             .animation(.easeInOut(duration: 0.2), value: copiedFeedback)
             .sheet(item: $shareItem) { item in
-                NetworkShareSheet(content: item.content)
+                ShareSheet(content: item.content)
             }
             .sheet(item: $shareFileURL) { url in
-                NetworkFileShareSheet(fileURL: url)
+                ShareSheet(fileURL: url)
             }
         }
     }
@@ -1032,26 +1032,4 @@ struct FormattedBodyView: View {
             }
             .joined(separator: "\n")
     }
-}
-
-// MARK: - Share Sheets
-
-struct NetworkShareSheet: UIViewControllerRepresentable {
-    let content: String
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [content], applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
-struct NetworkFileShareSheet: UIViewControllerRepresentable {
-    let fileURL: URL
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [fileURL], applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

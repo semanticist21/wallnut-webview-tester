@@ -45,6 +45,16 @@ enum JsonParser {
         return (try? JSONSerialization.jsonObject(with: data)) != nil
     }
 
+    /// Count the number of top-level elements in a JSON string
+    /// - Returns: Number of keys (for objects) or items (for arrays), or 1 for primitives
+    static func countElements(_ jsonString: String) -> Int {
+        guard let data = jsonString.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) else { return 0 }
+        if let dict = json as? [String: Any] { return dict.count }
+        if let array = json as? [Any] { return array.count }
+        return 1
+    }
+
     /// Parse a JSON string into a JsonNode tree
     static func parse(_ string: String) -> ParseResult {
         let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -365,7 +365,7 @@ struct StorageView: View {
             }
         }
         .sheet(item: $shareItem) { item in
-            StorageShareSheet(content: item.content)
+            ShareSheet(content: item.content)
         }
         .sheet(item: $selectedItem) { item in
             StorageEditSheet(
@@ -740,18 +740,6 @@ private struct StorageItemRow: View {
     }
 }
 
-// MARK: - Storage Share Sheet
-
-private struct StorageShareSheet: UIViewControllerRepresentable {
-    let content: String
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: [content], applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
 // MARK: - Storage Edit Sheet
 
 private struct StorageEditSheet: View {
@@ -931,7 +919,7 @@ private struct StorageEditSheet: View {
                         HStack {
                             Text("JSON Explorer")
                             Spacer()
-                            Text("\(countJsonElements(editedValue)) items")
+                            Text("\(JsonParser.countElements(editedValue)) items")
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                         }
@@ -1041,14 +1029,6 @@ private struct StorageEditSheet: View {
             isDeleting = false
         }
     }
-
-    private func countJsonElements(_ jsonString: String) -> Int {
-        guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) else { return 0 }
-        if let dict = json as? [String: Any] { return dict.count }
-        if let array = json as? [Any] { return array.count }
-        return 1
-    }
 }
 
 // MARK: - Storage Add Sheet
@@ -1121,7 +1101,7 @@ private struct StorageAddSheet: View {
                         HStack {
                             Text("JSON Explorer")
                             Spacer()
-                            Text("\(countJsonElements(value)) items")
+                            Text("\(JsonParser.countElements(value)) items")
                                 .font(.caption)
                                 .foregroundStyle(.tertiary)
                         }
@@ -1161,14 +1141,6 @@ private struct StorageAddSheet: View {
             }
             isSaving = false
         }
-    }
-
-    private func countJsonElements(_ jsonString: String) -> Int {
-        guard let data = jsonString.data(using: .utf8),
-              let json = try? JSONSerialization.jsonObject(with: data) else { return 0 }
-        if let dict = json as? [String: Any] { return dict.count }
-        if let array = json as? [Any] { return array.count }
-        return 1
     }
 }
 

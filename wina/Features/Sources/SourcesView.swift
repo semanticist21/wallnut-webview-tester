@@ -176,7 +176,7 @@ struct SourcesView: View {
             }
         }
         .sheet(item: $shareItem) { item in
-            SourcesShareSheet(content: item.content)
+            ShareSheet(content: item.content)
         }
         .sheet(item: $selectedNode) { node in
             ElementDetailView(node: node, navigator: navigator)
@@ -621,21 +621,6 @@ struct SourcesView: View {
 struct SourcesShareContent: Identifiable {
     let id = UUID()
     let content: String
-}
-
-// MARK: - Share Sheet
-
-struct SourcesShareSheet: UIViewControllerRepresentable {
-    let content: String
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(
-            activityItems: [content],
-            applicationActivities: nil
-        )
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview
