@@ -750,20 +750,12 @@ private struct ExplorerNodeView: View {
         VStack(alignment: .leading, spacing: 0) {
             // Current node row
             HStack(spacing: 0) {
-                // Expand/collapse button for expandable nodes
+                // Expand/collapse chevron for expandable nodes
                 if node.isExpandable {
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.15)) {
-                            isExpanded.toggle()
-                        }
-                    } label: {
-                        Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundStyle(.primary.opacity(0.6))
-                            .frame(width: 20, height: 20)
-                            .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(.primary.opacity(0.6))
+                        .frame(width: 20, height: 20)
                 } else {
                     Spacer().frame(width: 20)
                 }
@@ -782,6 +774,13 @@ private struct ExplorerNodeView: View {
                 valueView
             }
             .frame(minHeight: 20)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                guard node.isExpandable else { return }
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    isExpanded.toggle()
+                }
+            }
 
             // Children (if expanded)
             if isExpanded {
