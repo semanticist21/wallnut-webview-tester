@@ -144,7 +144,7 @@ extension PerformanceView {
                     HStack {
                         Label("Total Transfer", systemImage: "arrow.down.circle.fill")
                         Spacer()
-                        Text(formatBytes(performanceManager.data.totalTransferSize))
+                        Text(ByteFormatter.format(performanceManager.data.totalTransferSize))
                             .foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 10)

@@ -259,7 +259,7 @@ struct PerformanceView: View {
 
         PerformanceSection(
             title: "By Type",
-            trailing: formatBytes(totalResourceSize)
+            trailing: ByteFormatter.format(totalResourceSize)
         ) {
             VStack(spacing: 0) {
                 ForEach(Array(summary.enumerated()), id: \.element.type) { index, item in
@@ -395,15 +395,6 @@ struct PerformanceView: View {
         performanceManager.data.resources.reduce(0) { $0 + $1.displaySize }
     }
 
-    func formatBytes(_ bytes: Int) -> String {
-        if bytes >= 1_000_000 {
-            return String(format: "%.1f MB", Double(bytes) / 1_000_000)
-        } else if bytes >= 1_000 {
-            return String(format: "%.1f KB", Double(bytes) / 1_000)
-        }
-        return "\(bytes) B"
-    }
-
     private func formatTimestamp(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -523,7 +514,7 @@ private struct ResourceTypeRow: View {
                     Text("\(count)")
                         .foregroundStyle(.secondary)
 
-                    Text(size > 0 ? formatBytes(size) : "—")
+                    Text(size > 0 ? ByteFormatter.format(size) : "—")
                         .font(.subheadline.monospacedDigit())
                         .foregroundStyle(size > 0 ? .secondary : .tertiary)
                         .frame(width: 70, alignment: .trailing)
@@ -553,14 +544,6 @@ private struct ResourceTypeRow: View {
         }
     }
 
-    private func formatBytes(_ bytes: Int) -> String {
-        if bytes >= 1_000_000 {
-            return String(format: "%.1f MB", Double(bytes) / 1_000_000)
-        } else if bytes >= 1_000 {
-            return String(format: "%.1f KB", Double(bytes) / 1_000)
-        }
-        return "\(bytes) B"
-    }
 }
 
 // MARK: - Preview

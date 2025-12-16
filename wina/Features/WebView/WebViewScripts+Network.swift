@@ -23,6 +23,15 @@ extension WebViewScripts {
                 });
             }
 
+            // Resolve relative URL to absolute URL
+            function resolveURL(url) {
+                try {
+                    return new URL(url, document.baseURI).href;
+                } catch(e) {
+                    return url;
+                }
+            }
+
             // Safely stringify headers
             function headersToObject(headers) {
                 if (!headers) return null;
@@ -58,7 +67,8 @@ extension WebViewScripts {
             var originalFetch = window.fetch;
             window.fetch = function(input, init) {
                 var requestId = generateId();
-                var url = typeof input === 'string' ? input : (input.url || String(input));
+                var rawUrl = typeof input === 'string' ? input : (input.url || String(input));
+                var url = resolveURL(rawUrl);
                 var method = (init && init.method) || (input && input.method) || 'GET';
                 var headers = (init && init.headers) || (input && input.headers) || null;
                 var body = (init && init.body) || null;
@@ -131,7 +141,7 @@ extension WebViewScripts {
             XHR.prototype.open = function(method, url) {
                 this.__networkRequestId = generateId();
                 this.__networkMethod = method;
-                this.__networkUrl = url;
+                this.__networkUrl = resolveURL(url);
                 this.__networkHeaders = {};
                 return originalOpen.apply(this, arguments);
             };

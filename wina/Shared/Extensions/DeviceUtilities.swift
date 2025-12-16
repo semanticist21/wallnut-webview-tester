@@ -69,3 +69,17 @@ enum SettingsFormatter {
         }
     }
 }
+
+// MARK: - Byte Formatter
+
+enum ByteFormatter {
+    /// Formats bytes to human-readable string (KB, MB)
+    static func format(_ bytes: Int) -> String {
+        if bytes >= 1_000_000 {
+            return String(format: "%.1f MB", Double(bytes) / 1_000_000)
+        } else if bytes >= 1_000 {
+            return String(format: "%.1f KB", Double(bytes) / 1_000)
+        }
+        return "\(bytes) B"
+    }
+}

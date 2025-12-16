@@ -598,9 +598,18 @@ struct ElementDetailView: View {
     }
 
     private func buildSelector() -> String {
+        // Prefer ID selector (most specific)
         if let id = node.attributes["id"], !id.isEmpty {
             return "#\(id)"
         }
+        // Use tag + first class if available
+        if let className = node.attributes["class"], !className.isEmpty {
+            let firstClass = className.split(separator: " ").first.map(String.init) ?? ""
+            if !firstClass.isEmpty {
+                return "\(node.nodeName.lowercased()).\(firstClass)"
+            }
+        }
+        // Fallback to tag name only
         return node.nodeName.lowercased()
     }
 

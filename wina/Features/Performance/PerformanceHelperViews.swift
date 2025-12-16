@@ -91,7 +91,7 @@ struct ResourceDetailRow: View {
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.tertiary)
 
-            Text(resource.displaySize > 0 ? formatBytes(resource.displaySize) : "—")
+            Text(resource.displaySize > 0 ? ByteFormatter.format(resource.displaySize) : "—")
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .trailing)
@@ -105,14 +105,6 @@ struct ResourceDetailRow: View {
         return String(format: "%.0fms", ms)
     }
 
-    private func formatBytes(_ bytes: Int) -> String {
-        if bytes >= 1_000_000 {
-            return String(format: "%.1f MB", Double(bytes) / 1_000_000)
-        } else if bytes >= 1_000 {
-            return String(format: "%.1f KB", Double(bytes) / 1_000)
-        }
-        return "\(bytes) B"
-    }
 }
 
 // MARK: - Timing Breakdown Row

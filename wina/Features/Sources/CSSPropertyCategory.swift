@@ -22,6 +22,8 @@ enum CSSPropertyCategory {
         "Effects",
         "Animation",
         "Transform",
+        "Interaction",
+        "Scroll",
         "Other"
     ]
 
@@ -33,7 +35,8 @@ enum CSSPropertyCategory {
         if prop.hasPrefix("display") || prop.hasPrefix("visibility") ||
            prop.hasPrefix("overflow") || prop.hasPrefix("float") ||
            prop.hasPrefix("clear") || prop.hasPrefix("z-index") ||
-           prop.hasPrefix("box-sizing") || prop.hasPrefix("contain") {
+           prop.hasPrefix("box-sizing") || prop.hasPrefix("contain") ||
+           prop.hasPrefix("appearance") {
             return "Layout"
         }
 
@@ -68,7 +71,8 @@ enum CSSPropertyCategory {
            prop.hasPrefix("letter") || prop.hasPrefix("word") ||
            prop.hasPrefix("line-") || prop.hasPrefix("white-space") ||
            prop == "color" || prop.hasPrefix("writing-mode") ||
-           prop.hasPrefix("vertical-align") || prop.hasPrefix("direction") {
+           prop.hasPrefix("vertical-align") || prop.hasPrefix("direction") ||
+           prop.hasPrefix("accent-color") {
             return "Typography"
         }
 
@@ -100,6 +104,19 @@ enum CSSPropertyCategory {
            prop.hasPrefix("rotate") || prop.hasPrefix("scale") ||
            prop.hasPrefix("translate") {
             return "Transform"
+        }
+
+        // Interaction
+        if prop.hasPrefix("cursor") || prop.hasPrefix("pointer-events") ||
+           prop.hasPrefix("user-select") || prop.hasPrefix("touch-action") ||
+           prop.hasPrefix("resize") || prop.hasPrefix("caret") {
+            return "Interaction"
+        }
+
+        // Scroll
+        if prop.hasPrefix("scroll") || prop.hasPrefix("overscroll") ||
+           prop.hasPrefix("snap") {
+            return "Scroll"
         }
 
         return "Other"
