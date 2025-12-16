@@ -168,6 +168,7 @@ struct OverlayMenuBars: View {
         .frame(maxWidth: .infinity)
         .contentShape(Rectangle())
         .backport.glassEffect(in: .capsule)
+        .clipped()  // 좌우 overflow 숨김
         .padding(.horizontal, 8)
         .offset(y: topOffset)
         .highPriorityGesture(isOverlayMode ? dragGesture : nil)
@@ -295,6 +296,7 @@ struct OverlayMenuBars: View {
             .frame(height: bottomBarHeight)
             .frame(width: geometry.size.width - 16)  // 기기 너비 - 좌우 padding
             .backport.glassEffect(in: .capsule)
+            .clipped()  // 좌우 overflow 숨김
             .padding(.horizontal, 8)
             // Dynamic: push down by half of safe area to sit nicely above home indicator
             .padding(.bottom, -(geometry.safeAreaInsets.bottom * 0.6))

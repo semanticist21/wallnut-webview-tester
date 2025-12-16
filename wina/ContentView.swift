@@ -224,14 +224,14 @@ struct ContentView: View {
                     }
                 }
             )
-            .presentationDetents([.fraction(0.35), .medium, .large])
+            .presentationDetents([.medium, .large], selection: .constant(.medium))
             .presentationBackgroundInteraction(.enabled(upThrough: .medium))
             .presentationContentInteraction(.scrolls)
             .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showEditor) {
             SourcesView(navigator: webViewNavigator)
-                .presentationDetents([.fraction(0.35), .medium, .large])
+                .presentationDetents([.medium, .large], selection: .constant(.medium))
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationContentInteraction(.scrolls)
                 .presentationDragIndicator(.visible)

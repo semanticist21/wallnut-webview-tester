@@ -46,7 +46,7 @@ wina/
 ├── Features/
 │   ├── Ad/              # AdManager (Google AdMob interstitial)
 │   ├── Accessibility/   # AccessibilityAuditView (axe-core 기반)
-│   ├── AppBar/          # OverlayMenuBars (dual-mode), 버튼들
+│   ├── AppBar/          # OverlayMenuBars (+URLInput extension), 버튼들
 │   ├── Settings/        # SettingsView, ConfigurationSettingsView, SafariVCSettingsView
 │   ├── Console/         # ConsoleManager + UI (JS console 캡처)
 │   ├── Network/         # NetworkManager + UI (fetch/XHR 모니터링 + 리소스 목록 통합)
@@ -583,6 +583,7 @@ struct HTMLTextView: UIViewRepresentable {
 | 칩/태그 | `ChipButton`, `ToggleChipButton` (toggle state) |
 | info 버튼 | `InfoPopoverButton` (Generic ShapeStyle) |
 | deprecated 경고 | `DeprecatedPopoverButton` |
+| 보안 제한 배너 | `SecurityRestrictionBanner` (crossOriginTiming, crossOriginStylesheet, staticResourceBody) |
 | 설정 토글 | `SettingToggleRow` |
 | 색상 선택 | `ColorPickerRow` (deprecatedInfo 파라미터) |
 | 자동 줄바꿈 | `FlowLayout` |
