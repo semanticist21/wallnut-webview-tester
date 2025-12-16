@@ -408,11 +408,8 @@ struct NetworkDetailView: View {
                 }
                 .padding()
             } else {
-                emptyState(
-                    message: "Unable to capture response body",
-                    subtitle: "Static resources (scripts, stylesheets) cannot be intercepted"
-                )
-                .padding()
+                SecurityRestrictionBanner(type: .staticResourceBody)
+                    .padding()
             }
         }
     }

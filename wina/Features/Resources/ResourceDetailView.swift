@@ -17,6 +17,9 @@ struct ResourceDetailView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
+                    if resource.isCrossOriginRestricted {
+                        SecurityRestrictionBanner(type: .crossOriginTiming)
+                    }
                     overviewSection
                     timingSection
                     sizeSection
@@ -49,23 +52,6 @@ struct ResourceDetailView: View {
                 detailRow("Duration", value: resource.displayDuration, icon: "clock")
                 Divider().padding(.leading, 40)
                 detailRow("Size", value: resource.displaySize, icon: "arrow.down.circle")
-
-                if resource.isCrossOriginRestricted {
-                    Divider().padding(.leading, 40)
-                    HStack(spacing: 8) {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundStyle(.orange)
-                            .frame(width: 24)
-                        Text("Cross-origin restricted")
-                            .font(.subheadline)
-                        Spacer()
-                        InfoPopoverButton(
-                            text: "Detailed timing data is unavailable for cross-origin resources unless the server includes a Timing-Allow-Origin header."
-                        )
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                }
             }
             .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
         }
@@ -78,22 +64,25 @@ struct ResourceDetailView: View {
             sectionHeader("Timing Breakdown")
 
             VStack(spacing: 0) {
-                timingRow("DNS Lookup", time: resource.dnsTime, color: .cyan)
-                Divider().padding(.leading, 40)
-                timingRow("TCP Connect", time: resource.tcpTime, color: .blue)
-                Divider().padding(.leading, 40)
-                timingRow("TLS Handshake", time: resource.tlsTime, color: .purple)
-                Divider().padding(.leading, 40)
-                timingRow("Request", time: resource.requestTime, color: .green)
-                Divider().padding(.leading, 40)
-                timingRow("Response", time: resource.responseTime, color: .orange)
-                Divider().padding(.leading, 40)
+                // Only show detailed timing rows if not cross-origin restricted
+                if !resource.isCrossOriginRestricted {
+                    timingRow("DNS Lookup", time: resource.dnsTime, color: .cyan)
+                    Divider().padding(.leading, 40)
+                    timingRow("TCP Connect", time: resource.tcpTime, color: .blue)
+                    Divider().padding(.leading, 40)
+                    timingRow("TLS Handshake", time: resource.tlsTime, color: .purple)
+                    Divider().padding(.leading, 40)
+                    timingRow("Request", time: resource.requestTime, color: .green)
+                    Divider().padding(.leading, 40)
+                    timingRow("Response", time: resource.responseTime, color: .orange)
+                    Divider().padding(.leading, 40)
+                }
                 timingRow("Total", time: resource.duration, color: .primary, isTotal: true)
             }
             .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 10))
 
-            // Timing waterfall
-            if resource.duration > 0 {
+            // Timing waterfall (only show if detailed timing available)
+            if resource.duration > 0 && !resource.isCrossOriginRestricted {
                 timingWaterfall
             }
         }

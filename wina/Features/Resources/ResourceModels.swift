@@ -127,11 +127,21 @@ extension ResourceEntry {
         init(rawString: String, url: String? = nil) {
             // First try direct mapping
             if let direct = InitiatorType(rawValue: rawString.lowercased()) {
-                // CSS-loaded fonts have initiatorType "css" but URL ends with font extension
-                if direct == .css || direct == .link || direct == .other, let url {
-                    if Self.isFontURL(url) {
-                        self = .font
-                        return
+                // Some resources have generic initiatorType but can be identified by URL extension
+                // e.g., CSS-loaded fonts, fetch-loaded media files
+                if let url {
+                    let genericTypes: Set<InitiatorType> = [.css, .link, .fetch, .xmlhttprequest, .other]
+                    if genericTypes.contains(direct) {
+                        if Self.isFontURL(url) {
+                            self = .font
+                            return
+                        } else if Self.isVideoURL(url) {
+                            self = .video
+                            return
+                        } else if Self.isAudioURL(url) {
+                            self = .audio
+                            return
+                        }
                     }
                 }
                 self = direct

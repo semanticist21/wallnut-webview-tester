@@ -94,6 +94,9 @@ struct ElementDetailView: View {
     @State private var selectedSection: ElementSection = .attributes
     @State private var showMatchedRules: Bool = true  // Toggle between matched/computed
     @State private var computedStylesFilter: String = ""
+    @State private var showAllComputedStyles: Bool = false  // Show all vs non-default only
+    @State private var groupComputedStyles: Bool = false  // Group by property category
+    @State private var allComputedStyles: [String: String] = [:]  // All styles (for Show all)
     @State private var copiedFeedback: String?
     @State private var corsBlockedCount: Int = 0
 
@@ -106,6 +109,7 @@ struct ElementDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
+            limitationDisclaimer
             sectionPicker
             Divider()
 
@@ -186,6 +190,15 @@ struct ElementDetailView: View {
         case .html:
             htmlContent
         }
+    }
+
+    private var limitationDisclaimer: some View {
+        Label("May be incomplete or inaccurate", systemImage: "info.circle")
+            .font(.system(size: 11))
+            .foregroundStyle(.tertiary)
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 4)
     }
 
     private var attributesContent: some View {
@@ -272,18 +285,7 @@ struct ElementDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             // CORS warning banner if applicable
             if corsBlockedCount > 0 {
-                HStack(spacing: 6) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.orange)
-                    Text("\(corsBlockedCount) external stylesheet\(corsBlockedCount > 1 ? "s" : "") blocked by CORS")
-                        .font(.system(size: 11))
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 8)
-                .background(Color.orange.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+                SecurityRestrictionBanner(type: .crossOriginStylesheet(count: corsBlockedCount))
             }
 
             // Rules content
@@ -342,8 +344,13 @@ struct ElementDetailView: View {
             }
     }
 
+    /// Source styles based on Show all toggle
+    private var activeComputedStyles: [String: String] {
+        showAllComputedStyles ? allComputedStyles : computedStyles
+    }
+
     private var filteredComputedStyles: [(key: String, value: String)] {
-        let sorted = computedStyles.sorted { $0.key < $1.key }
+        let sorted = activeComputedStyles.sorted { $0.key < $1.key }
         if computedStylesFilter.isEmpty {
             return sorted.map { (key: $0.key, value: $0.value) }
         }
@@ -353,30 +360,80 @@ struct ElementDetailView: View {
             .map { (key: $0.key, value: $0.value) }
     }
 
+    /// Grouped computed styles by CSS property category
+    private var groupedComputedStyles: [(category: String, properties: [(key: String, value: String)])] {
+        let styles = filteredComputedStyles
+        var groups: [String: [(key: String, value: String)]] = [:]
+
+        for style in styles {
+            let category = CSSPropertyCategory.category(for: style.key)
+            groups[category, default: []].append(style)
+        }
+
+        return CSSPropertyCategory.allCategories
+            .compactMap { category in
+                guard let props = groups[category], !props.isEmpty else { return nil }
+                return (category: category, properties: props)
+            }
+    }
+
     private var computedStylesContent: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Search filter
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(.secondary)
-                    .font(.system(size: 12))
-                TextField("Filter properties", text: $computedStylesFilter)
-                    .font(.system(size: 13))
-                    .textFieldStyle(.plain)
-                if !computedStylesFilter.isEmpty {
-                    Button {
-                        computedStylesFilter = ""
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(.secondary)
-                            .font(.system(size: 12))
+            // Filter and options row
+            HStack(spacing: 12) {
+                // Search filter
+                HStack {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                        .font(.system(size: 12))
+                    TextField("Filter", text: $computedStylesFilter)
+                        .font(.system(size: 13))
+                        .textFieldStyle(.plain)
+                    if !computedStylesFilter.isEmpty {
+                        Button {
+                            computedStylesFilter = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(.secondary)
+                                .font(.system(size: 12))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .buttonStyle(.plain)
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
+
+                // Show all checkbox
+                Button {
+                    showAllComputedStyles.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: showAllComputedStyles ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 12))
+                            .foregroundStyle(showAllComputedStyles ? .blue : .secondary)
+                        Text("Show all")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+
+                // Group checkbox
+                Button {
+                    groupComputedStyles.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: groupComputedStyles ? "checkmark.square.fill" : "square")
+                            .font(.system(size: 12))
+                            .foregroundStyle(groupComputedStyles ? .blue : .secondary)
+                        Text("Group")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
 
             // Count indicator
             HStack {
@@ -387,7 +444,7 @@ struct ElementDetailView: View {
             }
 
             // Properties list
-            if computedStyles.isEmpty {
+            if activeComputedStyles.isEmpty {
                 Text("No computed styles")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -399,7 +456,15 @@ struct ElementDetailView: View {
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 20)
+            } else if groupComputedStyles {
+                // Grouped view
+                LazyVStack(alignment: .leading, spacing: 12) {
+                    ForEach(groupedComputedStyles, id: \.category) { group in
+                        ComputedStylesGroupView(category: group.category, properties: group.properties)
+                    }
+                }
             } else {
+                // Flat list view
                 LazyVStack(alignment: .leading, spacing: 4) {
                     ForEach(filteredComputedStyles, id: \.key) { item in
                         CSSPropertyRow(property: item.key, value: item.value)
@@ -443,14 +508,22 @@ struct ElementDetailView: View {
 
         // Execute all JavaScript fetches concurrently
         async let stylesResult = navigator.evaluateJavaScript(ElementDetailScripts.computedStyles(selector: selector))
+        async let allStylesResult = navigator.evaluateJavaScript(ElementDetailScripts.allComputedStyles(selector: selector))
         async let htmlResult = navigator.evaluateJavaScript(ElementDetailScripts.htmlContent(selector: selector))
         async let matchedResult = navigator.evaluateJavaScript(ElementDetailScripts.matchedRules(selector: selector))
 
-        // Parse computed styles
+        // Parse computed styles (non-default)
         if let stylesJSON = await stylesResult as? String,
            let data = stylesJSON.data(using: .utf8),
            let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
             computedStyles = parsed
+        }
+
+        // Parse ALL computed styles
+        if let allStylesJSON = await allStylesResult as? String,
+           let data = allStylesJSON.data(using: .utf8),
+           let parsed = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
+            allComputedStyles = parsed
         }
 
         // Parse HTML content
@@ -581,23 +654,42 @@ private enum ElementDetailScripts {
             const refStyles = window.getComputedStyle(ref);
             const result = {};
 
-            // Compare and keep only non-default values
+            // Compare and keep only non-default values (exclude CSS variables)
             for (let i = 0; i < styles.length; i++) {
                 const prop = styles[i];
+                // Skip CSS custom properties (shown only in "Show all" mode)
+                if (prop.startsWith('--')) continue;
+
                 const val = styles.getPropertyValue(prop);
                 const refVal = refStyles.getPropertyValue(prop);
 
-                // Keep if different from default or is a custom property
-                if (val !== refVal || prop.startsWith('--')) {
-                    if (val && val.trim()) {
-                        result[prop] = val;
-                    }
+                // Keep if different from default
+                if (val !== refVal && val && val.trim()) {
+                    result[prop] = val;
                 }
             }
 
             // Cleanup
             document.body.removeChild(ref);
 
+            return JSON.stringify(result);
+        })();
+        """
+    }
+
+    /// Script to fetch ALL computed styles (for "Show all" mode)
+    static func allComputedStyles(selector: String) -> String {
+        """
+        (function() {
+            const el = document.querySelector('\(selector)');
+            if (!el) return '{}';
+            const styles = window.getComputedStyle(el);
+            const result = {};
+            for (let i = 0; i < styles.length; i++) {
+                const prop = styles[i];
+                const val = styles.getPropertyValue(prop);
+                if (val && val.trim()) { result[prop] = val; }
+            }
             return JSON.stringify(result);
         })();
         """
@@ -885,12 +977,12 @@ private struct CollapsibleHTMLBlock: View {
 
     @State private var isExpanded: Bool = false
 
-    /// Preview text (first 100 chars)
+    /// Preview text (first 500 chars)
     private var previewText: String {
-        if content.count <= 100 {
+        if content.count <= 500 {
             return content
         }
-        return String(content.prefix(100)) + "..."
+        return String(content.prefix(500)) + "..."
     }
 
     /// Formatted size string
@@ -929,7 +1021,7 @@ private struct CollapsibleHTMLBlock: View {
 
                     Spacer()
 
-                    CopyIconButton(text: content, action: onCopy)
+                    CopyIconButton(text: content, onCopy: onCopy)
                 }
                 .contentShape(Rectangle())
             }
@@ -941,17 +1033,181 @@ private struct CollapsibleHTMLBlock: View {
                 CodeBlock(code: content, language: .html)
                     .padding(.top, 4)
             } else {
-                // Collapsed preview
+                // Collapsed preview (tap to expand)
                 Text(previewText)
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(.tertiary)
-                    .lineLimit(2)
+                    .lineLimit(10)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.secondary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+                    .contentShape(RoundedRectangle(cornerRadius: 8))
+                    .onTapGesture {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            isExpanded = true
+                        }
+                    }
             }
         }
+    }
+}
+
+// MARK: - Computed Styles Group View
+
+/// Collapsible group view for computed styles categories
+private struct ComputedStylesGroupView: View {
+    let category: String
+    let properties: [(key: String, value: String)]
+
+    @State private var isExpanded: Bool = true
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            Button {
+                withAnimation(.easeOut(duration: 0.15)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+
+                    Text(category)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.secondary)
+
+                    Text("\(properties.count)")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.secondary.opacity(0.1), in: Capsule())
+
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.vertical, 6)
+
+            // Properties
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(properties, id: \.key) { item in
+                        CSSPropertyRow(property: item.key, value: item.value)
+                    }
+                }
+                .padding(.leading, 16)
+                .padding(.bottom, 8)
+            }
+        }
+        .padding(.horizontal, 8)
+        .background(Color.secondary.opacity(0.03), in: RoundedRectangle(cornerRadius: 8))
+    }
+}
+
+// MARK: - CSS Property Category
+
+/// CSS property categories for grouping computed styles (Chrome DevTools style)
+private enum CSSPropertyCategory {
+    /// All categories in display order
+    static let allCategories = [
+        "Layout",
+        "Flexbox",
+        "Grid",
+        "Box Model",
+        "Position",
+        "Typography",
+        "Background",
+        "Border",
+        "Effects",
+        "Animation",
+        "Transform",
+        "Other"
+    ]
+
+    /// Determine category for a CSS property
+    static func category(for property: String) -> String {
+        let prop = property.lowercased()
+
+        // Layout
+        if prop.hasPrefix("display") || prop.hasPrefix("visibility") ||
+           prop.hasPrefix("overflow") || prop.hasPrefix("float") ||
+           prop.hasPrefix("clear") || prop.hasPrefix("z-index") ||
+           prop.hasPrefix("box-sizing") || prop.hasPrefix("contain") {
+            return "Layout"
+        }
+
+        // Flexbox
+        if prop.hasPrefix("flex") || prop.hasPrefix("align-") ||
+           prop.hasPrefix("justify-") || prop.hasPrefix("order") ||
+           prop.hasPrefix("gap") || prop == "row-gap" || prop == "column-gap" {
+            return "Flexbox"
+        }
+
+        // Grid
+        if prop.hasPrefix("grid") {
+            return "Grid"
+        }
+
+        // Box Model
+        if prop.hasPrefix("margin") || prop.hasPrefix("padding") ||
+           prop.hasPrefix("width") || prop.hasPrefix("height") ||
+           prop.hasPrefix("min-") || prop.hasPrefix("max-") ||
+           prop == "aspect-ratio" || prop == "block-size" || prop == "inline-size" {
+            return "Box Model"
+        }
+
+        // Position
+        if prop.hasPrefix("position") || prop == "top" || prop == "right" ||
+           prop == "bottom" || prop == "left" || prop.hasPrefix("inset") {
+            return "Position"
+        }
+
+        // Typography
+        if prop.hasPrefix("font") || prop.hasPrefix("text") ||
+           prop.hasPrefix("letter") || prop.hasPrefix("word") ||
+           prop.hasPrefix("line-") || prop.hasPrefix("white-space") ||
+           prop == "color" || prop.hasPrefix("writing-mode") ||
+           prop.hasPrefix("vertical-align") || prop.hasPrefix("direction") {
+            return "Typography"
+        }
+
+        // Background
+        if prop.hasPrefix("background") {
+            return "Background"
+        }
+
+        // Border
+        if prop.hasPrefix("border") || prop.hasPrefix("outline") {
+            return "Border"
+        }
+
+        // Effects
+        if prop.hasPrefix("box-shadow") || prop.hasPrefix("opacity") ||
+           prop.hasPrefix("filter") || prop.hasPrefix("backdrop") ||
+           prop.hasPrefix("mix-blend") || prop.hasPrefix("isolation") ||
+           prop.hasPrefix("mask") || prop.hasPrefix("clip") {
+            return "Effects"
+        }
+
+        // Animation
+        if prop.hasPrefix("animation") || prop.hasPrefix("transition") {
+            return "Animation"
+        }
+
+        // Transform
+        if prop.hasPrefix("transform") || prop.hasPrefix("perspective") ||
+           prop.hasPrefix("rotate") || prop.hasPrefix("scale") ||
+           prop.hasPrefix("translate") {
+            return "Transform"
+        }
+
+        return "Other"
     }
 }
 

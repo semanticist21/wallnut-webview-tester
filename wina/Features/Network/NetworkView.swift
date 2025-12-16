@@ -132,12 +132,27 @@ struct NetworkView: View {
     }
 
     private var filteredResources: [ResourceEntry] {
-        guard filter.isResourceFilter || filter == .all else { return [] }
+        guard filter.isResourceFilter else { return [] }
 
         var result = resourceManager.resources
+        result = result.filter { filter.matchesResource($0) }
 
-        if filter != .all {
-            result = result.filter { filter.matchesResource($0) }
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+                    || $0.displayName.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        return result
+    }
+
+    /// Resources shown in "All" filter - excludes fetch/xhr to avoid duplication with network requests
+    private var allFilterResources: [ResourceEntry] {
+        guard filter == .all else { return [] }
+
+        var result = resourceManager.resources.filter {
+            $0.initiatorType != .fetch && $0.initiatorType != .xmlhttprequest
         }
 
         if !searchText.isEmpty {
@@ -163,7 +178,7 @@ struct NetworkView: View {
     }
 
     private var hasFilteredData: Bool {
-        !filteredRequests.isEmpty || !filteredResources.isEmpty
+        !filteredRequests.isEmpty || !filteredResources.isEmpty || !allFilterResources.isEmpty
     }
 
     private var settingsActive: Bool {
@@ -433,20 +448,12 @@ struct NetworkView: View {
                     }
 
                     // For "All" filter, only show resources that aren't captured by Network (exclude fetch/xhr)
-                    if filter == .all {
-                        ForEach(resourceManager.resources.filter { resource in
-                            // Exclude fetch/xhr since those are already in network requests
-                            resource.initiatorType != .fetch && resource.initiatorType != .xmlhttprequest
-                        }) { resource in
-                            // Apply search filter
-                            if searchText.isEmpty || resource.name.localizedCaseInsensitiveContains(searchText) || resource.displayName.localizedCaseInsensitiveContains(searchText) {
-                                ResourceRow(resource: resource)
-                                    .id("resource-\(resource.id)")
-                                    .onTapGesture {
-                                        selectedResource = resource
-                                    }
+                    ForEach(allFilterResources) { resource in
+                        ResourceRow(resource: resource)
+                            .id("resource-\(resource.id)")
+                            .onTapGesture {
+                                selectedResource = resource
                             }
-                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -471,10 +478,13 @@ struct NetworkView: View {
             lastID = "request-\(lastRequest.id)"
         }
 
-        if showingResourceData || filter == .all {
-            if let lastResource = filteredResources.last {
-                lastID = "resource-\(lastResource.id)"
-            }
+        if showingResourceData, let lastResource = filteredResources.last {
+            lastID = "resource-\(lastResource.id)"
+        }
+
+        // For "All" filter, check allFilterResources
+        if filter == .all, let lastResource = allFilterResources.last {
+            lastID = "resource-\(lastResource.id)"
         }
 
         if let lastID {
@@ -524,9 +534,7 @@ struct NetworkView: View {
         }
 
         // Resources
-        let resourcesToExport = filter == .all
-            ? resourceManager.resources.filter { $0.initiatorType != .fetch && $0.initiatorType != .xmlhttprequest }
-            : filteredResources
+        let resourcesToExport = filter == .all ? allFilterResources : filteredResources
 
         if !resourcesToExport.isEmpty {
             if !body.isEmpty { body += "\n\n" }
