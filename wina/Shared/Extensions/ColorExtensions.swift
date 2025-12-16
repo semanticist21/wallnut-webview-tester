@@ -65,7 +65,7 @@ extension UIColor {
 
 // MARK: - CSS Color Parsing
 
-/// Parses CSS color values (hex, rgb, rgba, hsl, hsla, named colors)
+/// Parses CSS color values (hex, rgb, rgba, hsl, hsla, oklch, named colors)
 enum CSSColorParser {
     /// Attempts to parse a CSS color string and returns a SwiftUI Color
     static func parse(_ cssValue: String) -> Color? {
@@ -86,6 +86,31 @@ enum CSSColorParser {
             return parseHSL(trimmed)
         }
 
+        // Check oklch (CSS Color Level 4)
+        if trimmed.hasPrefix("oklch") {
+            return parseOKLCH(trimmed)
+        }
+
+        // Check oklab (CSS Color Level 4)
+        if trimmed.hasPrefix("oklab") {
+            return parseOKLab(trimmed)
+        }
+
+        // Check lch (CSS Color Level 4)
+        if trimmed.hasPrefix("lch") {
+            return parseLCH(trimmed)
+        }
+
+        // Check lab (CSS Color Level 4)
+        if trimmed.hasPrefix("lab") {
+            return parseLab(trimmed)
+        }
+
+        // Check hwb (CSS Color Level 4)
+        if trimmed.hasPrefix("hwb") {
+            return parseHWB(trimmed)
+        }
+
         // Check named colors
         if let namedColor = namedColors[trimmed] {
             return parseHex(namedColor)
@@ -103,11 +128,16 @@ enum CSSColorParser {
     static func extractColors(from cssValue: String) -> [(color: Color, range: Range<String.Index>)] {
         var results: [(Color, Range<String.Index>)] = []
 
-        // Pattern for various color formats
+        // Pattern for various color formats (CSS Color Level 4)
         let patterns = [
             "#[0-9a-fA-F]{3,8}",
             "rgba?\\([^)]+\\)",
-            "hsla?\\([^)]+\\)"
+            "hsla?\\([^)]+\\)",
+            "oklch\\([^)]+\\)",
+            "oklab\\([^)]+\\)",
+            "lch\\([^)]+\\)",
+            "lab\\([^)]+\\)",
+            "hwb\\([^)]+\\)"
         ]
 
         for pattern in patterns {
@@ -296,6 +326,341 @@ enum CSSColorParser {
             hueToRGB(chroma1, chroma2, hue),
             hueToRGB(chroma1, chroma2, hue - 1 / 3)
         )
+    }
+
+    // MARK: - OKLCH Parser (CSS Color Level 4)
+
+    private static func parseOKLCH(_ oklch: String) -> Color? {
+        // Extract values from oklch(L C H) or oklch(L C H / alpha)
+        // L: 0-1 or 0%-100%, C: 0-0.4+, H: 0-360 or with units
+        let pattern = "oklch\\(\\s*([\\d.]+)%?\\s+([\\d.]+)\\s+([\\d.]+)\\s*(?:/\\s*([\\d.]+%?))?\\s*\\)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+
+        let nsRange = NSRange(oklch.startIndex..., in: oklch)
+        guard let match = regex.firstMatch(in: oklch, options: [], range: nsRange) else {
+            return nil
+        }
+
+        func extractDouble(_ index: Int) -> Double? {
+            guard index < match.numberOfRanges,
+                  let range = Range(match.range(at: index), in: oklch) else { return nil }
+            let value = String(oklch[range])
+            return Double(value)
+        }
+
+        guard var lightness = extractDouble(1),
+              let chroma = extractDouble(2),
+              let hue = extractDouble(3) else { return nil }
+
+        // Handle percentage lightness
+        if oklch.contains("%") && lightness > 1 {
+            lightness /= 100.0
+        }
+
+        // Parse alpha
+        var alpha = 1.0
+        if match.numberOfRanges > 4,
+           let range = Range(match.range(at: 4), in: oklch) {
+            var value = String(oklch[range])
+            if value.hasSuffix("%") {
+                value = String(value.dropLast())
+                alpha = (Double(value) ?? 100.0) / 100.0
+            } else {
+                alpha = Double(value) ?? 1.0
+            }
+        }
+
+        // Convert oklch to sRGB
+        let (red, green, blue) = oklchToSRGB(lightness: lightness, chroma: chroma, hue: hue)
+        return Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    /// Convert OKLCH to sRGB (via OKLab)
+    private static func oklchToSRGB(lightness: Double, chroma: Double, hue: Double) -> (Double, Double, Double) {
+        // Convert LCH to Lab (cylindrical → cartesian)
+        let hRad = hue * .pi / 180.0
+        let labA = chroma * cos(hRad)
+        let labB = chroma * sin(hRad)
+
+        // OKLab to linear sRGB using approximate matrix
+        let lCubed = lightness * lightness * lightness
+        let mVal = lCubed + 0.3963377774 * labA + 0.2158037573 * labB
+        let sVal = lCubed - 0.1055613458 * labA - 0.0638541728 * labB
+        let longWave = lCubed - 0.0894841775 * labA - 1.2914855480 * labB
+
+        // Apply inverse transfer function and convert to sRGB
+        let red = +4.0767416621 * mVal - 3.3077115913 * sVal + 0.2309699292 * longWave
+        let green = -1.2684380046 * mVal + 2.6097574011 * sVal - 0.3413193965 * longWave
+        let blue = -0.0041960863 * mVal - 0.7034186147 * sVal + 1.7076147010 * longWave
+
+        // Clamp to valid sRGB range
+        return (
+            max(0, min(1, red)),
+            max(0, min(1, green)),
+            max(0, min(1, blue))
+        )
+    }
+
+    // MARK: - OKLab Parser (CSS Color Level 4)
+
+    private static func parseOKLab(_ oklab: String) -> Color? {
+        // Extract values from oklab(L a b) or oklab(L a b / alpha)
+        let pattern = "oklab\\(\\s*([\\d.]+)%?\\s+(-?[\\d.]+)\\s+(-?[\\d.]+)\\s*(?:/\\s*([\\d.]+%?))?\\s*\\)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+
+        let nsRange = NSRange(oklab.startIndex..., in: oklab)
+        guard let match = regex.firstMatch(in: oklab, options: [], range: nsRange) else {
+            return nil
+        }
+
+        func extractDouble(_ index: Int) -> Double? {
+            guard index < match.numberOfRanges,
+                  let range = Range(match.range(at: index), in: oklab) else { return nil }
+            return Double(String(oklab[range]))
+        }
+
+        guard var lightness = extractDouble(1),
+              let labA = extractDouble(2),
+              let labB = extractDouble(3) else { return nil }
+
+        // Handle percentage lightness
+        if oklab.contains("%") && lightness > 1 {
+            lightness /= 100.0
+        }
+
+        // Parse alpha
+        var alpha = 1.0
+        if match.numberOfRanges > 4,
+           let range = Range(match.range(at: 4), in: oklab) {
+            var value = String(oklab[range])
+            if value.hasSuffix("%") {
+                value = String(value.dropLast())
+                alpha = (Double(value) ?? 100.0) / 100.0
+            } else {
+                alpha = Double(value) ?? 1.0
+            }
+        }
+
+        // Convert OKLab to sRGB
+        let (red, green, blue) = oklabToSRGB(lightness: lightness, labA: labA, labB: labB)
+        return Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    /// Convert OKLab to sRGB
+    private static func oklabToSRGB(lightness: Double, labA: Double, labB: Double) -> (Double, Double, Double) {
+        let lCubed = lightness * lightness * lightness
+        let mVal = lCubed + 0.3963377774 * labA + 0.2158037573 * labB
+        let sVal = lCubed - 0.1055613458 * labA - 0.0638541728 * labB
+        let longWave = lCubed - 0.0894841775 * labA - 1.2914855480 * labB
+
+        let red = +4.0767416621 * mVal - 3.3077115913 * sVal + 0.2309699292 * longWave
+        let green = -1.2684380046 * mVal + 2.6097574011 * sVal - 0.3413193965 * longWave
+        let blue = -0.0041960863 * mVal - 0.7034186147 * sVal + 1.7076147010 * longWave
+
+        return (
+            max(0, min(1, red)),
+            max(0, min(1, green)),
+            max(0, min(1, blue))
+        )
+    }
+
+    // MARK: - LCH Parser (CSS Color Level 4)
+
+    private static func parseLCH(_ lch: String) -> Color? {
+        // Extract values from lch(L C H) or lch(L C H / alpha)
+        let pattern = "lch\\(\\s*([\\d.]+)%?\\s+([\\d.]+)%?\\s+([\\d.]+)\\s*(?:/\\s*([\\d.]+%?))?\\s*\\)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+
+        let nsRange = NSRange(lch.startIndex..., in: lch)
+        guard let match = regex.firstMatch(in: lch, options: [], range: nsRange) else {
+            return nil
+        }
+
+        func extractDouble(_ index: Int) -> Double? {
+            guard index < match.numberOfRanges,
+                  let range = Range(match.range(at: index), in: lch) else { return nil }
+            return Double(String(lch[range]))
+        }
+
+        guard let lightness = extractDouble(1),
+              let chroma = extractDouble(2),
+              let hue = extractDouble(3) else { return nil }
+
+        // Parse alpha
+        var alpha = 1.0
+        if match.numberOfRanges > 4,
+           let range = Range(match.range(at: 4), in: lch) {
+            var value = String(lch[range])
+            if value.hasSuffix("%") {
+                value = String(value.dropLast())
+                alpha = (Double(value) ?? 100.0) / 100.0
+            } else {
+                alpha = Double(value) ?? 1.0
+            }
+        }
+
+        // Convert CIE LCH to sRGB (via CIE Lab)
+        let (red, green, blue) = lchToSRGB(lightness: lightness, chroma: chroma, hue: hue)
+        return Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    /// Convert CIE LCH to sRGB (via CIE Lab → XYZ → sRGB)
+    private static func lchToSRGB(lightness: Double, chroma: Double, hue: Double) -> (Double, Double, Double) {
+        // LCH to Lab
+        let hRad = hue * .pi / 180.0
+        let labA = chroma * cos(hRad)
+        let labB = chroma * sin(hRad)
+
+        // Lab to XYZ (D65 illuminant)
+        let fy = (lightness + 16.0) / 116.0
+        let fx = labA / 500.0 + fy
+        let fz = fy - labB / 200.0
+
+        let epsilon = 216.0 / 24389.0
+        let kappa = 24389.0 / 27.0
+
+        let xr = fx * fx * fx > epsilon ? fx * fx * fx : (116.0 * fx - 16.0) / kappa
+        let yr = lightness > kappa * epsilon ? pow((lightness + 16.0) / 116.0, 3) : lightness / kappa
+        let zr = fz * fz * fz > epsilon ? fz * fz * fz : (116.0 * fz - 16.0) / kappa
+
+        // D65 reference white
+        let xyzX = xr * 0.95047
+        let xyzY = yr * 1.0
+        let xyzZ = zr * 1.08883
+
+        // XYZ to linear sRGB
+        var red = 3.2404542 * xyzX - 1.5371385 * xyzY - 0.4985314 * xyzZ
+        var green = -0.9692660 * xyzX + 1.8760108 * xyzY + 0.0415560 * xyzZ
+        var blue = 0.0556434 * xyzX - 0.2040259 * xyzY + 1.0572252 * xyzZ
+
+        // Gamma correction
+        func gammaCorrect(_ val: Double) -> Double {
+            val <= 0.0031308 ? 12.92 * val : 1.055 * pow(val, 1.0 / 2.4) - 0.055
+        }
+
+        red = gammaCorrect(red)
+        green = gammaCorrect(green)
+        blue = gammaCorrect(blue)
+
+        return (max(0, min(1, red)), max(0, min(1, green)), max(0, min(1, blue)))
+    }
+
+    // MARK: - Lab Parser (CSS Color Level 4)
+
+    private static func parseLab(_ lab: String) -> Color? {
+        // Extract values from lab(L a b) or lab(L a b / alpha)
+        let pattern = "lab\\(\\s*([\\d.]+)%?\\s+(-?[\\d.]+)\\s+(-?[\\d.]+)\\s*(?:/\\s*([\\d.]+%?))?\\s*\\)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+
+        let nsRange = NSRange(lab.startIndex..., in: lab)
+        guard let match = regex.firstMatch(in: lab, options: [], range: nsRange) else {
+            return nil
+        }
+
+        func extractDouble(_ index: Int) -> Double? {
+            guard index < match.numberOfRanges,
+                  let range = Range(match.range(at: index), in: lab) else { return nil }
+            return Double(String(lab[range]))
+        }
+
+        guard let lightness = extractDouble(1),
+              let labA = extractDouble(2),
+              let labB = extractDouble(3) else { return nil }
+
+        // Parse alpha
+        var alpha = 1.0
+        if match.numberOfRanges > 4,
+           let range = Range(match.range(at: 4), in: lab) {
+            var value = String(lab[range])
+            if value.hasSuffix("%") {
+                value = String(value.dropLast())
+                alpha = (Double(value) ?? 100.0) / 100.0
+            } else {
+                alpha = Double(value) ?? 1.0
+            }
+        }
+
+        // Convert CIE Lab to sRGB (reuse LCH conversion with chroma=sqrt(a²+b²), hue=atan2(b,a))
+        let chroma = sqrt(labA * labA + labB * labB)
+        let hue = atan2(labB, labA) * 180.0 / .pi
+        let (red, green, blue) = lchToSRGB(lightness: lightness, chroma: chroma, hue: hue < 0 ? hue + 360 : hue)
+        return Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    // MARK: - HWB Parser (CSS Color Level 4)
+
+    private static func parseHWB(_ hwb: String) -> Color? {
+        // Extract values from hwb(H W B) or hwb(H W B / alpha)
+        let pattern = "hwb\\(\\s*([\\d.]+)\\s+([\\d.]+)%?\\s+([\\d.]+)%?\\s*(?:/\\s*([\\d.]+%?))?\\s*\\)"
+        guard let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive) else {
+            return nil
+        }
+
+        let nsRange = NSRange(hwb.startIndex..., in: hwb)
+        guard let match = regex.firstMatch(in: hwb, options: [], range: nsRange) else {
+            return nil
+        }
+
+        func extractDouble(_ index: Int) -> Double? {
+            guard index < match.numberOfRanges,
+                  let range = Range(match.range(at: index), in: hwb) else { return nil }
+            return Double(String(hwb[range]))
+        }
+
+        guard let hue = extractDouble(1),
+              var whiteness = extractDouble(2),
+              var blackness = extractDouble(3) else { return nil }
+
+        // Normalize to 0-1 range
+        whiteness /= 100.0
+        blackness /= 100.0
+
+        // Parse alpha
+        var alpha = 1.0
+        if match.numberOfRanges > 4,
+           let range = Range(match.range(at: 4), in: hwb) {
+            var value = String(hwb[range])
+            if value.hasSuffix("%") {
+                value = String(value.dropLast())
+                alpha = (Double(value) ?? 100.0) / 100.0
+            } else {
+                alpha = Double(value) ?? 1.0
+            }
+        }
+
+        // Convert HWB to sRGB
+        let (red, green, blue) = hwbToSRGB(hue: hue, whiteness: whiteness, blackness: blackness)
+        return Color(red: red, green: green, blue: blue, opacity: alpha)
+    }
+
+    /// Convert HWB to sRGB
+    private static func hwbToSRGB(hue: Double, whiteness: Double, blackness: Double) -> (Double, Double, Double) {
+        // Normalize whiteness and blackness if they exceed 1
+        var whiteNorm = whiteness
+        var blackNorm = blackness
+
+        if whiteNorm + blackNorm > 1 {
+            let sum = whiteNorm + blackNorm
+            whiteNorm /= sum
+            blackNorm /= sum
+        }
+
+        // Convert to RGB via HSL (H, 100%, 50%) then apply white/black
+        let (baseR, baseG, baseB) = hslToRGB(hue: hue / 360.0, saturation: 1.0, lightness: 0.5)
+
+        let red = baseR * (1 - whiteNorm - blackNorm) + whiteNorm
+        let green = baseG * (1 - whiteNorm - blackNorm) + whiteNorm
+        let blue = baseB * (1 - whiteNorm - blackNorm) + whiteNorm
+
+        return (max(0, min(1, red)), max(0, min(1, green)), max(0, min(1, blue)))
     }
 
     // MARK: - Named Colors (CSS Level 4)

@@ -14,6 +14,7 @@ struct MatchedCSSRule: Identifiable {
     let id: Int
     let selector: String
     let source: CSSSource
+    let layer: String?  // CSS @layer name (e.g., "base", "utilities")
     let properties: [(property: String, value: String)]
     let specificity: Int  // For sorting
     let isCORSBlocked: Bool  // True if stylesheet couldn't be accessed due to CORS
@@ -22,6 +23,7 @@ struct MatchedCSSRule: Identifiable {
         id: Int,
         selector: String,
         source: CSSSource,
+        layer: String? = nil,
         properties: [(property: String, value: String)],
         specificity: Int,
         isCORSBlocked: Bool = false
@@ -29,9 +31,18 @@ struct MatchedCSSRule: Identifiable {
         self.id = id
         self.selector = selector
         self.source = source
+        self.layer = layer
         self.properties = properties
         self.specificity = specificity
         self.isCORSBlocked = isCORSBlocked
+    }
+
+    /// Display name combining source and layer
+    var displaySource: String {
+        if let layer {
+            return "\(source.displayName) @layer \(layer)"
+        }
+        return source.displayName
     }
 
     enum CSSSource: Equatable {
@@ -292,9 +303,10 @@ struct ElementDetailView: View {
                 .padding(.vertical, 20)
             } else {
                 LazyVStack(alignment: .leading, spacing: 12) {
-                    ForEach(groupedMatchedRules, id: \.source.displayName) { group in
+                    ForEach(groupedMatchedRules, id: \.groupKey) { group in
                         MatchedRulesGroupView(
                             source: group.source,
+                            layer: group.layer,
                             rules: group.rules
                         )
                     }
@@ -308,16 +320,26 @@ struct ElementDetailView: View {
         matchedRules.filter { !$0.isCORSBlocked }
     }
 
-    /// Group matched rules by source for display (excluding CORS-blocked)
-    private var groupedMatchedRules: [(source: MatchedCSSRule.CSSSource, rules: [MatchedCSSRule])] {
+    /// Group matched rules by layer for display (Chrome DevTools style)
+    private var groupedMatchedRules: [(groupKey: String, source: MatchedCSSRule.CSSSource, layer: String?, rules: [MatchedCSSRule])] {
         let accessible = accessibleMatchedRules
-        let grouped = Dictionary(grouping: accessible) { $0.source.displayName }
+        // Group by displaySource (source + layer combination)
+        let grouped = Dictionary(grouping: accessible) { $0.displaySource }
         return grouped
-            .compactMap { _, rules -> (source: MatchedCSSRule.CSSSource, rules: [MatchedCSSRule])? in
+            .compactMap { key, rules -> (groupKey: String, source: MatchedCSSRule.CSSSource, layer: String?, rules: [MatchedCSSRule])? in
                 guard let firstRule = rules.first else { return nil }
-                return (firstRule.source, rules)
+                return (key, firstRule.source, firstRule.layer, rules)
             }
-            .sorted { $0.source.sortOrder < $1.source.sortOrder }
+            .sorted { lhs, rhs in
+                // Sort order: inline > styleTag > stylesheet, then by layer name
+                if lhs.source.sortOrder != rhs.source.sortOrder {
+                    return lhs.source.sortOrder < rhs.source.sortOrder
+                }
+                // Within same source, sort by layer (nil first, then alphabetically)
+                let lhsLayer = lhs.layer ?? ""
+                let rhsLayer = rhs.layer ?? ""
+                return lhsLayer < rhsLayer
+            }
     }
 
     private var filteredComputedStyles: [(key: String, value: String)] {
@@ -388,35 +410,23 @@ struct ElementDetailView: View {
     }
 
     private var htmlContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // outerHTML
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("outerHTML")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    CopyIconButton(text: outerHTML) {
-                        showCopiedFeedback("outerHTML")
-                    }
-                }
-
-                CodeBlock(code: outerHTML, language: .html)
+        VStack(alignment: .leading, spacing: 12) {
+            // outerHTML (collapsed by default)
+            CollapsibleHTMLBlock(
+                title: "outerHTML",
+                content: outerHTML,
+                charCount: outerHTML.count
+            ) {
+                showCopiedFeedback("outerHTML")
             }
 
-            // innerHTML
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text("innerHTML")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    CopyIconButton(text: innerHTML) {
-                        showCopiedFeedback("innerHTML")
-                    }
-                }
-
-                CodeBlock(code: innerHTML, language: .html)
+            // innerHTML (collapsed by default)
+            CollapsibleHTMLBlock(
+                title: "innerHTML",
+                content: innerHTML,
+                charCount: innerHTML.count
+            ) {
+                showCopiedFeedback("innerHTML")
             }
         }
     }
@@ -475,6 +485,7 @@ struct ElementDetailView: View {
             let propsArray = item["properties"] as? [[String: String]] ?? []
             let specificity = item["specificity"] as? Int ?? 0
             let corsBlocked = item["corsBlocked"] as? Bool ?? false
+            let layer = item["layer"] as? String  // CSS @layer name
 
             // Parse source
             let source: MatchedCSSRule.CSSSource
@@ -505,6 +516,7 @@ struct ElementDetailView: View {
                 id: id,
                 selector: selector,
                 source: source,
+                layer: layer,
                 properties: properties,
                 specificity: specificity,
                 isCORSBlocked: corsBlocked
@@ -605,7 +617,7 @@ private enum ElementDetailScripts {
         """
     }
 
-    /// Script to fetch matched CSS rules
+    /// Script to fetch matched CSS rules (with @layer support)
     static func matchedRules(selector: String) -> String {
         """
         (function() {
@@ -623,29 +635,19 @@ private enum ElementDetailScripts {
                 return ids * 100 + classes * 10 + tags;
             }
 
-            function parseProps(cssText) {
+            function parseProps(style) {
                 const props = [];
-                const match = cssText.match(/\\{([^}]*)\\}/);
-                if (!match) return props;
-                const decls = match[1].split(';');
-                for (const decl of decls) {
-                    const parts = decl.split(':');
-                    if (parts.length >= 2) {
-                        const prop = parts[0].trim();
-                        const val = parts.slice(1).join(':').trim();
-                        if (prop && val) props.push({p: prop, v: val});
-                    }
+                for (let i = 0; i < style.length; i++) {
+                    const prop = style[i];
+                    const val = style.getPropertyValue(prop);
+                    if (val) props.push({p: prop, v: val});
                 }
                 return props;
             }
 
+            // Inline styles (highest specificity)
             if (el.style.length > 0) {
-                const inlineProps = [];
-                for (let i = 0; i < el.style.length; i++) {
-                    const prop = el.style[i];
-                    const val = el.style.getPropertyValue(prop);
-                    if (val) inlineProps.push({p: prop, v: val});
-                }
+                const inlineProps = parseProps(el.style);
                 if (inlineProps.length > 0) {
                     rules.push({
                         id: ruleId++,
@@ -654,6 +656,60 @@ private enum ElementDetailScripts {
                         properties: inlineProps,
                         specificity: 1000
                     });
+                }
+            }
+
+            // Process CSS rules recursively (handles @layer, @media, @container, etc.)
+            function processRules(cssRules, sourceInfo, layerName = null) {
+                for (const rule of cssRules) {
+                    const ruleType = rule.constructor.name;
+
+                    // CSSLayerBlockRule - recurse into layer
+                    if (ruleType === 'CSSLayerBlockRule' && rule.cssRules) {
+                        processRules(rule.cssRules, sourceInfo, rule.name);
+                    }
+                    // CSSMediaRule - recurse if media matches
+                    else if (ruleType === 'CSSMediaRule' && rule.cssRules) {
+                        if (window.matchMedia(rule.conditionText).matches) {
+                            processRules(rule.cssRules, sourceInfo, layerName);
+                        }
+                    }
+                    // CSSSupportsRule - recurse if condition matches
+                    else if (ruleType === 'CSSSupportsRule' && rule.cssRules) {
+                        if (CSS.supports(rule.conditionText)) {
+                            processRules(rule.cssRules, sourceInfo, layerName);
+                        }
+                    }
+                    // CSSContainerRule - recurse (container queries)
+                    else if (ruleType === 'CSSContainerRule' && rule.cssRules) {
+                        processRules(rule.cssRules, sourceInfo, layerName);
+                    }
+                    // CSSScopeRule - recurse (scoped styles)
+                    else if (ruleType === 'CSSScopeRule' && rule.cssRules) {
+                        processRules(rule.cssRules, sourceInfo, layerName);
+                    }
+                    // CSSStartingStyleRule - recurse (transition starting styles)
+                    else if (ruleType === 'CSSStartingStyleRule' && rule.cssRules) {
+                        processRules(rule.cssRules, sourceInfo, layerName);
+                    }
+                    // CSSStyleRule - check if matches element
+                    else if (rule.type === 1) {
+                        try {
+                            if (el.matches(rule.selectorText)) {
+                                const props = parseProps(rule.style);
+                                if (props.length > 0) {
+                                    rules.push({
+                                        id: ruleId++,
+                                        selector: rule.selectorText,
+                                        source: sourceInfo,
+                                        layer: layerName,
+                                        properties: props,
+                                        specificity: calcSpecificity(rule.selectorText)
+                                    });
+                                }
+                            }
+                        } catch(e) {}
+                    }
                 }
             }
 
@@ -671,25 +727,7 @@ private enum ElementDetailScripts {
                 try {
                     const cssRules = sheet.cssRules || sheet.rules;
                     if (!cssRules) continue;
-
-                    for (const rule of cssRules) {
-                        if (rule.type !== 1) continue;
-
-                        try {
-                            if (el.matches(rule.selectorText)) {
-                                const props = parseProps(rule.cssText);
-                                if (props.length > 0) {
-                                    rules.push({
-                                        id: ruleId++,
-                                        selector: rule.selectorText,
-                                        source: sourceInfo,
-                                        properties: props,
-                                        specificity: calcSpecificity(rule.selectorText)
-                                    });
-                                }
-                            }
-                        } catch(e) {}
-                    }
+                    processRules(cssRules, sourceInfo);
                 } catch(e) {
                     if (sheet.href) {
                         rules.push({
@@ -704,7 +742,7 @@ private enum ElementDetailScripts {
                 }
             }
 
-            return JSON.stringify(rules.slice(0, 50));
+            return JSON.stringify(rules.slice(0, 100));
         })();
         """
     }
@@ -712,9 +750,10 @@ private enum ElementDetailScripts {
 
 // MARK: - Matched Rules Group View
 
-/// Displays a group of matched CSS rules from a single source
+/// Displays a group of matched CSS rules from a single source/layer (Chrome DevTools style)
 private struct MatchedRulesGroupView: View {
     let source: MatchedCSSRule.CSSSource
+    let layer: String?
     let rules: [MatchedCSSRule]
 
     @Environment(\.colorScheme) private var colorScheme
@@ -724,15 +763,49 @@ private struct MatchedRulesGroupView: View {
         rules.first?.isCORSBlocked ?? false
     }
 
+    /// Header text showing layer or source
+    private var headerText: String {
+        if let layer {
+            return "Layer \(layer)"
+        }
+        return source.displayName
+    }
+
+    /// Subheader showing source file (when layer exists)
+    private var sourceText: String? {
+        guard layer != nil else { return nil }
+        return source.displayName
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            // Source header
-            HStack {
-                sourceIcon
-                Text(source.displayName)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-                Spacer()
+            // Header (Chrome DevTools style: "Layer utilities" or source name)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    layerIcon
+                    Text(headerText)
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(layer != nil ? .primary : .secondary)
+                    Spacer()
+                    // Rules count badge
+                    Text("\(rules.count)")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.secondary.opacity(0.1), in: Capsule())
+                }
+
+                // Source file subheader (when showing layer)
+                if let sourceText {
+                    HStack(spacing: 4) {
+                        sourceIcon
+                        Text(sourceText)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(.leading, 2)
+                }
             }
 
             // Rules or CORS warning
@@ -748,7 +821,34 @@ private struct MatchedRulesGroupView: View {
             }
         }
         .padding(10)
-        .background(Color.secondary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
+        .background(layerBackground, in: RoundedRectangle(cornerRadius: 8))
+    }
+
+    /// Background color based on layer type
+    private var layerBackground: Color {
+        guard let layer else {
+            return Color.secondary.opacity(0.05)
+        }
+        // Different subtle colors for different layers (Chrome DevTools style)
+        switch layer.lowercased() {
+        case "base": return Color.blue.opacity(0.05)
+        case "utilities": return Color.purple.opacity(0.05)
+        case "theme": return Color.green.opacity(0.05)
+        case "components": return Color.orange.opacity(0.05)
+        default: return Color.secondary.opacity(0.05)
+        }
+    }
+
+    /// Icon for layer type
+    @ViewBuilder
+    private var layerIcon: some View {
+        if layer != nil {
+            Image(systemName: "square.3.layers.3d")
+                .font(.system(size: 10))
+                .foregroundStyle(.blue)
+        } else {
+            sourceIcon
+        }
     }
 
     private var corsBlockedView: some View {
@@ -835,6 +935,87 @@ private struct MatchedRuleRowView: View {
                 .padding(.leading, 16)
                 .padding(.top, 4)
                 .padding(.bottom, 2)
+            }
+        }
+    }
+}
+
+// MARK: - Collapsible HTML Block
+
+/// Collapsible block for displaying long HTML content
+private struct CollapsibleHTMLBlock: View {
+    let title: String
+    let content: String
+    let charCount: Int
+    let onCopy: () -> Void
+
+    @State private var isExpanded: Bool = false
+
+    /// Preview text (first 100 chars)
+    private var previewText: String {
+        if content.count <= 100 {
+            return content
+        }
+        return String(content.prefix(100)) + "..."
+    }
+
+    /// Formatted size string
+    private var sizeString: String {
+        if charCount >= 1000 {
+            return String(format: "%.1fK", Double(charCount) / 1000.0)
+        }
+        return "\(charCount)"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header (always visible)
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
+
+                    Text(title)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(.secondary)
+
+                    // Size badge
+                    Text(sizeString)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.tertiary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.secondary.opacity(0.1), in: Capsule())
+
+                    Spacer()
+
+                    CopyIconButton(text: content, action: onCopy)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.vertical, 8)
+
+            // Content
+            if isExpanded {
+                CodeBlock(code: content, language: .html)
+                    .padding(.top, 4)
+            } else {
+                // Collapsed preview
+                Text(previewText)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(2)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.secondary.opacity(0.05), in: RoundedRectangle(cornerRadius: 8))
             }
         }
     }
