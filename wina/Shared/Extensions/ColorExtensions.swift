@@ -663,9 +663,13 @@ enum CSSColorParser {
         return (max(0, min(1, red)), max(0, min(1, green)), max(0, min(1, blue)))
     }
 
-    // MARK: - Named Colors (CSS Level 4)
+}
 
-    private static let namedColors: [String: String] = [
+// MARK: - CSSColorParser Named Colors
+
+extension CSSColorParser {
+    /// CSS Named Colors (Level 4)
+    static let namedColors: [String: String] = [
         "transparent": "#00000000",
         "black": "#000000",
         "white": "#ffffff",

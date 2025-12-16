@@ -619,131 +619,65 @@ private enum ElementDetailScripts {
 
     /// Script to fetch matched CSS rules (with @layer support)
     static func matchedRules(selector: String) -> String {
+        "(function() { \(matchedRulesSetup(selector: selector)) \(matchedRulesProcessing) })();"
+    }
+
+    /// Setup part of matchedRules script
+    private static func matchedRulesSetup(selector: String) -> String {
         """
-        (function() {
-            const el = document.querySelector('\(selector)');
-            if (!el) return '[]';
-
-            const rules = [];
-            let ruleId = 0;
-
-            function calcSpecificity(sel) {
-                if (!sel) return 0;
-                const ids = (sel.match(/#/g) || []).length;
-                const classes = (sel.match(/\\./g) || []).length + (sel.match(/\\[/g) || []).length;
-                const tags = (sel.match(/^[a-z]/gi) || []).length;
-                return ids * 100 + classes * 10 + tags;
+        const el = document.querySelector('\(selector)');
+        if (!el) return '[]';
+        const rules = []; let ruleId = 0;
+        function calcSpecificity(sel) {
+            if (!sel) return 0;
+            const ids = (sel.match(/#/g) || []).length;
+            const classes = (sel.match(/\\./g) || []).length + (sel.match(/\\[/g) || []).length;
+            const tags = (sel.match(/^[a-z]/gi) || []).length;
+            return ids * 100 + classes * 10 + tags;
+        }
+        function parseProps(style) {
+            const props = [];
+            for (let i = 0; i < style.length; i++) {
+                const prop = style[i];
+                const val = style.getPropertyValue(prop);
+                if (val) props.push({p: prop, v: val});
             }
-
-            function parseProps(style) {
-                const props = [];
-                for (let i = 0; i < style.length; i++) {
-                    const prop = style[i];
-                    const val = style.getPropertyValue(prop);
-                    if (val) props.push({p: prop, v: val});
-                }
-                return props;
+            return props;
+        }
+        if (el.style.length > 0) {
+            const inlineProps = parseProps(el.style);
+            if (inlineProps.length > 0) {
+                rules.push({ id: ruleId++, selector: 'element.style', source: {type: 'inline'}, properties: inlineProps, specificity: 1000 });
             }
+        }
+        """
+    }
 
-            // Inline styles (highest specificity)
-            if (el.style.length > 0) {
-                const inlineProps = parseProps(el.style);
-                if (inlineProps.length > 0) {
-                    rules.push({
-                        id: ruleId++,
-                        selector: 'element.style',
-                        source: {type: 'inline'},
-                        properties: inlineProps,
-                        specificity: 1000
-                    });
-                }
-            }
-
-            // Process CSS rules recursively (handles @layer, @media, @container, etc.)
-            function processRules(cssRules, sourceInfo, layerName = null) {
-                for (const rule of cssRules) {
-                    const ruleType = rule.constructor.name;
-
-                    // CSSLayerBlockRule - recurse into layer
-                    if (ruleType === 'CSSLayerBlockRule' && rule.cssRules) {
-                        processRules(rule.cssRules, sourceInfo, rule.name);
-                    }
-                    // CSSMediaRule - recurse if media matches
-                    else if (ruleType === 'CSSMediaRule' && rule.cssRules) {
-                        if (window.matchMedia(rule.conditionText).matches) {
-                            processRules(rule.cssRules, sourceInfo, layerName);
-                        }
-                    }
-                    // CSSSupportsRule - recurse if condition matches
-                    else if (ruleType === 'CSSSupportsRule' && rule.cssRules) {
-                        if (CSS.supports(rule.conditionText)) {
-                            processRules(rule.cssRules, sourceInfo, layerName);
-                        }
-                    }
-                    // CSSContainerRule - recurse (container queries)
-                    else if (ruleType === 'CSSContainerRule' && rule.cssRules) {
-                        processRules(rule.cssRules, sourceInfo, layerName);
-                    }
-                    // CSSScopeRule - recurse (scoped styles)
-                    else if (ruleType === 'CSSScopeRule' && rule.cssRules) {
-                        processRules(rule.cssRules, sourceInfo, layerName);
-                    }
-                    // CSSStartingStyleRule - recurse (transition starting styles)
-                    else if (ruleType === 'CSSStartingStyleRule' && rule.cssRules) {
-                        processRules(rule.cssRules, sourceInfo, layerName);
-                    }
-                    // CSSStyleRule - check if matches element
-                    else if (rule.type === 1) {
-                        try {
-                            if (el.matches(rule.selectorText)) {
-                                const props = parseProps(rule.style);
-                                if (props.length > 0) {
-                                    rules.push({
-                                        id: ruleId++,
-                                        selector: rule.selectorText,
-                                        source: sourceInfo,
-                                        layer: layerName,
-                                        properties: props,
-                                        specificity: calcSpecificity(rule.selectorText)
-                                    });
-                                }
-                            }
-                        } catch(e) {}
-                    }
+    /// Processing part of matchedRules script (handles @layer, @media, @container, etc.)
+    private static var matchedRulesProcessing: String {
+        """
+        function processRules(cssRules, sourceInfo, layerName = null) {
+            for (const rule of cssRules) {
+                const ruleType = rule.constructor.name;
+                if (ruleType === 'CSSLayerBlockRule' && rule.cssRules) { processRules(rule.cssRules, sourceInfo, rule.name); }
+                else if (ruleType === 'CSSMediaRule' && rule.cssRules) { if (window.matchMedia(rule.conditionText).matches) { processRules(rule.cssRules, sourceInfo, layerName); } }
+                else if (ruleType === 'CSSSupportsRule' && rule.cssRules) { if (CSS.supports(rule.conditionText)) { processRules(rule.cssRules, sourceInfo, layerName); } }
+                else if (ruleType === 'CSSContainerRule' && rule.cssRules) { processRules(rule.cssRules, sourceInfo, layerName); }
+                else if (ruleType === 'CSSScopeRule' && rule.cssRules) { processRules(rule.cssRules, sourceInfo, layerName); }
+                else if (ruleType === 'CSSStartingStyleRule' && rule.cssRules) { processRules(rule.cssRules, sourceInfo, layerName); }
+                else if (rule.type === 1) {
+                    try { if (el.matches(rule.selectorText)) { const props = parseProps(rule.style); if (props.length > 0) { rules.push({ id: ruleId++, selector: rule.selectorText, source: sourceInfo, layer: layerName, properties: props, specificity: calcSpecificity(rule.selectorText) }); } } } catch(e) {}
                 }
             }
-
-            let styleTagIndex = 0;
-            for (let i = 0; i < document.styleSheets.length; i++) {
-                const sheet = document.styleSheets[i];
-                let sourceInfo;
-
-                if (sheet.href) {
-                    sourceInfo = {type: 'external', href: sheet.href};
-                } else {
-                    sourceInfo = {type: 'styleTag', index: styleTagIndex++};
-                }
-
-                try {
-                    const cssRules = sheet.cssRules || sheet.rules;
-                    if (!cssRules) continue;
-                    processRules(cssRules, sourceInfo);
-                } catch(e) {
-                    if (sheet.href) {
-                        rules.push({
-                            id: ruleId++,
-                            selector: '',
-                            source: sourceInfo,
-                            properties: [],
-                            specificity: 0,
-                            corsBlocked: true
-                        });
-                    }
-                }
-            }
-
-            return JSON.stringify(rules.slice(0, 100));
-        })();
+        }
+        let styleTagIndex = 0;
+        for (let i = 0; i < document.styleSheets.length; i++) {
+            const sheet = document.styleSheets[i]; let sourceInfo;
+            if (sheet.href) { sourceInfo = {type: 'external', href: sheet.href}; } else { sourceInfo = {type: 'styleTag', index: styleTagIndex++}; }
+            try { const cssRules = sheet.cssRules || sheet.rules; if (!cssRules) continue; processRules(cssRules, sourceInfo); }
+            catch(e) { if (sheet.href) { rules.push({ id: ruleId++, selector: '', source: sourceInfo, properties: [], specificity: 0, corsBlocked: true }); } }
+        }
+        return JSON.stringify(rules.slice(0, 100));
         """
     }
 }
