@@ -38,8 +38,7 @@ extension PerformanceView {
                                 nav.ttfb,
                                 good: MetricThresholds.ttfbGood,
                                 poor: MetricThresholds.ttfbPoor
-                            ),
-                            threshold: "≤ 200ms"
+                            )
                         )
                         sectionDivider
                     }
@@ -80,8 +79,7 @@ extension PerformanceView {
                                 performanceManager.data.tbt,
                                 good: MetricThresholds.tbtGood,
                                 poor: MetricThresholds.tbtPoor
-                            ),
-                            threshold: "≤ 200ms"
+                            )
                         )
                     }
                 }

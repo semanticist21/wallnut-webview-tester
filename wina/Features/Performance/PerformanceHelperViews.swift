@@ -41,29 +41,22 @@ struct MetricRow: View {
     let label: String
     let value: Double
     let rating: PerformanceRating
-    var threshold: String?
 
     var body: some View {
         HStack {
             Image(systemName: rating.icon)
                 .foregroundStyle(rating.color)
-                .frame(width: 24)
+                .frame(width: 20)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(label)
-                if let threshold {
-                    Text(threshold)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                }
-            }
+            Text(label)
 
             Spacer()
 
             Text(formatTime(value))
                 .foregroundStyle(rating.color)
-                .fontWeight(.medium)
+                .monospacedDigit()
         }
+        .padding(.vertical, 8)
     }
 
     private func formatTime(_ ms: Double) -> String {
@@ -163,10 +156,10 @@ struct TimelineRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .fontWeight(.medium)
             Spacer()
             Text(formatTime(time))
                 .foregroundStyle(.secondary)
+                .monospacedDigit()
         }
     }
 

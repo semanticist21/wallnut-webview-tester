@@ -130,7 +130,10 @@ struct OverlayMenuBars: View {
             HStack(spacing: 12) {
                 if showWebView {
                     // WebView mode: Home, Back, Forward, Refresh
-                    HomeButton(action: onHome)
+                    HomeButton {
+                        urlInputText = ""
+                        onHome()
+                    }
 
                     // Navigation buttons (only for WKWebView, not SafariVC)
                     if !useSafariVC, let nav = navigator {
