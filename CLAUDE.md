@@ -60,6 +60,7 @@ wina/
 │   └── About/           # AboutView, StoreManager (IAP)
 ├── Shared/
 │   ├── Components/      # GlassIconButton, GlassActionButton, ChipButton, InfoPopoverButton, SettingToggleRow, DevToolsHeader, FlowLayout, JsonEditor/
+│   ├── Constants/       # BarConstants (레이아웃 상수)
 │   └── Extensions/      # ColorExtensions, DeviceUtilities, URLValidator
 └── Resources/Icons/
 ```
@@ -185,6 +186,38 @@ final class StoreManager {
 - ✅ `transaction.finish()` 항상 호출
 - ✅ `revocationDate` 체크 (환불 처리)
 - ✅ `Task.detached` 백그라운드 실행
+
+### Theme/ColorScheme 패턴
+
+시스템 기본 → 사용자 선택 시 Light↔Dark 토글
+
+```swift
+// winaApp.swift
+@AppStorage("colorSchemeOverride") private var colorSchemeOverride: String?
+// nil = system, "light" = light mode, "dark" = dark mode
+
+.preferredColorScheme(preferredScheme)  // nil이면 시스템 따름
+
+// ThemeToggleButton.swift
+@Environment(\.colorScheme) private var systemColorScheme
+
+// 버튼 탭 시: 현재 effective scheme의 반대로 설정 (시스템 모드 해제)
+colorSchemeOverride = isDark ? "light" : "dark"
+```
+
+### BarConstants (중앙 집중 레이아웃 상수)
+
+```swift
+// Shared/Constants/BarConstants.swift
+enum BarConstants {
+    static let barHeight: CGFloat = 64           // 상단/하단 바 높이
+    static let horizontalPadding: CGFloat = 8    // 바 좌우 패딩
+    static let bottomBarSafeAreaRatio: CGFloat = 0.5  // 하단 바가 safe area로 들어가는 비율
+    static let webViewOffsetRatio: CGFloat = 0.375    // WebView 수직 오프셋 비율
+    static let additionalSpacing: CGFloat = 64        // "App" 프리셋용 추가 여백
+    static var totalUIHeight: CGFloat { barHeight * 2 + additionalSpacing }
+}
+```
 
 ### AdManager 광고 패턴
 
