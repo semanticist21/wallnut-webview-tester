@@ -986,8 +986,20 @@ private struct MatchedRulesGroupView: View {
 private struct MatchedRuleRowView: View {
     let rule: MatchedCSSRule
     @State private var isExpanded: Bool = false
+    @State private var showCopiedFeedback: Bool = false
 
     @Environment(\.colorScheme) private var colorScheme
+
+    /// Generates copyable CSS text for the entire rule
+    private var copyableRuleText: String {
+        let propsText = rule.properties
+            .map { prop in
+                let important = prop.isImportant ? " !important" : ""
+                return "  \(prop.property): \(prop.value)\(important);"
+            }
+            .joined(separator: "\n")
+        return "\(rule.selector) {\n\(propsText)\n}"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -1009,6 +1021,31 @@ private struct MatchedRuleRowView: View {
 
                     Spacer()
 
+                    // Copy button (visible when expanded)
+                    if isExpanded {
+                        Button {
+                            UIPasteboard.general.string = copyableRuleText
+                            withAnimation(.easeOut(duration: 0.15)) {
+                                showCopiedFeedback = true
+                            }
+                            Task {
+                                try? await Task.sleep(for: .seconds(1.2))
+                                await MainActor.run {
+                                    withAnimation(.easeOut(duration: 0.15)) {
+                                        showCopiedFeedback = false
+                                    }
+                                }
+                            }
+                        } label: {
+                            Image(systemName: showCopiedFeedback ? "checkmark" : "doc.on.doc")
+                                .font(.system(size: 10))
+                                .foregroundStyle(showCopiedFeedback ? Color.green : Color.gray.opacity(0.6))
+                                .frame(width: 24, height: 24)
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+
                     Text("\(rule.properties.count)")
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(.tertiary)
@@ -1021,20 +1058,132 @@ private struct MatchedRuleRowView: View {
             .buttonStyle(.plain)
 
             if isExpanded {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(rule.properties) { prop in
-                        FormattedCSSPropertyRow(
-                            property: prop.property,
-                            value: prop.value,
-                            isOverridden: prop.isOverridden
-                        )
-                    }
-                }
+                SelectableCSSPropertiesView(
+                    properties: rule.properties,
+                    colorScheme: colorScheme
+                )
                 .padding(.leading, 16)
                 .padding(.top, 4)
                 .padding(.bottom, 2)
             }
         }
+    }
+}
+
+// MARK: - Selectable CSS Properties View
+
+/// Displays CSS properties with text selection enabled for drag-to-copy
+private struct SelectableCSSPropertiesView: View {
+    let properties: [CSSProperty]
+    let colorScheme: ColorScheme
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(properties) { prop in
+                SelectableCSSPropertyRow(
+                    property: prop.property,
+                    value: prop.value,
+                    isImportant: prop.isImportant,
+                    isOverridden: prop.isOverridden,
+                    colorScheme: colorScheme
+                )
+            }
+        }
+        .textSelection(.enabled)
+    }
+}
+
+// MARK: - Selectable CSS Property Row
+
+/// Single CSS property row with text selection support
+private struct SelectableCSSPropertyRow: View {
+    let property: String
+    let value: String
+    let isImportant: Bool
+    let isOverridden: Bool
+    let colorScheme: ColorScheme
+
+    /// Extract all colors from value
+    private var extractedColors: [Color] {
+        CSSColorParser.extractColors(from: value).map(\.color)
+    }
+
+    /// Full property text for selection
+    private var fullPropertyText: AttributedString {
+        var result = AttributedString()
+
+        // Property name
+        var propAttr = AttributedString(property)
+        propAttr.foregroundColor = UIColor(CSSSyntaxColors.property(for: colorScheme))
+        propAttr.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        result.append(propAttr)
+
+        // Colon
+        var colonAttr = AttributedString(": ")
+        colonAttr.foregroundColor = UIColor.tertiaryLabel
+        colonAttr.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        result.append(colonAttr)
+
+        // Value
+        var valueAttr = AttributedString(value)
+        valueAttr.foregroundColor = UIColor(valueColor)
+        valueAttr.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        result.append(valueAttr)
+
+        // !important
+        if isImportant {
+            var importantAttr = AttributedString(" !important")
+            importantAttr.foregroundColor = UIColor.systemRed
+            importantAttr.font = .monospacedSystemFont(ofSize: 11, weight: .semibold)
+            result.append(importantAttr)
+        }
+
+        // Semicolon
+        var semiAttr = AttributedString(";")
+        semiAttr.foregroundColor = UIColor.tertiaryLabel
+        semiAttr.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        result.append(semiAttr)
+
+        // Apply strikethrough if overridden
+        if isOverridden {
+            result.strikethroughStyle = .single
+            result.strikethroughColor = UIColor.secondaryLabel
+        }
+
+        return result
+    }
+
+    private var valueColor: Color {
+        let trimmed = value.trimmingCharacters(in: .whitespaces).lowercased()
+
+        if CSSColorParser.containsColor(trimmed) {
+            return CSSSyntaxColors.colorValue(for: colorScheme)
+        }
+        if trimmed.first?.isNumber == true || trimmed.hasPrefix(".") || trimmed.hasPrefix("-") {
+            return CSSSyntaxColors.number(for: colorScheme)
+        }
+        if trimmed.hasPrefix("\"") || trimmed.hasPrefix("'") {
+            return CSSSyntaxColors.string(for: colorScheme)
+        }
+        if trimmed.hasPrefix("url(") {
+            return CSSSyntaxColors.url(for: colorScheme)
+        }
+        return CSSSyntaxColors.keyword(for: colorScheme)
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 4) {
+            // Color swatches
+            ForEach(Array(extractedColors.enumerated()), id: \.offset) { _, color in
+                ColorSwatchView(color: color)
+            }
+
+            // Selectable text
+            Text(fullPropertyText)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 1)
+        .opacity(isOverridden ? 0.6 : 1.0)
     }
 }
 
