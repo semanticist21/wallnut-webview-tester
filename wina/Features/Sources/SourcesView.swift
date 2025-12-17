@@ -180,21 +180,15 @@ struct SourcesView: View {
         }
         .sheet(item: $selectedNode) { node in
             ElementDetailView(node: node, navigator: navigator)
-                .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
-                .presentationContentInteraction(.scrolls)
-                .presentationDragIndicator(.visible)
+                .devToolsSheet()
         }
         .sheet(item: $selectedStylesheet) { sheet in
             StylesheetDetailView(sheet: sheet, index: sheet.index, navigator: navigator)
-                .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
-                .presentationContentInteraction(.scrolls)
-                .presentationDragIndicator(.visible)
+                .devToolsSheet()
         }
         .sheet(item: $selectedScript) { script in
             ScriptDetailView(script: script, index: script.index, navigator: navigator)
-                .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
-                .presentationContentInteraction(.scrolls)
-                .presentationDragIndicator(.visible)
+                .devToolsSheet()
         }
     }
 

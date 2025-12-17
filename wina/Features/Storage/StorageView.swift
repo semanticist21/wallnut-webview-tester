@@ -1147,5 +1147,5 @@ private struct StorageAddSheet: View {
 #Preview {
     let manager = StorageManager()
     return StorageView(storageManager: manager, navigator: nil)
-        .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
+        .devToolsSheet()
 }

@@ -205,15 +205,15 @@ struct ContentView: View {
                     }
                 }
             )
-            .standardSheet()
+            .devToolsSheet()
         }
         .sheet(isPresented: $showEditor) {
             SourcesView(navigator: webViewNavigator)
-                .standardSheet()
+                .devToolsSheet()
         }
         .sheet(isPresented: $showAccessibility) {
             AccessibilityAuditView(navigator: webViewNavigator)
-                .standardSheet()
+                .devToolsSheet()
         }
         .sheet(isPresented: $showAbout) {
             AboutView()
@@ -324,19 +324,6 @@ struct ContentView: View {
         }
 
         manager.isLoading = false
-    }
-}
-
-// MARK: - Sheet Presentation Modifiers
-
-private extension View {
-    /// DevTools sheet style with compact option
-    func devToolsSheet() -> some View {
-        self
-            .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
-            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-            .presentationContentInteraction(.scrolls)
-            .presentationDragIndicator(.visible)
     }
 }
 
