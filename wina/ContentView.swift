@@ -51,11 +51,13 @@ struct ContentView: View {
     @AppStorage("safariWidthRatio") private var safariWidthRatio: Double = 1.0
     @AppStorage("safariHeightRatio") private var safariHeightRatio: Double = 0.82
 
-    // App preset: heightRatio = 0.82
-    // Use 0.83 threshold to handle floating point comparison
+    // Bars are expanded (fixed position) when WebView is NOT fullscreen
+    // Fullscreen = both width and height at 99%+ (matches isFullSize in WebViewContainer)
     private var shouldBarsBeExpanded: Bool {
+        let widthRatio = useSafariWebView ? safariWidthRatio : webViewWidthRatio
         let heightRatio = useSafariWebView ? safariHeightRatio : webViewHeightRatio
-        return heightRatio <= 0.83
+        let isFullSize = widthRatio >= 0.99 && heightRatio >= 0.99
+        return !isFullSize
     }
 
     var filteredURLs: [String] {

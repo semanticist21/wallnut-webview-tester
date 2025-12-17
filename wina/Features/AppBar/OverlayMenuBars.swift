@@ -36,8 +36,8 @@ struct OverlayMenuBars: View {
     @State private var isKeyboardVisible: Bool = false
     @State private var showPhotoPermissionAlert: Bool = false
 
-    private let topBarHeight: CGFloat = 64
-    private let bottomBarHeight: CGFloat = 56
+    private let topBarHeight: CGFloat = BarConstants.barHeight
+    private let bottomBarHeight: CGFloat = BarConstants.barHeight
     private let topHandleVisible: CGFloat = 6  // Tiny peek for top bar
 
     // Top bar offset (comes down from top)
@@ -191,103 +191,47 @@ struct OverlayMenuBars: View {
                         } label: {
                             HStack(spacing: 6) {
                                 Image(systemName: "link")
-                                    .font(.system(size: 13))
+                                    .font(.system(size: 15))
                                 Text(navigator?.currentURL?.host() ?? "URL")
                                     .font(.subheadline)
                                     .lineLimit(1)
                             }
                             .foregroundStyle(.primary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 12)
+                            .frame(height: 44)
                             .background(.ultraThinMaterial, in: Capsule())
                         }
                         .buttonStyle(.plain)
 
                         // Console and Network buttons (only for WKWebView)
                         if !useSafariVC {
-                            Button {
+                            BottomBarIconButton(icon: "terminal") {
                                 showConsole = true
-                            } label: {
-                                Image(systemName: "terminal")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
 
-                            Button {
+                            BottomBarIconButton(icon: "chevron.left.forwardslash.chevron.right") {
                                 showEditor = true
-                            } label: {
-                                Image(systemName: "chevron.left.forwardslash.chevron.right")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
 
-                            Button {
+                            BottomBarIconButton(icon: "network") {
                                 showNetwork = true
-                            } label: {
-                                Image(systemName: "network")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
 
-                            Button {
+                            BottomBarIconButton(icon: "externaldrive") {
                                 showStorage = true
-                            } label: {
-                                Image(systemName: "externaldrive")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
 
-                            Button {
+                            BottomBarIconButton(icon: "gauge.with.dots.needle.bottom.50percent") {
                                 showPerformance = true
-                            } label: {
-                                Image(systemName: "gauge.with.dots.needle.bottom.50percent")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
 
-                            Button {
+                            BottomBarIconButton(icon: "accessibility") {
                                 showAccessibility = true
-                            } label: {
-                                Image(systemName: "accessibility")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
 
-                            Button {
+                            BottomBarIconButton(icon: "camera") {
                                 takeScreenshotWithFeedback()
-                            } label: {
-                                Image(systemName: "camera")
-                                    .font(.system(size: 15))
-                                    .foregroundStyle(.primary)
-                                    .padding(8)
-                                    .background(.ultraThinMaterial, in: Circle())
-                                    .contentShape(Circle())
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -301,8 +245,8 @@ struct OverlayMenuBars: View {
             .backport.glassEffect(in: .capsule)
             .clipShape(Capsule())  // Capsule 모양에 맞게 overflow 숨김
             .padding(.horizontal, 8)
-            // Dynamic: push down by half of safe area to sit nicely above home indicator
-            .padding(.bottom, -(geometry.safeAreaInsets.bottom * 0.6))
+            // Dynamic: push down by portion of safe area to sit above home indicator
+            .padding(.bottom, -(geometry.safeAreaInsets.bottom * BarConstants.bottomBarSafeAreaRatio))
             .offset(y: bottomOffset)
             .frame(maxHeight: .infinity, alignment: .bottom)
         }
@@ -397,6 +341,26 @@ struct OverlayMenuBars: View {
                     dragOffset = 0
                 }
             }
+    }
+}
+
+// MARK: - Bottom Bar Icon Button
+
+/// Bottom bar icon button matching header button size (44×44, 18pt icon)
+private struct BottomBarIconButton: View {
+    let icon: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 18))
+                .foregroundStyle(.primary)
+                .frame(width: 44, height: 44)
+                .background(.ultraThinMaterial, in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

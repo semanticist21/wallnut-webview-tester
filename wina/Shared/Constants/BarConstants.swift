@@ -1,0 +1,40 @@
+//
+//  BarConstants.swift
+//  wina
+//
+//  Centralized constants for overlay menu bars and WebView layout.
+//
+
+import SwiftUI
+
+enum BarConstants {
+    // MARK: - Bar Dimensions
+
+    /// Height of both top and bottom bars
+    static let barHeight: CGFloat = 64
+
+    /// Horizontal padding around bars
+    static let horizontalPadding: CGFloat = 8
+
+    // MARK: - Safe Area Handling
+
+    /// How much of safe area bottom the bottom bar extends into (0 = none, 1 = full)
+    /// At 0.5, bottom bar goes 50% into safe area (sits nicely above home indicator)
+    static let bottomBarSafeAreaRatio: CGFloat = 0.5
+
+    // MARK: - WebView Layout
+
+    /// WebView vertical offset ratio to balance gaps between top and bottom bars
+    /// Higher value = WebView moves up more, creating more bottom gap
+    static let webViewOffsetRatio: CGFloat = 0.375
+
+    /// Additional spacing beyond bar heights for "App" preset calculation
+    /// Accounts for visual gaps between bars and WebView
+    static let additionalSpacing: CGFloat = 64
+
+    /// Total UI height used for "App" preset WebView size calculation
+    /// Formula: top bar + bottom bar + additional spacing
+    static var totalUIHeight: CGFloat {
+        barHeight * 2 + additionalSpacing
+    }
+}

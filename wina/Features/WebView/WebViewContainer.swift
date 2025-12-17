@@ -102,6 +102,9 @@ struct WebViewContainer: View {
                         .frame(width: webViewWidth, height: webViewHeight)
                         .clipShape(RoundedRectangle(cornerRadius: isFullSize ? 0 : 12))
                         .shadow(color: .black.opacity(isFullSize ? 0 : 0.15), radius: 8, y: 2)
+                        // Offset up to balance gap between top bar and bottom bar (only in non-fullscreen mode)
+                        // Uses safe area ratio with fallback for devices without safe area (e.g. SE)
+                        .offset(y: isFullSize ? 0 : -10)
                 } else {
                     WKWebViewRepresentable(
                         urlString: normalizedURL,
@@ -113,6 +116,9 @@ struct WebViewContainer: View {
                     .frame(width: webViewWidth, height: webViewHeight)
                     .clipShape(RoundedRectangle(cornerRadius: isFullSize ? 0 : 12))
                     .shadow(color: .black.opacity(isFullSize ? 0 : 0.15), radius: 8, y: 2)
+                    // Offset up to balance gap between top bar and bottom bar (only in non-fullscreen mode)
+                    // Uses safe area ratio with fallback for devices without safe area (e.g. SE)
+                    .offset(y: isFullSize ? 0 : -10)
                     .overlay(alignment: .top) {
                         // Subtle top loading bar
                         if isLoading {
