@@ -853,5 +853,5 @@ private struct ConsoleSettingsSheet: View {
     )
 
     return ConsoleView(consoleManager: manager)
-        .presentationDetents([.fraction(0.35), .medium, .large])
+        .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
 }

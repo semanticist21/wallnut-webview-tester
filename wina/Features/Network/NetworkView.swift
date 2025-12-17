@@ -819,5 +819,5 @@ private struct ExportContentSheet: View {
     )
 
     return NetworkView(networkManager: networkManager, resourceManager: resourceManager)
-        .presentationDetents([.fraction(0.35), .medium, .large])
+        .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
 }

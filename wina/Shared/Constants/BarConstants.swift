@@ -37,4 +37,12 @@ enum BarConstants {
     static var totalUIHeight: CGFloat {
         barHeight * 2 + additionalSpacing
     }
+
+    // MARK: - Sheet Presentation
+
+    /// Standard sheet detents with compact option
+    static let sheetDetents: Set<PresentationDetent> = [.fraction(0.35), .medium, .large]
+
+    /// Default sheet detent when opening
+    static let defaultSheetDetent: PresentationDetent = .medium
 }

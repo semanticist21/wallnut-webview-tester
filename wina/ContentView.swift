@@ -330,19 +330,10 @@ struct ContentView: View {
 // MARK: - Sheet Presentation Modifiers
 
 private extension View {
-    /// DevTools sheet style with compact option (.fraction(0.35), .medium, .large)
+    /// DevTools sheet style with compact option
     func devToolsSheet() -> some View {
         self
-            .presentationDetents([.fraction(0.35), .medium, .large], selection: .constant(.medium))
-            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-            .presentationContentInteraction(.scrolls)
-            .presentationDragIndicator(.visible)
-    }
-
-    /// Standard sheet style (.medium, .large)
-    func standardSheet() -> some View {
-        self
-            .presentationDetents([.medium, .large], selection: .constant(.medium))
+            .presentationDetents(BarConstants.sheetDetents, selection: .constant(BarConstants.defaultSheetDetent))
             .presentationBackgroundInteraction(.enabled(upThrough: .medium))
             .presentationContentInteraction(.scrolls)
             .presentationDragIndicator(.visible)
