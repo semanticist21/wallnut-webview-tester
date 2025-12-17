@@ -87,9 +87,9 @@ struct CSSPropertyRow: View {
         value.count > 40
     }
 
-    /// Parsed color from value (if any)
-    private var parsedColor: Color? {
-        CSSColorParser.parse(value)
+    /// Extract all colors from value (supports multiple colors like scrollbar-color)
+    private var extractedColors: [Color] {
+        CSSColorParser.extractColors(from: value).map(\.color)
     }
 
     var body: some View {
@@ -101,8 +101,8 @@ struct CSSPropertyRow: View {
                 .font(.system(size: 11, design: .monospaced))
                 .foregroundStyle(.tertiary)
 
-            // Color preview swatch (before value)
-            if let color = parsedColor {
+            // Color preview swatches (before value) - supports multiple colors
+            ForEach(Array(extractedColors.enumerated()), id: \.offset) { _, color in
                 ColorSwatchView(color: color)
             }
 

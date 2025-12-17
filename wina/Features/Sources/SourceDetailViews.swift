@@ -1104,6 +1104,12 @@ private struct CollapsibleHTMLBlock: View {
             if isExpanded {
                 CodeBlock(code: content, language: .html)
                     .padding(.top, 4)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            isExpanded = false
+                        }
+                    }
             } else {
                 // Collapsed preview (tap to expand)
                 Text(previewText)

@@ -209,6 +209,25 @@ AdOptions(id: "feature_name", probability: 0.5)
 
 **광고 위치**: Info/Settings sheet, DevTools (Console/Network/Storage/Performance/Sources/Accessibility), Screenshot
 
+### CSS Property Override 표시 (Sources DevTools)
+
+JavaScript에서 specificity + !important 기반으로 override 계산:
+
+```swift
+// CSSProperty struct with override tracking
+struct CSSProperty: Identifiable {
+    let property: String
+    let value: String
+    let isImportant: Bool   // !important flag (score +10000)
+    var isOverridden: Bool  // Overridden by higher specificity rule
+}
+
+// UI에서 취소선 + opacity 적용
+FormattedCSSPropertyRow(property: prop.property, value: prop.value, isOverridden: prop.isOverridden)
+    .strikethrough(isOverridden, color: .secondary)
+    .opacity(isOverridden ? 0.6 : 1.0)
+```
+
 ### Runestone (Sources Raw HTML View)
 
 대용량 HTML 표시 시 Runestone + Tree-sitter 사용 (virtualization + syntax highlighting)
@@ -555,6 +574,18 @@ struct HTMLTextView: UIViewRepresentable {
 **주의**: UITextView는 virtualization 없음 (메모리에 전체 텍스트 로드). 대용량 시 maxLines 제한 필수.
 
 **핵심**: 양방향 스크롤 + 텍스트 선택 필요 시 → UIScrollView + UITextView 조합, 10000줄 이상은 제한
+
+### 19. JavaScript → Swift 파싱 시 타입 주의
+
+```swift
+// ❌ [String: String]으로 파싱 - Bool 필드 누락
+let propsArray = item["properties"] as? [[String: String]] ?? []
+
+// ✅ [String: Any]로 파싱 - Bool, Int 등 다양한 타입 지원
+let propsArray = item["properties"] as? [[String: Any]] ?? []
+let isImportant = propDict["i"] as? Bool ?? false
+let specificity = propDict["specificity"] as? Int ?? 0
+```
 
 ---
 
