@@ -169,11 +169,9 @@ struct ContentView: View {
         .sheet(isPresented: $showInfo) {
             if useSafariWebView {
                 SafariVCInfoView()
-                    .standardSheet()
             } else {
                 // Pass navigator only when WebView is loaded (for live page testing)
                 InfoView(navigator: showWebView ? webViewNavigator : nil)
-                    .standardSheet()
             }
         }
         .sheet(isPresented: $showConsole) {
