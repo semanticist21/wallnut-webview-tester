@@ -23,6 +23,9 @@ struct winaApp: App {
     }
 
     init() {
+        // Initialize WebView size to "App" preset on first launch
+        Self.initializeWebViewSizeIfNeeded()
+
         // Clear network body cache from previous session (unless preserveLog is enabled)
         NetworkBodyStorage.shared.clearOnLaunchIfNeeded()
 
@@ -40,6 +43,26 @@ struct winaApp: App {
                 Self.requestATTAuthorization()
             }
         }
+    }
+
+    /// Initialize WebView size ratios to "App" preset on first launch
+    private static func initializeWebViewSizeIfNeeded() {
+        let defaults = UserDefaults.standard
+        let hasInitializedKey = "hasInitializedWebViewSize"
+
+        guard !defaults.bool(forKey: hasInitializedKey) else { return }
+
+        // Calculate "App" preset height ratio based on device screen
+        let screenHeight = ScreenUtility.screenSize.height
+        let appContainerHeightRatio = 1.0 - (BarConstants.totalUIHeight / screenHeight)
+
+        // Set both WKWebView and SafariVC to "App" preset
+        defaults.set(1.0, forKey: "webViewWidthRatio")
+        defaults.set(appContainerHeightRatio, forKey: "webViewHeightRatio")
+        defaults.set(1.0, forKey: "safariWidthRatio")
+        defaults.set(appContainerHeightRatio, forKey: "safariHeightRatio")
+
+        defaults.set(true, forKey: hasInitializedKey)
     }
 
     var body: some Scene {

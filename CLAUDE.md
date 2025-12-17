@@ -219,6 +219,33 @@ enum BarConstants {
 }
 ```
 
+### Sheet Modifier 패턴
+
+두 가지 sheet 스타일 제공 (`Shared/Extensions/SheetModifiers.swift`):
+
+| Modifier | 용도 | 동작 |
+|----------|------|------|
+| `.devToolsSheet()` | DevTools (Console, Network, Storage, Performance, Sources) | detent 선택 가능 (35%, medium, large), iPad는 `.form` sizing |
+| `.fullSizeSheet()` | Settings, Info | 항상 large, `.page` sizing (iOS/iPad 동일) |
+
+```swift
+// DevTools - 리사이즈 가능한 sheet
+.sheet(isPresented: $showConsole) {
+    ConsoleView(...)
+        .devToolsSheet()
+}
+
+// Settings/Info - 항상 풀사이즈
+.sheet(isPresented: $showSettings) {
+    SettingsView(...)
+        .fullSizeSheet()
+}
+```
+
+**iPad 지원**:
+- `devToolsSheet()`: `.presentationSizing(.form)` + iPad 기본 `.large` detent
+- `fullSizeSheet()`: `.presentationSizing(.page)` 항상 풀스크린
+
 ### AdManager 광고 패턴
 
 확률 기반 interstitial 광고. 세션당 id별 1회 표시.
