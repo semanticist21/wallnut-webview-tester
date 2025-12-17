@@ -143,12 +143,14 @@ struct ContentView: View {
         .sheet(isPresented: $showSettings) {
             if useSafariWebView {
                 SafariVCSettingsView(webViewID: $webViewID)
+                    .fullSizeSheet()
             } else {
                 LoadedSettingsView(
                     webViewID: $webViewID,
                     loadedURL: $loadedURL,
                     navigator: webViewNavigator
                 )
+                .fullSizeSheet()
             }
         }
         .sheet(isPresented: $showBookmarks) {
@@ -169,9 +171,11 @@ struct ContentView: View {
         .sheet(isPresented: $showInfo) {
             if useSafariWebView {
                 SafariVCInfoView()
+                    .fullSizeSheet()
             } else {
                 // Pass navigator only when WebView is loaded (for live page testing)
                 InfoView(navigator: showWebView ? webViewNavigator : nil)
+                    .fullSizeSheet()
             }
         }
         .sheet(isPresented: $showConsole) {
