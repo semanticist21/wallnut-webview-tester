@@ -3,6 +3,7 @@
 //  wina
 //
 
+import StoreKit
 import SwiftUI
 import SwiftUIBackports
 
@@ -14,6 +15,13 @@ struct AboutView: View {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
+    }
+
+    private var removeAdsButtonTitle: String {
+        if let price = store.product?.displayPrice {
+            return "Remove Ads (\(price))"
+        }
+        return "Remove Ads"
     }
 
     var body: some View {
@@ -55,7 +63,7 @@ struct AboutView: View {
                         .padding(.vertical, 10)
                         .backport.glassEffect(in: .capsule)
                     } else {
-                        GlassActionButton("Remove Ads", icon: "sparkles", style: .primary) {
+                        GlassActionButton(removeAdsButtonTitle, icon: "sparkles", style: .primary) {
                             Task {
                                 await store.purchaseAdRemoval()
                             }

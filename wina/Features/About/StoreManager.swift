@@ -12,6 +12,7 @@ final class StoreManager {
     private(set) var isAdRemoved = false
     private(set) var isLoading = false
     private(set) var errorMessage: String?
+    private(set) var product: Product?
 
     private var updateListenerTask: Task<Void, Error>?
 
@@ -25,6 +26,20 @@ final class StoreManager {
         Task {
             await processUnfinishedTransactions()
             await checkEntitlements()
+            await fetchProduct()
+        }
+    }
+
+    // MARK: - Fetch Product
+
+    /// Fetch product info to display price
+    @MainActor
+    func fetchProduct() async {
+        do {
+            let products = try await Product.products(for: [productID])
+            product = products.first
+        } catch {
+            // Silently fail - price just won't be displayed
         }
     }
 
@@ -79,14 +94,22 @@ final class StoreManager {
         errorMessage = nil
 
         do {
-            let products = try await Product.products(for: [productID])
-            guard let product = products.first else {
-                errorMessage = "Product not available"
-                isLoading = false
-                return
+            // Use cached product or fetch if not available
+            let purchaseProduct: Product
+            if let cached = product {
+                purchaseProduct = cached
+            } else {
+                let products = try await Product.products(for: [productID])
+                guard let fetched = products.first else {
+                    errorMessage = "Product not available"
+                    isLoading = false
+                    return
+                }
+                purchaseProduct = fetched
+                product = fetched
             }
 
-            let result = try await product.purchase()
+            let result = try await purchaseProduct.purchase()
             await handle(purchaseResult: result)
         } catch {
             errorMessage = error.localizedDescription
