@@ -62,6 +62,27 @@ struct WebForwardButton: View {
     }
 }
 
+/// Go to initial URL button (최초 입력 URL로 돌아가기)
+struct InitialURLButton: View {
+    let isEnabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "flag")
+                .font(.system(size: 18))
+                .foregroundStyle(isEnabled ? .primary : .tertiary)
+                .frame(width: 44, height: 44)
+                .contentShape(Circle())
+                .backport.glassEffect(in: .circle)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .accessibilityLabel("Go to initial URL")
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
 /// WebView refresh button
 struct RefreshButton: View {
     let action: () -> Void
@@ -82,6 +103,7 @@ typealias BackButton = HomeButton
 #Preview {
     HStack(spacing: 12) {
         HomeButton {}
+        InitialURLButton(isEnabled: true) {}
         WebBackButton(isEnabled: true) {}
         WebForwardButton(isEnabled: false) {}
         RefreshButton {}

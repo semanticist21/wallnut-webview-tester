@@ -111,6 +111,9 @@ struct ContentView: View {
                         showBookmarks = false
                         showInfo = false
 
+                        // Clear initial URL tracking
+                        webViewNavigator.clearInitialURL()
+
                         withAnimation(.easeOut(duration: 0.2)) {
                             showWebView = false
                         }
@@ -267,6 +270,13 @@ struct ContentView: View {
         // Add to history via shared storage
         urlStorage.addToHistory(urlText)
 
+        // Normalize URL for initialURL tracking
+        var normalized = urlText.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !normalized.contains("://") {
+            normalized = "https://\(normalized)"
+        }
+        let initialURLValue = URL(string: normalized)
+
         // Clean Start: clear all website data and DevTools logs before loading
         if cleanStart {
             Task {
@@ -288,6 +298,11 @@ struct ContentView: View {
                     webViewNavigator.detach()
                     webViewNavigator = WebViewNavigator()
 
+                    // Set initial URL for "go to initial" feature
+                    if let url = initialURLValue {
+                        webViewNavigator.setInitialURL(url)
+                    }
+
                     loadedURL = urlText
                     webViewID = UUID()  // Force new WebView instance
                     withAnimation(.easeOut(duration: 0.2)) {
@@ -296,6 +311,11 @@ struct ContentView: View {
                 }
             }
         } else {
+            // Set initial URL for "go to initial" feature
+            if let url = initialURLValue {
+                webViewNavigator.setInitialURL(url)
+            }
+
             loadedURL = urlText
             withAnimation(.easeOut(duration: 0.2)) {
                 showWebView = true

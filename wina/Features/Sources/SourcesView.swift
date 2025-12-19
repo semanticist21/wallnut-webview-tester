@@ -97,12 +97,6 @@ struct SourcesView: View {
                 await fetchCurrentTab()
             }
         }
-        .task {
-            await AdManager.shared.showInterstitialAd(
-                options: AdOptions(id: "sources_devtools"),
-                adUnitId: AdManager.interstitialAdUnitId
-            )
-        }
         .task(id: searchText) {
             // Debounce search: wait 400ms before processing
             guard !searchText.isEmpty else {

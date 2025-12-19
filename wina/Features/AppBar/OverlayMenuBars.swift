@@ -127,39 +127,44 @@ struct OverlayMenuBars: View {
 
     private var topBar: some View {
         VStack(spacing: 6) {
-            // Menu buttons
-            HStack(spacing: 12) {
-                if showWebView {
-                    // WebView mode: Home, Back, Forward, Refresh
-                    HomeButton {
-                        urlInputText = ""
-                        onHome()
+            // Menu buttons (all scrollable)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    if showWebView {
+                        // WebView mode: Home, InitialURL, Back, Forward, Refresh
+                        HomeButton {
+                            urlInputText = ""
+                            onHome()
+                        }
+
+                        // Navigation buttons (only for WKWebView, not SafariVC)
+                        if !useSafariVC, let nav = navigator {
+                            InitialURLButton(isEnabled: nav.canGoToInitialURL) {
+                                nav.goToInitialURL()
+                            }
+                            WebBackButton(isEnabled: nav.canGoBack) {
+                                nav.goBack()
+                            }
+                            WebForwardButton(isEnabled: nav.canGoForward) {
+                                nav.goForward()
+                            }
+                            RefreshButton {
+                                nav.reload()
+                            }
+                        }
+                    } else {
+                        ThemeToggleButton()
+                        BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: hasBookmarks)
                     }
 
-                    // Navigation buttons (only for WKWebView, not SafariVC)
-                    if !useSafariVC, let nav = navigator {
-                        WebBackButton(isEnabled: nav.canGoBack) {
-                            nav.goBack()
-                        }
-                        WebForwardButton(isEnabled: nav.canGoForward) {
-                            nav.goForward()
-                        }
-                        RefreshButton {
-                            nav.reload()
-                        }
-                    }
-                } else {
-                    ThemeToggleButton()
-                    BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: hasBookmarks)
+                    // Info & Settings buttons
+                    InfoSheetButton(showInfo: $showInfo)
+                    SettingsButton(showSettings: $showSettings)
                 }
-
-                Spacer()
-
-                // Info button (always visible)
-                InfoSheetButton(showInfo: $showInfo)
-                SettingsButton(showSettings: $showSettings)
+                .frame(height: 44)
             }
-            .padding(.horizontal, 16)
+            .contentMargins(.horizontal, 16, for: .scrollContent)
+            .scrollBounceBehavior(.basedOnSize)
 
             // Handle (drag area) - only in overlay mode
             if isOverlayMode {

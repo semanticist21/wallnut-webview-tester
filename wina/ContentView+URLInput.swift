@@ -21,6 +21,19 @@ extension ContentView {
                     showDropdown = false
                 }
 
+            // Banner ad at bottom (only for non-premium users)
+            if !StoreManager.shared.isAdRemoved {
+                VStack {
+                    Spacer()
+                    BannerAdView(adUnitId: AdManager.bannerAdUnitId)
+                        .frame(
+                            width: geometry.size.width,
+                            height: 50
+                        )
+                }
+                .ignoresSafeArea(edges: .bottom)
+            }
+
             VStack(spacing: 16) {
                 // Walnut logo
                 Image("walnut")

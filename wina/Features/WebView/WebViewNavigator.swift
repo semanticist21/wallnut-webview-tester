@@ -29,6 +29,8 @@ class WebViewNavigator {
     var canGoBack: Bool = false
     var canGoForward: Bool = false
     var currentURL: URL?
+    /// 최초 입력된 URL (네비게이션 시작점)
+    private(set) var initialURL: URL?
     var showScreenshotFlash: Bool = false
     var showScreenshotSavedToast: Bool = false
     let consoleManager = ConsoleManager()
@@ -91,6 +93,28 @@ class WebViewNavigator {
 
     func goForward() {
         webView?.goForward()
+    }
+
+    /// 최초 URL로 돌아갈 수 있는지 여부
+    var canGoToInitialURL: Bool {
+        guard let initialURL else { return false }
+        return currentURL != initialURL
+    }
+
+    /// 최초 URL 설정 (웹뷰 최초 로드 시 호출)
+    func setInitialURL(_ url: URL) {
+        initialURL = url
+    }
+
+    /// 최초 URL 초기화 (홈으로 돌아갈 때)
+    func clearInitialURL() {
+        initialURL = nil
+    }
+
+    /// 최초 입력된 URL로 이동
+    func goToInitialURL() {
+        guard let initialURL else { return }
+        webView?.load(URLRequest(url: initialURL))
     }
 
     func reload() {

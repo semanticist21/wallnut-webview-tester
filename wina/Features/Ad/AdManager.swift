@@ -4,6 +4,50 @@ import SwiftUI
 
 private let logger = Logger(subsystem: "com.wallnut.wina", category: "AdManager")
 
+// MARK: - Banner Ad View
+
+struct BannerAdView: UIViewRepresentable {
+    let adUnitId: String
+
+    func makeUIView(context: Context) -> BannerView {
+        let banner = BannerView()
+        banner.adUnitID = adUnitId
+        banner.delegate = context.coordinator
+
+        // Get root view controller for ad requests
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController
+        {
+            banner.rootViewController = rootViewController
+        }
+
+        // Load adaptive banner
+        let adSize = currentOrientationAnchoredAdaptiveBanner(
+            width: UIScreen.main.bounds.width
+        )
+        banner.adSize = adSize
+        banner.load(Request())
+
+        return banner
+    }
+
+    func updateUIView(_ uiView: BannerView, context: Context) {}
+
+    func makeCoordinator() -> BannerCoordinator {
+        BannerCoordinator()
+    }
+
+    class BannerCoordinator: NSObject, BannerViewDelegate {
+        func bannerViewDidReceiveAd(_ bannerView: BannerView) {
+            logger.info("Banner ad loaded successfully")
+        }
+
+        func bannerView(_ bannerView: BannerView, didFailToReceiveAdWithError error: Error) {
+            logger.error("Banner ad failed to load: \(error.localizedDescription)")
+        }
+    }
+}
+
 // MARK: - Ad Options
 
 struct AdOptions {
@@ -32,8 +76,14 @@ final class AdManager: NSObject {
     /// Interstitial ad unit ID (Production)
     static let interstitialAdUnitId = "ca-app-pub-6737616702687889/5962304852"
 
+    /// Banner ad unit ID (Production) - Home screen bottom
+    static let bannerAdUnitId = "ca-app-pub-6737616702687889/6596869296"
+
     /// Google's official test interstitial ad unit ID (always shows test ads)
     static let testInterstitialAdUnitId = "ca-app-pub-3940256099942544/4411468910"
+
+    /// Google's official test banner ad unit ID (always shows test ads)
+    static let testBannerAdUnitId = "ca-app-pub-3940256099942544/2435281174"
 
     private var interstitialAd: InterstitialAd?
     private var shownAdIds: Set<String> = []
