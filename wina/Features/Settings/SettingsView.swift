@@ -296,14 +296,13 @@ struct LoadedSettingsView: View {
                                     Text("Eruda is a third-party mobile console.")
                                     HStack(spacing: 4) {
                                         Text("MIT License")
-                                            .padding(.horizontal, 6)
+                                            .padding(.horizontal, 2)
                                             .padding(.vertical, 2)
-                                            .background(.blue.opacity(0.15))
                                             .foregroundStyle(.blue)
                                             .clipShape(Capsule())
-                                        Text("©")
+                                        Text("© liriliri")
                                             .foregroundStyle(.secondary)
-                                        Link("liriliri", destination: URL(string: "https://github.com/liriliri/eruda")!)
+                                        Link("Link", destination: URL(string: "https://github.com/liriliri/eruda")!)
                                     }
                                 }
                             }
