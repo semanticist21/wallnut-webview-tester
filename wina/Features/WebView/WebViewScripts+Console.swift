@@ -83,18 +83,166 @@ extension WebViewScripts {
                 return String(arg);
             }
 
+            // Parse CSS string to extract color, background, bold, fontSize
+            function parseCSS(cssStr) {
+                const result = { color: null, backgroundColor: null, isBold: false, fontSize: null };
+                if (typeof cssStr !== 'string') return result;
+
+                const props = cssStr.split(';');
+                for (let i = 0; i < props.length; i++) {
+                    const prop = props[i].trim();
+                    if (!prop) continue;
+
+                    const colonIdx = prop.indexOf(':');
+                    if (colonIdx === -1) continue;
+
+                    const key = prop.substring(0, colonIdx).trim();
+                    const value = prop.substring(colonIdx + 1).trim();
+
+                    if (key === 'color') {
+                        result.color = value;
+                    } else if (key === 'background' || key === 'background-color') {
+                        result.backgroundColor = value;
+                    } else if (key === 'font-weight' && (value === 'bold' || value === '700' || parseInt(value) >= 700)) {
+                        result.isBold = true;
+                    } else if (key === 'font-size') {
+                        result.fontSize = parseInt(value);
+                    }
+                }
+                return result;
+            }
+
+            // Format console message with %c, %s, %d, %i, %f, %o specifiers
+            function formatConsoleMessage(args) {
+                if (args.length === 0) return { message: '', objectJSON: null, styledSegments: null };
+
+                const first = args[0];
+                if (typeof first !== 'string') {
+                    return { message: args.map(formatArg).join(' '), objectJSON: null, styledSegments: null };
+                }
+
+                if (!/%[sdifoOc%]/.test(first)) {
+                    return { message: args.map(formatArg).join(' '), objectJSON: null, styledSegments: null };
+                }
+
+                let argIndex = 1;
+                let message = '';
+                let styledSegments = [];
+                let currentCSS = null;
+                let textBuffer = '';
+
+                // Match all format specifiers
+                const regex = /%[sdifoOc%]/g;
+                let lastIndex = 0;
+                let match;
+
+                while ((match = regex.exec(first)) !== null) {
+                    // Add text before specifier
+                    if (match.index > lastIndex) {
+                        const textBefore = first.substring(lastIndex, match.index);
+                        textBuffer += textBefore;
+                    }
+
+                    const specifier = match[0];
+
+                    if (specifier === '%%') {
+                        textBuffer += '%';
+                    } else if (argIndex < args.length) {
+                        const arg = args[argIndex];
+
+                        switch (specifier) {
+                            case '%s':
+                                textBuffer += String(arg);
+                                argIndex++;
+                                break;
+                            case '%d':
+                            case '%i':
+                                textBuffer += String(parseInt(arg, 10));
+                                argIndex++;
+                                break;
+                            case '%f':
+                                textBuffer += String(parseFloat(arg));
+                                argIndex++;
+                                break;
+                            case '%o':
+                            case '%O':
+                                textBuffer += formatArg(arg);
+                                argIndex++;
+                                break;
+                            case '%c':
+                                // Save current text with CSS, start new segment
+                                if (textBuffer) {
+                                    styledSegments.push({
+                                        text: textBuffer,
+                                        color: currentCSS?.color || null,
+                                        backgroundColor: currentCSS?.backgroundColor || null,
+                                        isBold: currentCSS?.isBold || false,
+                                        fontSize: currentCSS?.fontSize || null
+                                    });
+                                    textBuffer = '';
+                                }
+                                // Next arg is CSS string
+                                if (argIndex < args.length) {
+                                    currentCSS = parseCSS(String(args[argIndex]));
+                                    argIndex++;
+                                }
+                                break;
+                        }
+                    } else {
+                        textBuffer += specifier;
+                    }
+
+                    lastIndex = match.index + specifier.length;
+                }
+
+                // Add remaining text
+                if (lastIndex < first.length) {
+                    textBuffer += first.substring(lastIndex);
+                }
+
+                // Save final text segment
+                if (textBuffer) {
+                    styledSegments.push({
+                        text: textBuffer,
+                        color: currentCSS?.color || null,
+                        backgroundColor: currentCSS?.backgroundColor || null,
+                        isBold: currentCSS?.isBold || false,
+                        fontSize: currentCSS?.fontSize || null
+                    });
+                }
+
+                // Build plain message from all segments
+                message = styledSegments.map(function(seg) { return seg.text; }).join('');
+
+                // Add remaining args to message
+                while (argIndex < args.length) {
+                    message += ' ' + formatArg(args[argIndex]);
+                    argIndex++;
+                }
+
+                return {
+                    message: message,
+                    objectJSON: null,
+                    styledSegments: styledSegments.length > 0 ? styledSegments : null
+                };
+            }
+
             const methods = ['log', 'info', 'warn', 'error', 'debug'];
             methods.forEach(function(method) {
                 const original = console[method];
                 console[method] = function(...args) {
                     try {
-                        const message = args.map(formatArg).join(' ');
+                        const formatted = formatConsoleMessage(args);
                         const source = getCallerSource();
-                        sendMessage({
+                        const payload = {
                             type: method,
-                            message: message,
+                            message: formatted.message,
                             source: source
-                        });
+                        };
+                        if (formatted.styledSegments !== null) {
+                            payload.styledSegments = formatted.styledSegments;
+                        }
+                        sendMessage(payload);
                     } catch(e) {}
                     original.apply(console, args);
                 };
@@ -104,12 +252,16 @@ extension WebViewScripts {
             const originalGroup = console.group;
             console.group = function(...args) {
                 try {
-                    const message = args.length > 0 ? args.map(formatArg).join(' ') : 'group';
-                    sendMessage({
+                    const formatted = args.length > 0 ? formatConsoleMessage(args) : { message: 'group', styledSegments: null };
+                    const payload = {
                         type: 'group',
-                        message: message,
+                        message: formatted.message,
                         source: getCallerSource()
-                    });
+                    };
+                    if (formatted.styledSegments !== null) {
+                        payload.styledSegments = formatted.styledSegments;
+                    }
+                    sendMessage(payload);
                 } catch(e) {}
                 originalGroup.apply(console, args);
             };
@@ -118,12 +270,16 @@ extension WebViewScripts {
             const originalGroupCollapsed = console.groupCollapsed;
             console.groupCollapsed = function(...args) {
                 try {
-                    const message = args.length > 0 ? args.map(formatArg).join(' ') : 'group';
-                    sendMessage({
+                    const formatted = args.length > 0 ? formatConsoleMessage(args) : { message: 'group', styledSegments: null };
+                    const payload = {
                         type: 'groupCollapsed',
-                        message: message,
+                        message: formatted.message,
                         source: getCallerSource()
-                    });
+                    };
+                    if (formatted.styledSegments !== null) {
+                        payload.styledSegments = formatted.styledSegments;
+                    }
+                    sendMessage(payload);
                 } catch(e) {}
                 originalGroupCollapsed.apply(console, args);
             };

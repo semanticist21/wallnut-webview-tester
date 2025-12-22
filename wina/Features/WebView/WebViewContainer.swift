@@ -422,7 +422,14 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                 return
             }
             let source = body["source"] as? String
-            navigator?.consoleManager.addLog(type: type, message: msg, source: source)
+
+            // Parse styledSegments if present
+            var styledSegments: [[String: Any]]?
+            if let segments = body["styledSegments"] as? [[String: Any]] {
+                styledSegments = segments
+            }
+
+            navigator?.consoleManager.addLog(type: type, message: msg, source: source, styledSegments: styledSegments)
         }
 
         private func handleNetworkMessage(_ message: WKScriptMessage) {
