@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Console Test - Simple</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+        h1 { color: #333; }
+        .btn { padding: 10px 20px; margin: 5px; cursor: pointer; background: #007AFF; color: white; border: none; border-radius: 5px; font-size: 14px; }
+        .btn:active { opacity: 0.7; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple Console Test</h1>
+    <p>Click the buttons below to test console logging:</p>
+
+    <button class="btn" onclick="test1()">Test 1: Simple Log</button>
+    <button class="btn" onclick="test2()">Test 2: Log with Object</button>
+    <button class="btn" onclick="test3()">Test 3: Error</button>
+    <button class="btn" onclick="test4()">Test 4: Styled Log</button>
+
+    <hr>
+    <p id="status" style="color: green;">Ready to test...</p>
+
+    <script>
+        function test1() {
+            console.log('Test 1: Simple log message');
+            document.getElementById('status').textContent = '✓ Test 1 executed - check console in DevTools';
+        }
+
+        function test2() {
+            const obj = { name: 'John', age: 30, active: true };
+            console.log('Test 2: Object logging', obj);
+            document.getElementById('status').textContent = '✓ Test 2 executed - check console in DevTools';
+        }
+
+        function test3() {
+            console.error('Test 3: This is an error message');
+            document.getElementById('status').textContent = '✓ Test 3 executed - check console in DevTools';
+        }
+
+        function test4() {
+            console.log('%cStyled %cText', 'color: red; font-weight: bold;', 'color: blue;');
+            document.getElementById('status').textContent = '✓ Test 4 executed - check console in DevTools';
+        }
+
+        // Auto log on page load
+        console.log('Page loaded successfully!');
+    </script>
+</body>
+</html>

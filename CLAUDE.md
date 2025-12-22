@@ -130,6 +130,60 @@ let heightRatio = 0.82
 
 `ConsoleManager`, `NetworkManager`, `StorageManager` 모두 `WebViewNavigator`에 포함. JavaScript 인젝션으로 캡처.
 
+### Console Method Implementations (JavaScript 훅)
+
+**WebViewScripts+Console.swift**에서 다양한 console 메서드를 JavaScript hook으로 캡처하여 native로 전달.
+
+#### console.dir() - 객체 검사
+
+```javascript
+// 첫 번째 인자를 JSON으로 직렬화하여 objectJSON 필드에 포함
+console.dir({name: "John", age: 30})
+→ type: "dir", objectJSON: "{\"name\":\"John\",\"age\":30}"
+```
+
+**UI 렌더링**: ConsoleValueView에서 `ConsoleValue.object()` tree로 확장 가능하게 표시 (색상 포함)
+
+#### console.time/timeLog/timeEnd() - 성능 타이밍
+
+```javascript
+// 타이머 객체 유지, performance.now()로 정확한 측정
+console.time("fetch");  // 시작 (밀리초 저장)
+...
+console.timeLog("fetch");  // "fetch: 123.456ms" (중단 없음)
+...
+console.timeEnd("fetch");  // "fetch: 456.789ms" (타이머 삭제)
+```
+
+**주의사항**:
+- `timeLog()` 호출 시에도 타이머는 유지됨 (timeEnd()만 삭제)
+- 존재하지 않는 타이머 참조 시 "Timer 'label' does not exist" 에러 메시지 표시
+- 밀리초는 3자리 소수점으로 표시 (`.toFixed(3)`)
+
+**Message Handler**: `WebViewContainer.handleConsoleMessage()` - `type: "time" | "timeLog" | "timeEnd"` 모두 처리
+
+### ConsoleView 필터링 - Info 레벨 추가
+
+**필터 탭 구조** (탭 순서):
+1. **All** - 모든 로그 표시
+2. **Errors** (빨강) - error 타입만
+3. **Warnings** (주황) - warn 타입만
+4. **Info** (파랑) - info 타입만 ← **신규**
+5. **Log** (기본색) - log 타입만
+6. **Debug** (기회색) - debug 타입만
+
+```swift
+// ConsoleManager에 infoCount 추가
+var infoCount: Int { logs.filter { $0.type == .info }.count }
+
+// ConsoleView에서 Info 필터 탭 생성
+FilterTab(label: "Info", count: consoleManager.infoCount, isSelected: filterType == .info, color: .blue) {
+    filterType = .info
+}
+```
+
+**이점**: Eruda와 동일한 필터 구조로 기능 parity 달성
+
 ### 스크린샷 패턴
 
 WKWebView 전용 (`SFSafariViewController`는 내부 웹뷰 접근 불가).
@@ -803,7 +857,59 @@ let specificity = propDict["specificity"] as? Int ?? 0
 - **Lazy**: `lazy var`로 지연 초기화
 - **컬렉션**: Array(정렬), Dictionary(조회), Set(중복제거) 적절히 선택
 - **SwiftUI**: `@State` 범위 최소화, 1000+ 항목은 `LazyVStack`
+- **Large Array 렌더링**: ConsoleArray에서 100+ 항목을 100개씩 청크로 분할, 모두 collapsed 상태로 시작 (사용자가 개별 청크 expand 가능)
 - ❌ Reflection, 강제 언래핑(`!`), 동기 네트워크
+
+### Array Chunking Pattern (콘솔 큰 배열 처리)
+
+**문제**: console.log([1,2,3,...10000]) 시 10,000개 모두 렌더링 → UI 프리징
+
+**해결책**: ConsoleArray 모델에서 자동으로 청크 계산
+
+```swift
+// ConsoleArray.swift - 청크 계산 (100개 단위)
+struct ConsoleArray: Equatable {
+    let elements: [ConsoleValue]
+    let chunkSize: Int = 100
+
+    var chunks: [(range: Range<Int>, label: String, elements: [ConsoleValue])]? {
+        guard elements.count > chunkSize else { return nil }
+
+        var result: [(range: Range<Int>, label: String, elements: [ConsoleValue])] = []
+        var index = 0
+        while index < elements.count {
+            let endIndex = min(index + chunkSize, elements.count)
+            let range = index..<endIndex
+            let chunkElements = Array(elements[range])
+            let label = "[​\(index)..​\(endIndex - 1)]"  // Zero-width space
+            result.append((range: range, label: label, elements: chunkElements))
+            index = endIndex
+        }
+        return result
+    }
+}
+```
+
+**UI 렌더링** (ConsoleValueView.swift):
+
+```swift
+// 큰 배열: 먼저 preview 라인 표시, 그 다음 collapsed 청크들
+if let chunks = arr.chunks {
+    // 1. Preview: (10000) [0, 1, 2, 3, ...]
+    HStack { Text("(\(arr.elements.count))"); Text(arrayPreview(...)) }
+
+    // 2. Chunks: 모두 collapsed 상태로 시작
+    ForEach(Array(chunks.enumerated()), id: \.element.label) { chunkIndex, chunk in
+        ArrayChunkView(chunk: chunk)  // @State private var isExpanded = false (기본값!)
+    }
+}
+```
+
+**핵심 규칙**:
+- ✅ Preview 라인으로 배열 크기와 샘플 아이템 먼저 표시
+- ✅ 모든 청크 기본값: collapsed (`isExpanded: Bool = false`)
+- ✅ 사용자가 필요한 청크만 expand → 메모리 효율적
+- ✅ 100개 이하 배열은 청크 미사용 (모두 표시)
 
 ---
 

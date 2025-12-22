@@ -14,6 +14,17 @@ extension WebViewScripts {
             if (window.__consoleHooked) return;
             window.__consoleHooked = true;
 
+            // Helper to send message (no retry logic)
+            function sendMessage(payload) {
+                try {
+                    if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.consoleLog) {
+                        window.webkit.messageHandlers.consoleLog.postMessage(payload);
+                    }
+                } catch(e) {
+                    // Silent fail
+                }
+            }
+
             // Parse stack trace to get caller location
             function getCallerSource() {
                 try {
@@ -79,7 +90,7 @@ extension WebViewScripts {
                     try {
                         const message = args.map(formatArg).join(' ');
                         const source = getCallerSource();
-                        window.webkit.messageHandlers.consoleLog.postMessage({
+                        sendMessage({
                             type: method,
                             message: message,
                             source: source
@@ -94,7 +105,7 @@ extension WebViewScripts {
             console.group = function(...args) {
                 try {
                     const message = args.length > 0 ? args.map(formatArg).join(' ') : 'group';
-                    window.webkit.messageHandlers.consoleLog.postMessage({
+                    sendMessage({
                         type: 'group',
                         message: message,
                         source: getCallerSource()
@@ -108,7 +119,7 @@ extension WebViewScripts {
             console.groupCollapsed = function(...args) {
                 try {
                     const message = args.length > 0 ? args.map(formatArg).join(' ') : 'group';
-                    window.webkit.messageHandlers.consoleLog.postMessage({
+                    sendMessage({
                         type: 'groupCollapsed',
                         message: message,
                         source: getCallerSource()
@@ -121,7 +132,7 @@ extension WebViewScripts {
             const originalGroupEnd = console.groupEnd;
             console.groupEnd = function() {
                 try {
-                    window.webkit.messageHandlers.consoleLog.postMessage({
+                    sendMessage({
                         type: 'groupEnd',
                         message: '',
                         source: null
@@ -162,7 +173,7 @@ extension WebViewScripts {
                             }
                         });
                     }
-                    window.webkit.messageHandlers.consoleLog.postMessage({
+                    sendMessage({
                         type: 'table',
                         message: JSON.stringify(tableData),
                         source: getCallerSource()
@@ -183,7 +194,7 @@ extension WebViewScripts {
                         source = e.filename + ':' + e.lineno;
                     }
                 }
-                window.webkit.messageHandlers.consoleLog.postMessage({
+                sendMessage({
                     type: 'error',
                     message: 'Uncaught: ' + e.message,
                     source: source
@@ -192,7 +203,7 @@ extension WebViewScripts {
 
             // Capture unhandled promise rejections
             window.addEventListener('unhandledrejection', function(e) {
-                window.webkit.messageHandlers.consoleLog.postMessage({
+                sendMessage({
                     type: 'error',
                     message: 'Unhandled Promise: ' + String(e.reason),
                     source: null
