@@ -171,12 +171,14 @@ extension WebViewScripts {
                     seen.set(value, path);
 
                     const props = {};
+                    let truncated = false;
                     const names = Object.getOwnPropertyNames(value);
                     let count = 0;
                     for (let i = 0; i < names.length; i++) {
                         const key = names[i];
                         if (count >= maxProps) {
                             props['[[Truncated]]'] = { type: 'string', value: 'true' };
+                            truncated = true;
                             break;
                         }
                         try {
@@ -197,7 +199,7 @@ extension WebViewScripts {
                         props['[[Prototype]]'] = serializeValue(proto, depth + 1, seen, path + '.[[Prototype]]', protoDepth + 1);
                     }
 
-                    return { type: 'object', properties: props };
+                    return { type: 'object', properties: props, truncated: truncated };
                 }
 
                 return { type: 'unknown', value: String(value) };
@@ -286,7 +288,11 @@ extension WebViewScripts {
                                 break;
                             case '%o':
                             case '%O':
-                                textBuffer += formatArg(arg);
+                                if (arg !== null && (typeof arg === 'object' || typeof arg === 'function')) {
+                                    textBuffer += '';
+                                } else {
+                                    textBuffer += formatArg(arg);
+                                }
                                 argIndex++;
                                 break;
                             case '%c':

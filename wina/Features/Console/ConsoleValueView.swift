@@ -19,7 +19,6 @@ struct ConsoleValueView: View {
 
     private var simpleValueView: some View {
         HStack(spacing: 6) {
-            typeBadge
             Text(value.preview)
                 .font(.system(size: 12, design: .monospaced))
                 .foregroundStyle(valueTextColor)
@@ -39,8 +38,6 @@ struct ConsoleValueView: View {
                     .foregroundStyle(.secondary)
                     .frame(width: 10)
 
-                typeBadge
-
                 Text(value.preview)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundStyle(valueTextColor)
@@ -59,7 +56,7 @@ struct ConsoleValueView: View {
             // Children (expanded)
             if isExpanded {
                 children
-                    .padding(.leading, 12)
+                    .padding(.leading, 8)
             }
         }
     }
@@ -84,7 +81,7 @@ struct ConsoleValueView: View {
     @ViewBuilder
     private func arrayChunksView(_ allElements: [ConsoleValue], chunks: [(Int, Int)]) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(chunks.enumerated()), id: \.offset) { chunkIdx, chunk in
+            ForEach(Array(chunks.enumerated()), id: \.offset) { _, chunk in
                 ArrayChunkView(
                     startIndex: chunk.0,
                     endIndex: chunk.1,
@@ -155,7 +152,7 @@ struct ConsoleValueView: View {
                     Text("… \(arr.totalCount - arr.elements.count) more items")
                         .font(.system(size: 11, design: .monospaced))
                         .foregroundStyle(.tertiary)
-                        .padding(.leading, 12)
+                        .padding(.leading, 8)
                 }
             }
 
@@ -196,43 +193,6 @@ struct ConsoleValueView: View {
         }
     }
 
-    // MARK: - Type Badge
-
-    private var typeBadge: some View {
-        let (icon, label) = typeInfo
-        return HStack(spacing: 3) {
-            Image(systemName: icon)
-                .font(.system(size: 8, weight: .semibold))
-            Text(label)
-                .font(.system(size: 9, weight: .medium))
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 3)
-        .background(value.typeColor, in: RoundedRectangle(cornerRadius: 4))
-    }
-
-    // MARK: - Type Info (icon + label)
-
-    private var typeInfo: (icon: String, label: String) {
-        switch value {
-        case .string: return ("quote.bubble.fill", "str")
-        case .number: return ("number", "num")
-        case .boolean: return ("checkmark.square.fill", "bool")
-        case .null: return ("circle.slash", "null")
-        case .undefined: return ("questionmark.circle.fill", "undefined")
-        case .object: return ("curlybraces", "obj")
-        case .array: return ("square.fill", "arr")
-        case .function: return ("function", "ƒ")
-        case .date: return ("calendar", "date")
-        case .domElement(let tag, _): return ("tag.fill", "<\(tag)>")
-        case .map: return ("map.fill", "map")
-        case .set: return ("circle.fill", "set")
-        case .circularReference: return ("arrow.circlepath", "circular")
-        case .error: return ("exclamationmark.triangle.fill", "err")
-        }
-    }
-
     // MARK: - Text Color (Eruda-like syntax highlighting)
 
     /// Returns color based on value type (similar to Eruda's luna-object-viewer)
@@ -269,7 +229,11 @@ private struct ArrayChunkView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Header
-            Button(action: { withAnimation(.easeInOut(duration: 0.15)) { isExpanded.toggle() } }) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    isExpanded.toggle()
+                }
+            } label: {
                 HStack(spacing: 6) {
                     Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 9, weight: .semibold))
@@ -310,7 +274,7 @@ private struct ArrayChunkView: View {
                         }
                     }
                 }
-                .padding(.leading, 12)
+                .padding(.leading, 8)
                 .padding(.vertical, 4)
             }
         }

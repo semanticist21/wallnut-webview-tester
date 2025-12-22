@@ -154,6 +154,7 @@ class StorageManager {
     var items: [StorageItem] = []
     var lastRefreshTime: Date?
     var errorMessage: String?
+    var currentURL: URL?
 
     private weak var navigator: StorageNavigator?
 
@@ -169,9 +170,16 @@ class StorageManager {
             return
         }
 
+        // If URL changed, clear items immediately to avoid stale data flashing
+        if let newURL = pageURL, currentURL != newURL {
+            currentURL = newURL
+            items.removeAll()
+        }
+        currentURL = pageURL
+
         errorMessage = nil
 
-        // Fetch new data in background (keep existing items visible)
+        // Fetch new data in background
         var newItems: [StorageItem] = []
 
         // Fetch localStorage
@@ -376,6 +384,8 @@ struct StorageView: View {
     @State private var shareItem: StorageShareContent?
     @State private var selectedItem: StorageItem?
     @State private var showAddSheet: Bool = false
+    @State private var lastObservedURL: URL?
+    @State private var urlCheckTimer: Timer?
 
     private var filteredItems: [StorageItem] {
         var result: [StorageItem]
@@ -449,10 +459,28 @@ struct StorageView: View {
                 adUnitId: AdManager.interstitialAdUnitId
             )
             storageManager.setNavigator(navigator)
+            lastObservedURL = navigator?.currentURL
             await storageManager.refresh(pageURL: navigator?.currentURL)
         }
-        .onChange(of: navigator?.currentURL) { _, _ in
-            Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
+        .onChange(of: navigator?.currentURL) { _, newURL in
+            if newURL != lastObservedURL {
+                lastObservedURL = newURL
+                Task { await storageManager.refresh(pageURL: newURL) }
+            }
+        }
+        .onAppear {
+            // Start timer to detect URL changes even during swipe navigation
+            urlCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+                if navigator?.currentURL != lastObservedURL {
+                    lastObservedURL = navigator?.currentURL
+                    Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
+                }
+            }
+        }
+        .onDisappear {
+            // Stop timer when drawer closes
+            urlCheckTimer?.invalidate()
+            urlCheckTimer = nil
         }
     }
 

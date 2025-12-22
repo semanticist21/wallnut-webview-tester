@@ -8,6 +8,7 @@
 import SwiftUI
 import WebKit
 import SafariServices
+import os
 
 // MARK: - WebView Container
 
@@ -397,6 +398,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
         let navigator: WebViewNavigator?
 
         private var loadingObservation: NSKeyValueObservation?
+        private let logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "wina", category: "ConsoleBridge")
 
         init(isLoading: Binding<Bool>, navigator: WebViewNavigator?) {
             _isLoading = isLoading
@@ -430,28 +432,56 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                 styledSegments = segments
             }
 
+            let argValues = body["args"] as? [Any]
+            if let argValues {
+                let argTypes = argValues.prefix(5).map { item -> String in
+                    if let dict = item as? [String: Any], let argType = dict["type"] as? String {
+                        return argType
+                    }
+                    return "unknown"
+                }
+                let preview = String(msg.prefix(200))
+                logger.debug("Console message type=\(type, privacy: .public) msgLen=\(msg.count, privacy: .public) args=\(argValues.count, privacy: .public) styled=\(styledSegments?.count ?? 0, privacy: .public)")
+                logger.debug("Console message preview: \(preview, privacy: .public)")
+                logger.debug("Console args types: \(argTypes.joined(separator: ","), privacy: .public)")
+                if let first = argValues.first {
+                    logger.debug("Console first arg raw: \(String(describing: first), privacy: .public)")
+                }
+            } else {
+                logger.debug("Console message type=\(type, privacy: .public) msgLen=\(msg.count, privacy: .public) args=0 styled=\(styledSegments?.count ?? 0, privacy: .public)")
+            }
+
             var objectValue: ConsoleValue?
             if let args = body["args"] as? [Any] {
                 let parsedValues = args.compactMap { ConsoleValue.fromSerializedAny($0) }
-                if parsedValues.count == 1, let value = parsedValues.first, value.isExpandable {
-                    messageText = ""
-                    objectValue = value
-                } else if parsedValues.count > 1 {
-                    if case .string(let first) = parsedValues[0] {
-                        let rest = Array(parsedValues.dropFirst())
-                        if rest.contains(where: { $0.isExpandable }) {
-                            messageText = first
-                            if rest.count == 1 {
-                                objectValue = rest[0]
-                            } else {
-                                objectValue = .array(ConsoleArray(elements: rest, depth: 0))
-                            }
-                        }
-                    } else if parsedValues.contains(where: { $0.isExpandable }) {
+                let hasExpandable = parsedValues.contains(where: { $0.isExpandable })
+
+                if hasExpandable {
+                    if parsedValues.count == 1, let value = parsedValues.first {
                         messageText = ""
-                        objectValue = .array(ConsoleArray(elements: parsedValues, depth: 0))
+                        objectValue = value
+                    } else if let firstStringIndex = parsedValues.firstIndex(where: {
+                        if case .string = $0 { return true }
+                        return false
+                    }) {
+                        if case .string(let label) = parsedValues[firstStringIndex] {
+                            messageText = label
+                        }
+                        let remaining = parsedValues.enumerated().filter { $0.offset != firstStringIndex }.map(\.element)
+                        objectValue = remaining.count == 1 ? remaining[0] : .array(ConsoleArray(elements: remaining, depth: 0))
+                    } else {
+                        messageText = ""
+                        objectValue = parsedValues.count == 1 ? parsedValues[0] : .array(ConsoleArray(elements: parsedValues, depth: 0))
                     }
+                } else if parsedValues.count == 1, case .string(let only) = parsedValues[0] {
+                    messageText = only
                 }
+            }
+
+            if objectValue != nil {
+                messageText = messageText
+                    .replacingOccurrences(of: "  ", with: " ")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
             }
 
             navigator?.consoleManager.addLog(

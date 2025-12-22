@@ -506,6 +506,7 @@ struct NetworkView: View {
                                     .glassEffect(in: .circle)
                             }
                         )
+                        .disabled(!canScroll || scrollOffset <= 20)
                         .opacity(canScroll && scrollOffset > 20 ? 1 : 0.3)
                         .animation(.easeInOut(duration: 0.2), value: canScroll && scrollOffset > 20)
 
@@ -519,6 +520,7 @@ struct NetworkView: View {
                                     .glassEffect(in: .circle)
                             }
                         )
+                        .disabled(!canScroll || (contentHeight - scrollOffset - scrollViewHeight) <= 20)
                         .opacity(canScroll && (contentHeight - scrollOffset - scrollViewHeight) > 20 ? 1 : 0.3)
                         .animation(.easeInOut(duration: 0.2), value: canScroll && (contentHeight - scrollOffset - scrollViewHeight) > 20)
                     }
@@ -540,9 +542,16 @@ struct NetworkView: View {
 
     private func scrollUp(proxy: ScrollViewProxy?) {
         guard let proxy else { return }
-        let firstID = filteredRequests.first.map { "request-\($0.id)" }
-            ?? filteredResources.first.map { "resource-\($0.id)" }
-            ?? allFilterResources.first.map { "resource-\($0.id)" }
+
+        var firstID: String?
+
+        if showingNetworkData && !filteredRequests.isEmpty {
+            firstID = "request-\(filteredRequests.first!.id)"
+        } else if showingResourceData && filter != .all && !filteredResources.isEmpty {
+            firstID = "resource-\(filteredResources.first!.id)"
+        } else if filter == .all && !allFilterResources.isEmpty {
+            firstID = "resource-\(allFilterResources.first!.id)"
+        }
 
         if let id = firstID {
             withAnimation(.easeOut(duration: 0.2)) {
@@ -553,13 +562,18 @@ struct NetworkView: View {
 
     private func scrollDown(proxy: ScrollViewProxy?) {
         guard let proxy else { return }
-        // 역순: 화면에 표시되는 마지막 아이템부터 확인
+
         var lastID: String?
-        if !allFilterResources.isEmpty {
-            lastID = "resource-\(allFilterResources.last!.id)"
-        } else if showingResourceData && filter != .all && !filteredResources.isEmpty {
+
+        if filter == .all {
+            if !allFilterResources.isEmpty {
+                lastID = "resource-\(allFilterResources.last!.id)"
+            } else if !filteredRequests.isEmpty {
+                lastID = "request-\(filteredRequests.last!.id)"
+            }
+        } else if showingResourceData && !filteredResources.isEmpty {
             lastID = "resource-\(filteredResources.last!.id)"
-        } else if !filteredRequests.isEmpty {
+        } else if showingNetworkData && !filteredRequests.isEmpty {
             lastID = "request-\(filteredRequests.last!.id)"
         }
 

@@ -24,15 +24,15 @@ indirect enum ConsoleValue {
     /// 콘솔에서 한 줄로 표시되는 미리보기 텍스트
     var preview: String {
         switch self {
-        case .string(let s):
-            return "\"\(s)\""
-        case .number(let n):
-            if n == Double(Int(n)) {
-                return String(Int(n))
+        case .string(let stringValue):
+            return "\"\(stringValue)\""
+        case .number(let numberValue):
+            if numberValue == Double(Int(numberValue)) {
+                return String(Int(numberValue))
             }
-            return String(n)
-        case .boolean(let b):
-            return b ? "true" : "false"
+            return String(numberValue)
+        case .boolean(let boolValue):
+            return boolValue ? "true" : "false"
         case .null:
             return "null"
         case .undefined:
@@ -336,33 +336,33 @@ extension ConsoleValue {
 extension ConsoleValue: Equatable {
     static func == (lhs: ConsoleValue, rhs: ConsoleValue) -> Bool {
         switch (lhs, rhs) {
-        case let (.string(l), .string(r)):
-            return l == r
-        case let (.number(l), .number(r)):
-            return l == r
-        case let (.boolean(l), .boolean(r)):
-            return l == r
+        case let (.string(lhsValue), .string(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.number(lhsValue), .number(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.boolean(lhsValue), .boolean(rhsValue)):
+            return lhsValue == rhsValue
         case (.null, .null), (.undefined, .undefined):
             return true
-        case let (.object(l), .object(r)):
-            return l == r
-        case let (.array(l), .array(r)):
-            return l == r
-        case let (.function(l), .function(r)):
-            return l == r
-        case let (.date(l), .date(r)):
-            return l == r
-        case let (.domElement(lTag, lAttrs), .domElement(rTag, rAttrs)):
-            return lTag == rTag && lAttrs == rAttrs
-        case let (.map(lEntries), .map(rEntries)):
-            return lEntries.count == rEntries.count &&
-                zip(lEntries, rEntries).allSatisfy { $0.key == $1.key && $0.value == $1.value }
-        case let (.set(l), .set(r)):
-            return l.count == r.count && zip(l, r).allSatisfy { $0 == $1 }
-        case let (.circularReference(l), .circularReference(r)):
-            return l == r
-        case let (.error(l), .error(r)):
-            return l == r
+        case let (.object(lhsValue), .object(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.array(lhsValue), .array(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.function(lhsValue), .function(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.date(lhsValue), .date(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.domElement(lhsTag, lhsAttrs), .domElement(rhsTag, rhsAttrs)):
+            return lhsTag == rhsTag && lhsAttrs == rhsAttrs
+        case let (.map(lhsEntries), .map(rhsEntries)):
+            return lhsEntries.count == rhsEntries.count &&
+                zip(lhsEntries, rhsEntries).allSatisfy { $0.key == $1.key && $0.value == $1.value }
+        case let (.set(lhsValue), .set(rhsValue)):
+            return lhsValue.count == rhsValue.count && zip(lhsValue, rhsValue).allSatisfy { $0 == $1 }
+        case let (.circularReference(lhsValue), .circularReference(rhsValue)):
+            return lhsValue == rhsValue
+        case let (.error(lhsValue), .error(rhsValue)):
+            return lhsValue == rhsValue
         default:
             return false
         }

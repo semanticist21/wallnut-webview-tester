@@ -14,7 +14,7 @@ struct ConsoleLog: Identifiable, Equatable {
     let type: LogType
     let message: String
     let source: String?  // e.g., "main.js:45"
-    let timestamp: Date
+    var timestamp: Date
     var groupLevel: Int = 0  // Indentation level for groups
     var groupId: UUID?  // For groupCollapsed toggle
     var isCollapsed: Bool = false  // For groupCollapsed
@@ -36,6 +36,7 @@ struct ConsoleLog: Identifiable, Equatable {
 
     // ✨ Object Support (console.dir, console.log with objects)
     var objectValue: ConsoleValue?
+    var repeatCount: Int = 1
 
     enum LogType: String, CaseIterable {
         case log
@@ -237,7 +238,50 @@ class ConsoleManager {
                 }
             }
 
+            if self.shouldCollapseRepeat(log: log), let lastIndex = self.logs.indices.last {
+                var updated = self.logs[lastIndex]
+                if self.isSameRepeat(lhs: updated, rhs: log) {
+                    updated.repeatCount += 1
+                    updated.timestamp = log.timestamp
+                    self.logs[lastIndex] = updated
+                    return
+                }
+            }
+
             self.logs.append(log)
+        }
+    }
+
+    private func shouldCollapseRepeat(log: ConsoleLog) -> Bool {
+        switch log.type {
+        case .log, .info, .warn, .error, .debug, .dir, .trace:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func isSameRepeat(lhs: ConsoleLog, rhs: ConsoleLog) -> Bool {
+        guard lhs.type == rhs.type,
+              lhs.message == rhs.message,
+              lhs.source == rhs.source,
+              lhs.groupLevel == rhs.groupLevel,
+              lhs.groupId == rhs.groupId,
+              lhs.tableData == rhs.tableData,
+              lhs.objectValue == rhs.objectValue else {
+            return false
+        }
+        return styledSegmentsEqual(lhs.styledSegments, rhs.styledSegments)
+    }
+
+    private func styledSegmentsEqual(_ lhs: [[String: Any]]?, _ rhs: [[String: Any]]?) -> Bool {
+        switch (lhs, rhs) {
+        case (nil, nil):
+            return true
+        case let (l?, r?):
+            return NSArray(array: l).isEqual(r)
+        default:
+            return false
         }
     }
 
@@ -790,6 +834,15 @@ private struct LogRow: View {
                 // Type badge (icon + label)
                 ConsoleTypeBadge(type: log.type)
 
+                if log.repeatCount > 1 {
+                    Text("×\(log.repeatCount)")
+                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.secondary.opacity(0.15), in: Capsule())
+                }
+
                 Text(Self.timeFormatter.string(from: log.timestamp))
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.tertiary)
@@ -841,10 +894,10 @@ private struct LogRow: View {
         HStack(alignment: .top, spacing: 2) {
             ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
                 let text = segment["text"] as? String ?? ""
-                let colorStr = segment["color"] as? String ?? nil
-                let bgColorStr = segment["backgroundColor"] as? String ?? nil
+                let colorStr = segment["color"] as? String
+                let bgColorStr = segment["backgroundColor"] as? String
                 let isBold = segment["isBold"] as? Bool ?? false
-                let fontSize = segment["fontSize"] as? Int ?? nil
+                let fontSize = segment["fontSize"] as? Int
 
                 Text(text)
                     .font(.system(size: CGFloat(fontSize ?? 12), weight: isBold ? .semibold : .regular, design: .monospaced))
