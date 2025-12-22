@@ -25,20 +25,17 @@ struct SearchTextOverlay: View {
         VStack {
             Spacer()
 
-            // Search bar at bottom
+            // Search bar at bottom (Liquid Glass UI)
             HStack(spacing: 12) {
-                // Close button
-                Button {
+                // Close 버튼
+                GlassIconButton(
+                    icon: "xmark",
+                    size: .small,
+                    color: .secondary
+                ) {
                     clearHighlights()
                     isPresented = false
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 32, height: 32)
-                        .contentShape(Circle())
                 }
-                .buttonStyle(.plain)
 
                 // Search field
                 HStack(spacing: 8) {
@@ -56,21 +53,22 @@ struct SearchTextOverlay: View {
                             performSearch()
                         }
 
+                    // Clear 버튼
                     if !searchText.isEmpty {
                         Button {
                             searchText = ""
                             clearHighlights()
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundStyle(.tertiary)
+                                .font(.system(size: 16))
+                                .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 12)
                 .frame(height: 36)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+                .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 10))
 
                 // Match count & navigation
                 if matchCount > 0 {
@@ -80,29 +78,23 @@ struct SearchTextOverlay: View {
                             .foregroundStyle(.secondary)
                             .frame(minWidth: 40)
 
-                        Button {
+                        // 이전 매치로 이동
+                        GlassIconButton(
+                            icon: "chevron.up",
+                            size: .small,
+                            isDisabled: matchCount <= 1
+                        ) {
                             navigateToPrevious()
-                        } label: {
-                            Image(systemName: "chevron.up")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.primary)
-                                .frame(width: 28, height: 28)
-                                .contentShape(Circle())
                         }
-                        .buttonStyle(.plain)
-                        .disabled(matchCount <= 1)
 
-                        Button {
+                        // 다음 매치로 이동
+                        GlassIconButton(
+                            icon: "chevron.down",
+                            size: .small,
+                            isDisabled: matchCount <= 1
+                        ) {
                             navigateToNext()
-                        } label: {
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.primary)
-                                .frame(width: 28, height: 28)
-                                .contentShape(Circle())
                         }
-                        .buttonStyle(.plain)
-                        .disabled(matchCount <= 1)
                     }
                 } else if !searchText.isEmpty && !isSearching {
                     Text("No matches")
@@ -112,8 +104,7 @@ struct SearchTextOverlay: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(.ultraThinMaterial)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .backport.glassEffect(in: .rect(cornerRadius: 20))
             .padding(.horizontal, 12)
             .padding(.bottom, 80) // Above bottom bar
         }
