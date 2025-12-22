@@ -125,6 +125,7 @@ enum ConsoleInlineKind: String, Equatable {
     case array
     case object
     case circular
+    case regexp
 }
 
 struct ConsoleInlineSegment: Equatable {

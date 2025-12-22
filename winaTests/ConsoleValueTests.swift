@@ -215,6 +215,50 @@ final class ConsoleValueTests: XCTestCase {
         XCTAssertFalse(value.isExpandable)
     }
 
+    // MARK: - RegExp Serialization
+
+    func testSerializedRegExpPayloadParses() {
+        let payload: [String: Any] = [
+            "type": "regexp",
+            "value": "/test/gi"
+        ]
+
+        let parsed = ConsoleValue.fromSerializedAny(payload)
+        guard case let .string(regexpString)? = parsed else {
+            XCTFail("Expected regexp payload to parse as string")
+            return
+        }
+        XCTAssertEqual(regexpString, "/test/gi")
+    }
+
+    func testSerializedRegExpWithComplexPattern() {
+        let payload: [String: Any] = [
+            "type": "regexp",
+            "value": "/^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$/i"
+        ]
+
+        let parsed = ConsoleValue.fromSerializedAny(payload)
+        guard case let .string(regexpString)? = parsed else {
+            XCTFail("Expected regexp payload to parse as string")
+            return
+        }
+        XCTAssertTrue(regexpString.hasPrefix("/"))
+        XCTAssertTrue(regexpString.hasSuffix("/i"))
+    }
+
+    func testSerializedRegExpWithoutValue() {
+        let payload: [String: Any] = [
+            "type": "regexp"
+        ]
+
+        let parsed = ConsoleValue.fromSerializedAny(payload)
+        guard case let .string(regexpString)? = parsed else {
+            XCTFail("Expected regexp payload to parse as string with default")
+            return
+        }
+        XCTAssertEqual(regexpString, "/(?:)/")
+    }
+
     // MARK: - Factory Methods
 
     func testFromObjectDictionary() {

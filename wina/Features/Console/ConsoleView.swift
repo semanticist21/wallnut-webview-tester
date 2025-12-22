@@ -1113,7 +1113,7 @@ private struct LogRow: View {
             return .purple
         case .error:
             return .red
-        case .dom:
+        case .dom, .regexp:
             return .red
         case .symbol, .bigint, .map, .set, .array, .object, .circular:
             return .secondary

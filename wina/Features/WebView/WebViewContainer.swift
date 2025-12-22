@@ -636,6 +636,9 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             case "bigint":
                 let value = dict["value"] as? String ?? "0n"
                 return ConsoleInlineSegment(text: value, kind: .bigint)
+            case "regexp":
+                let value = dict["value"] as? String ?? "/(?:)/"
+                return ConsoleInlineSegment(text: value, kind: .regexp)
             case "error":
                 let message = dict["message"] as? String ?? "Error"
                 let stack = dict["stack"] as? String
