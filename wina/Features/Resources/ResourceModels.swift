@@ -112,14 +112,14 @@ extension ResourceEntry {
 
         var color: Color {
             switch self {
-            case .img: .purple
-            case .script: .orange
-            case .link, .css: .blue
-            case .font: .pink
-            case .fetch, .xmlhttprequest: .green
-            case .beacon: .cyan
-            case .video, .audio: .red
-            case .other: .gray
+            case .img: .purple.opacity(0.7)
+            case .script: .orange.opacity(0.7)
+            case .link, .css: .blue.opacity(0.7)
+            case .font: .pink.opacity(0.6)
+            case .fetch, .xmlhttprequest: .green.opacity(0.7)
+            case .beacon: .cyan.opacity(0.6)
+            case .video, .audio: .red.opacity(0.6)
+            case .other: .secondary
             }
         }
 

@@ -16,6 +16,7 @@ struct DOMNodeRow: View {
     let searchText: String
     let currentMatchPath: [String]?
     let onSelect: (DOMNode) -> Void
+    var onBreadcrumbTap: ((DOMNode) -> Void)?
 
     // HTML, BODY are expanded by default
     @State private var isExpanded: Bool = false
@@ -136,6 +137,9 @@ struct DOMNodeRow: View {
             .id(node.id)
             .contentShape(Rectangle())
             .onTapGesture {
+                // Update breadcrumbs when element is tapped
+                onBreadcrumbTap?(node)
+
                 if hasChildren {
                     withAnimation(.easeOut(duration: 0.15)) {
                         isExpanded.toggle()
@@ -152,7 +156,8 @@ struct DOMNodeRow: View {
                         manager: manager,
                         searchText: searchText,
                         currentMatchPath: currentMatchPath,
-                        onSelect: onSelect
+                        onSelect: onSelect,
+                        onBreadcrumbTap: onBreadcrumbTap
                     )
                 }
             }

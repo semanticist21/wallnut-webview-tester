@@ -719,7 +719,6 @@ struct StorageView: View {
                     scrollOffset: scrollOffset,
                     contentHeight: contentHeight,
                     viewportHeight: scrollViewHeight,
-                    showProgress: true,
                     onScrollUp: { scrollUp(proxy: scrollProxy) },
                     onScrollDown: { scrollDown(proxy: scrollProxy) }
                 )

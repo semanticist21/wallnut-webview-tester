@@ -62,10 +62,18 @@ struct NetworkDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        shareRequest()
-                    } label: {
-                        Image(systemName: "square.and.arrow.up")
+                    HStack(spacing: 12) {
+                        Button {
+                            shareRequest()
+                        } label: {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+
+                        Button {
+                            copyAsCurl()
+                        } label: {
+                            Image(systemName: "terminal")
+                        }
                     }
                 }
 
@@ -484,6 +492,37 @@ struct NetworkDetailView: View {
         shareItem = NetworkShareContent(content: text)
     }
 
+    private func copyAsCurl() {
+        var curl = "curl"
+
+        // Method (skip if GET since it's default)
+        if request.method != "GET" {
+            curl += " -X \(request.method)"
+        }
+
+        // URL
+        curl += " '\(request.url)'"
+
+        // Request headers
+        if let headers = request.requestHeaders {
+            for (key, value) in headers.sorted(by: { $0.key < $1.key }) {
+                // Escape single quotes in header values
+                let escapedValue = value.replacingOccurrences(of: "'", with: "'\\''")
+                curl += " \\\n  -H '\(key): \(escapedValue)'"
+            }
+        }
+
+        // Request body
+        if let body = request.requestBody, !body.isEmpty {
+            // Escape single quotes in body
+            let escapedBody = body.replacingOccurrences(of: "'", with: "'\\''")
+            curl += " \\\n  -d '\(escapedBody)'"
+        }
+
+        UIPasteboard.general.string = curl
+        showCopiedFeedback("cURL")
+    }
+
     private func shareResponseBodyAsFile(body: String, contentType: NetworkContentType) {
         // Determine file extension based on content type
         let fileExtension: String
@@ -530,11 +569,11 @@ struct NetworkDetailView: View {
 
     private var methodColor: Color {
         switch request.method {
-        case "GET": return .blue
-        case "POST": return .green
-        case "PUT": return .orange
-        case "DELETE": return .red
-        case "PATCH": return .purple
+        case "GET": return .blue.opacity(0.8)
+        case "POST": return .green.opacity(0.8)
+        case "PUT": return .orange.opacity(0.8)
+        case "DELETE": return .red.opacity(0.8)
+        case "PATCH": return .purple.opacity(0.8)
         default: return .secondary
         }
     }

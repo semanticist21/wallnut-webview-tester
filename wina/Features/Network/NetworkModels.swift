@@ -118,10 +118,10 @@ struct NetworkRequest: Identifiable, Equatable {
     var statusColor: Color {
         guard let status else { return .secondary }
         switch status {
-        case 200..<300: return .green
-        case 300..<400: return .blue
-        case 400..<500: return .orange
-        case 500...: return .red
+        case 200..<300: return .secondary  // Success - no highlight needed
+        case 300..<400: return .secondary  // Redirects - subtle
+        case 400..<500: return .orange.opacity(0.8)
+        case 500...: return .red.opacity(0.8)
         default: return .secondary
         }
     }
@@ -216,18 +216,18 @@ struct NetworkRequest: Identifiable, Equatable {
         return "Text"
     }
 
-    // Color for response content type
+    // Color for response content type (muted, subtle)
     var responseContentTypeColor: Color {
         switch responseContentType {
-        case "JSON": return .purple
-        case "HTML": return .orange
-        case "XML": return .teal
-        case "CSS": return .pink
-        case "JS": return .yellow
-        case "Image": return .green
-        case "Font": return .cyan
-        case "Text": return .gray
-        default: return Color(uiColor: .tertiaryLabel)
+        case "JSON": return .purple.opacity(0.7)
+        case "HTML": return .orange.opacity(0.6)
+        case "XML": return .teal.opacity(0.7)
+        case "CSS": return .pink.opacity(0.6)
+        case "JS": return .yellow.opacity(0.7)
+        case "Image": return .green.opacity(0.6)
+        case "Font": return .cyan.opacity(0.6)
+        case "Text": return .secondary
+        default: return .gray
         }
     }
 
@@ -250,11 +250,11 @@ enum NetworkContentType: String {
 
     var color: Color {
         switch self {
-        case .json: return .purple
-        case .html: return .orange
-        case .xml: return .teal
+        case .json: return .purple.opacity(0.7)
+        case .html: return .orange.opacity(0.6)
+        case .xml: return .teal.opacity(0.7)
         case .text: return .secondary
-        case .formUrlEncoded: return .blue
+        case .formUrlEncoded: return .blue.opacity(0.7)
         }
     }
 

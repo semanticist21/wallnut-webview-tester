@@ -498,7 +498,6 @@ struct NetworkView: View {
                     scrollOffset: scrollOffset,
                     contentHeight: contentHeight,
                     viewportHeight: scrollViewHeight,
-                    showProgress: true,
                     onScrollUp: { scrollUp(proxy: scrollProxy) },
                     onScrollDown: { scrollDown(proxy: scrollProxy) }
                 )
@@ -687,15 +686,15 @@ private struct NetworkRequestRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            // Status indicator
+            // Status indicator (subtle)
             Circle()
-                .fill(request.isPending ? Color.orange : request.statusColor)
-                .frame(width: 8, height: 8)
+                .fill(request.isPending ? Color.orange.opacity(0.6) : (request.error != nil ? Color.red.opacity(0.6) : Color.secondary.opacity(0.3)))
+                .frame(width: 6, height: 6)
 
             // Method badge
             Text(request.method)
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                .foregroundStyle(.white)
+                .foregroundStyle(methodTextColor)
                 .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(methodColor, in: RoundedRectangle(cornerRadius: 4))
@@ -755,11 +754,22 @@ private struct NetworkRequestRow: View {
 
     private var methodColor: Color {
         switch request.method {
-        case "GET": return .blue
-        case "POST": return .green
-        case "PUT": return .orange
-        case "DELETE": return .red
-        case "PATCH": return .purple
+        case "GET": return .blue.opacity(0.15)
+        case "POST": return .green.opacity(0.15)
+        case "PUT": return .orange.opacity(0.15)
+        case "DELETE": return .red.opacity(0.15)
+        case "PATCH": return .purple.opacity(0.15)
+        default: return .secondary.opacity(0.1)
+        }
+    }
+
+    private var methodTextColor: Color {
+        switch request.method {
+        case "GET": return .blue.opacity(0.9)
+        case "POST": return .green.opacity(0.9)
+        case "PUT": return .orange.opacity(0.9)
+        case "DELETE": return .red.opacity(0.9)
+        case "PATCH": return .purple.opacity(0.9)
         default: return .secondary
         }
     }
@@ -772,10 +782,10 @@ private struct ResourceRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            // Type icon
+            // Type icon (monochrome)
             Image(systemName: resource.initiatorType.icon)
                 .font(.system(size: 12))
-                .foregroundStyle(resource.initiatorType.color)
+                .foregroundStyle(.secondary)
                 .frame(width: 24, height: 24)
 
             // Resource info
@@ -788,7 +798,7 @@ private struct ResourceRow: View {
                 if let host = resource.host {
                     Text(host)
                         .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
             }
@@ -798,23 +808,22 @@ private struct ResourceRow: View {
             // Right side info
             VStack(alignment: .trailing, spacing: 2) {
                 Text(resource.displayDuration)
-                    .font(.system(size: 11, weight: .medium, design: .monospaced))
-                    .foregroundStyle(.primary)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.secondary)
 
                 Text(resource.displaySize)
                     .font(.system(size: 9, design: .monospaced))
                     .foregroundStyle(.tertiary)
             }
 
-            // Type badge
+            // Type badge (only colored element)
             Text(resource.initiatorType.displayName)
-                .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                .font(.system(size: 9, weight: .medium, design: .monospaced))
                 .foregroundStyle(resource.initiatorType.color)
                 .frame(width: 60, alignment: .trailing)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(resource.isCrossOriginRestricted ? Color.orange.opacity(0.05) : Color.clear)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) {
             Divider()

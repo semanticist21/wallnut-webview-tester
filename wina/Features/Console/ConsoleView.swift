@@ -411,6 +411,7 @@ struct ShareContent: Identifiable {
 
 struct ConsoleView: View {
     let consoleManager: ConsoleManager
+    var navigator: WebViewNavigator?  // Optional - for JS execution
     @Environment(\.dismiss) private var dismiss
     @State private var filterType: ConsoleLog.LogType?
     @State private var searchText: String = ""
@@ -421,6 +422,11 @@ struct ConsoleView: View {
     @State private var enabledLogTypes: Set<ConsoleLog.LogType> = Set(ConsoleLog.LogType.displayableTypes)
     // AppStorage for settings indicator (matches ConsoleSettingsSheet)
     @AppStorage("consolePreserveLog") private var preserveLog: Bool = false
+    // JavaScript input
+    @State private var jsInput: String = ""
+    @State private var commandHistory: [String] = []
+    @State private var historyIndex: Int = -1
+    @FocusState private var isInputFocused: Bool
 
     private var filteredLogs: [ConsoleLog] {
         var result = consoleManager.logs
@@ -483,6 +489,11 @@ struct ConsoleView: View {
                 emptyState
             } else {
                 logList
+            }
+
+            // JavaScript execution input (only shown when navigator is available)
+            if navigator != nil {
+                jsInputField
             }
         }
         .sheet(item: $shareItem) { item in
@@ -649,6 +660,139 @@ extension ConsoleView {
                     }
                 }
             }
+        }
+    }
+
+    // MARK: - JavaScript Input Field
+
+    private var jsInputField: some View {
+        VStack(spacing: 0) {
+            Divider()
+
+            HStack(spacing: 8) {
+                // Prompt symbol
+                Text(">")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundStyle(.cyan)
+
+                // Input field
+                TextField("JavaScript to execute...", text: $jsInput, axis: .vertical)
+                    .font(.system(size: 13, design: .monospaced))
+                    .textFieldStyle(.plain)
+                    .lineLimit(1...5)
+                    .focused($isInputFocused)
+                    .onSubmit {
+                        executeJavaScript()
+                    }
+                    .submitLabel(.send)
+
+                // History navigation buttons (only when there's history)
+                if !commandHistory.isEmpty {
+                    HStack(spacing: 4) {
+                        Button {
+                            navigateHistory(direction: -1)
+                        } label: {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .disabled(historyIndex >= commandHistory.count - 1)
+
+                        Button {
+                            navigateHistory(direction: 1)
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .disabled(historyIndex <= 0)
+                    }
+                    .foregroundStyle(.secondary)
+                    .buttonStyle(.plain)
+                }
+
+                // Execute button
+                Button {
+                    executeJavaScript()
+                } label: {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(jsInput.isEmpty ? Color.gray : Color.cyan, in: Circle())
+                }
+                .disabled(jsInput.isEmpty)
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(uiColor: .secondarySystemBackground))
+        }
+    }
+
+    // MARK: - JavaScript Execution
+
+    private func executeJavaScript() {
+        let command = jsInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !command.isEmpty, let nav = navigator else { return }
+
+        // Add to history
+        if commandHistory.last != command {
+            commandHistory.append(command)
+        }
+        historyIndex = -1
+
+        // Log the command
+        consoleManager.addLog(type: "command", message: command, source: "user input")
+
+        // Clear input
+        jsInput = ""
+
+        // Execute and log result
+        Task {
+            let result = await nav.evaluateJavaScript(command)
+            await MainActor.run {
+                let resultText: String
+                if let result {
+                    resultText = formatJSResult(result)
+                } else {
+                    resultText = "undefined"
+                }
+                consoleManager.addLog(type: "result", message: resultText, source: nil)
+            }
+        }
+    }
+
+    private func formatJSResult(_ result: Any) -> String {
+        switch result {
+        case let string as String:
+            return "\"\(string)\""
+        case let number as NSNumber:
+            // Check if it's a boolean
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                return number.boolValue ? "true" : "false"
+            }
+            return number.stringValue
+        case let array as [Any]:
+            let items = array.map { formatJSResult($0) }.joined(separator: ", ")
+            return "[\(items)]"
+        case let dict as [String: Any]:
+            if let jsonData = try? JSONSerialization.data(withJSONObject: dict, options: .prettyPrinted),
+               let jsonString = String(data: jsonData, encoding: .utf8) {
+                return jsonString
+            }
+            return String(describing: dict)
+        default:
+            return String(describing: result)
+        }
+    }
+
+    private func navigateHistory(direction: Int) {
+        let newIndex = historyIndex - direction
+        if newIndex >= 0 && newIndex < commandHistory.count {
+            historyIndex = newIndex
+            jsInput = commandHistory[commandHistory.count - 1 - historyIndex]
+        } else if newIndex < 0 {
+            historyIndex = -1
+            jsInput = ""
         }
     }
 }

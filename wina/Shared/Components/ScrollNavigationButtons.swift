@@ -17,9 +17,6 @@ struct ScrollNavigationButtons: View {
     let onScrollUp: () -> Void
     let onScrollDown: () -> Void
 
-    /// Show progress indicator between buttons
-    var showProgress: Bool = false
-
     /// Minimal mode: show only relevant button based on position
     var minimalMode: Bool = true
 
@@ -37,55 +34,41 @@ struct ScrollNavigationButtons: View {
         (contentHeight - scrollOffset - viewportHeight) <= 20
     }
 
-    private var scrollProgress: CGFloat {
-        guard contentHeight > viewportHeight else { return 0 }
-        let maxOffset = contentHeight - viewportHeight
-        return min(max(scrollOffset / maxOffset, 0), 1)
+    private var showUpButton: Bool {
+        !minimalMode || !isNearTop
     }
 
-    private var progressPercent: Int {
-        Int(scrollProgress * 100)
+    private var showDownButton: Bool {
+        !minimalMode || !isNearBottom
     }
 
     var body: some View {
         if canScroll {
-            VStack(spacing: showProgress ? 4 : 8) {
-                // Up button
-                if !minimalMode || !isNearTop {
-                    scrollButton(
-                        icon: "chevron.up.circle.fill",
-                        isEnabled: !isNearTop,
-                        action: {
-                            triggerHaptic()
-                            onScrollUp()
-                        }
-                    )
-                    .transition(.scale.combined(with: .opacity))
-                }
-
-                // Progress indicator
-                if showProgress {
-                    progressIndicator
-                        .transition(.opacity)
-                }
+            VStack(spacing: 6) {
+                // Up button - always in layout, visibility controlled by opacity
+                scrollButton(
+                    icon: "chevron.up.circle.fill",
+                    isVisible: showUpButton,
+                    isEnabled: !isNearTop,
+                    action: {
+                        triggerHaptic()
+                        onScrollUp()
+                    }
+                )
 
                 // Down button
-                if !minimalMode || !isNearBottom {
-                    scrollButton(
-                        icon: "chevron.down.circle.fill",
-                        isEnabled: !isNearBottom,
-                        action: {
-                            triggerHaptic()
-                            onScrollDown()
-                        }
-                    )
-                    .transition(.scale.combined(with: .opacity))
-                }
+                scrollButton(
+                    icon: "chevron.down.circle.fill",
+                    isVisible: showDownButton,
+                    isEnabled: !isNearBottom,
+                    action: {
+                        triggerHaptic()
+                        onScrollDown()
+                    }
+                )
             }
             .padding(.trailing, 12)
             .padding(.bottom, 12)
-            .animation(.easeInOut(duration: 0.2), value: isNearTop)
-            .animation(.easeInOut(duration: 0.2), value: isNearBottom)
         }
     }
 
@@ -94,28 +77,20 @@ struct ScrollNavigationButtons: View {
     @ViewBuilder
     private func scrollButton(
         icon: String,
+        isVisible: Bool,
         isEnabled: Bool,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 28))
+                .font(.system(size: 24))
                 .foregroundStyle(.white)
         }
         .backport
         .glassEffect(in: .circle)
-        .disabled(!isEnabled)
-        .opacity(isEnabled ? 1 : 0.3)
-    }
-
-    // MARK: - Progress Indicator
-
-    @ViewBuilder
-    private var progressIndicator: some View {
-        Text("\(progressPercent)%")
-            .font(.system(size: 10, weight: .medium, design: .monospaced))
-            .foregroundStyle(.secondary)
-            .frame(width: 32, height: 16)
+        .disabled(!isVisible || !isEnabled)
+        .opacity(isVisible ? (isEnabled ? 1 : 0.3) : 0)
+        .animation(.easeInOut(duration: 0.15), value: isVisible)
     }
 
     // MARK: - Haptic
@@ -130,19 +105,10 @@ struct ScrollNavigationButtons: View {
 
 extension View {
     /// Adds scroll navigation buttons overlay to a ScrollView
-    /// - Parameters:
-    ///   - scrollOffset: Current scroll offset (y position)
-    ///   - contentHeight: Total content height
-    ///   - viewportHeight: Visible viewport height
-    ///   - showProgress: Show progress percentage between buttons
-    ///   - minimalMode: Show only relevant button based on scroll position
-    ///   - onScrollUp: Action when up button tapped
-    ///   - onScrollDown: Action when down button tapped
     func scrollNavigationOverlay(
         scrollOffset: CGFloat,
         contentHeight: CGFloat,
         viewportHeight: CGFloat,
-        showProgress: Bool = false,
         minimalMode: Bool = true,
         onScrollUp: @escaping () -> Void,
         onScrollDown: @escaping () -> Void
@@ -154,7 +120,6 @@ extension View {
                 viewportHeight: viewportHeight,
                 onScrollUp: onScrollUp,
                 onScrollDown: onScrollDown,
-                showProgress: showProgress,
                 minimalMode: minimalMode
             )
         }
@@ -163,38 +128,36 @@ extension View {
 
 #Preview {
     VStack {
+        // Both buttons visible
         ScrollNavigationButtons(
             scrollOffset: 100,
             contentHeight: 1000,
             viewportHeight: 400,
             onScrollUp: {},
             onScrollDown: {},
-            showProgress: true,
             minimalMode: false
         )
 
         Divider()
 
-        // Minimal mode - near top
+        // Minimal mode - near top (only down visible)
         ScrollNavigationButtons(
             scrollOffset: 10,
             contentHeight: 1000,
             viewportHeight: 400,
             onScrollUp: {},
-            onScrollDown: {},
-            minimalMode: true
+            onScrollDown: {}
         )
 
         Divider()
 
-        // Minimal mode - near bottom
+        // Minimal mode - near bottom (only up visible)
         ScrollNavigationButtons(
             scrollOffset: 590,
             contentHeight: 1000,
             viewportHeight: 400,
             onScrollUp: {},
-            onScrollDown: {},
-            minimalMode: true
+            onScrollDown: {}
         )
     }
     .padding()

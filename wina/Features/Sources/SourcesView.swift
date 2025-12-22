@@ -67,6 +67,12 @@ struct SourcesView: View {
     @State private var selectedStylesheet: StylesheetInfo?
     @State private var selectedScript: ScriptInfo?
 
+    // Element Picker (Inspect mode)
+    @State private var isElementPickerActive: Bool = false
+
+    // Breadcrumbs navigation
+    @State private var breadcrumbPath: [DOMNode] = []
+
     var body: some View {
         VStack(spacing: 0) {
             sourcesHeader
@@ -97,6 +103,12 @@ struct SourcesView: View {
                 await fetchCurrentTab()
             }
         }
+        .onDisappear {
+            // Clean up element picker when view is dismissed
+            if isElementPickerActive {
+                disableElementPicker()
+            }
+        }
         .task {
             await AdManager.shared.showInterstitialAd(
                 options: AdOptions(id: "sources_devtools"),
@@ -120,6 +132,7 @@ struct SourcesView: View {
             matchingNodePaths = []
             currentRawMatchIndex = 0
             rawMatchLineIndices = []
+            breadcrumbPath = []
 
             Task {
                 await fetchCurrentTab()
@@ -155,6 +168,9 @@ struct SourcesView: View {
             }
         }
         .onChange(of: elementsViewMode) { _, newMode in
+            // Clear breadcrumbs when switching view modes
+            breadcrumbPath = []
+
             // Update search results when view mode changes
             if !debouncedSearchText.isEmpty {
                 if newMode == .tree {
@@ -168,6 +184,7 @@ struct SourcesView: View {
             // Auto-refresh when page URL changes
             if let newURL, newURL != lastURL {
                 lastURL = newURL
+                breadcrumbPath = []
                 Task {
                     // Small delay to let page load
                     try? await Task.sleep(for: .milliseconds(500))
@@ -281,8 +298,153 @@ struct SourcesView: View {
                     shareCurrentTab()
                 }
             ],
-            rightButtons: []
+            rightButtons: [
+                .init(
+                    icon: "scope",
+                    activeIcon: "scope",
+                    color: .secondary,
+                    activeColor: .cyan,
+                    isActive: isElementPickerActive
+                ) {
+                    toggleElementPicker()
+                }
+            ]
         )
+    }
+
+    // MARK: - Element Picker
+
+    private func toggleElementPicker() {
+        isElementPickerActive.toggle()
+
+        if isElementPickerActive {
+            enableElementPicker()
+        } else {
+            disableElementPicker()
+        }
+    }
+
+    private func enableElementPicker() {
+        let script = """
+            (function() {
+                // Remove existing picker if any
+                if (window.__wina_element_picker__) {
+                    window.__wina_element_picker__.destroy();
+                }
+
+                const overlay = document.createElement('div');
+                overlay.id = '__wina_picker_overlay__';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483646;pointer-events:none;';
+
+                const highlight = document.createElement('div');
+                highlight.id = '__wina_picker_highlight__';
+                highlight.style.cssText = 'position:absolute;border:2px solid #00BCD4;background:rgba(0,188,212,0.15);pointer-events:none;transition:all 0.1s ease;';
+                overlay.appendChild(highlight);
+
+                const tooltip = document.createElement('div');
+                tooltip.id = '__wina_picker_tooltip__';
+                tooltip.style.cssText = 'position:absolute;background:#333;color:#fff;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;pointer-events:none;white-space:nowrap;z-index:2147483647;';
+                overlay.appendChild(tooltip);
+
+                document.body.appendChild(overlay);
+
+                let currentElement = null;
+
+                function getElementPath(el) {
+                    const parts = [];
+                    while (el && el.nodeType === 1) {
+                        let selector = el.tagName.toLowerCase();
+                        if (el.id) {
+                            selector += '#' + el.id;
+                            parts.unshift(selector);
+                            break;
+                        } else if (el.className && typeof el.className === 'string') {
+                            selector += '.' + el.className.trim().split(/\\s+/).join('.');
+                        }
+                        parts.unshift(selector);
+                        el = el.parentElement;
+                    }
+                    return parts.join(' > ');
+                }
+
+                function handleMove(e) {
+                    const x = e.clientX || (e.touches && e.touches[0].clientX);
+                    const y = e.clientY || (e.touches && e.touches[0].clientY);
+                    overlay.style.pointerEvents = 'none';
+                    const el = document.elementFromPoint(x, y);
+                    overlay.style.pointerEvents = '';
+
+                    if (el && el !== overlay && !overlay.contains(el)) {
+                        currentElement = el;
+                        const rect = el.getBoundingClientRect();
+                        highlight.style.left = rect.left + 'px';
+                        highlight.style.top = rect.top + 'px';
+                        highlight.style.width = rect.width + 'px';
+                        highlight.style.height = rect.height + 'px';
+
+                        let label = el.tagName.toLowerCase();
+                        if (el.id) label += '#' + el.id;
+                        else if (el.className && typeof el.className === 'string')
+                            label += '.' + el.className.trim().split(/\\s+/)[0];
+                        tooltip.textContent = label + ' (' + Math.round(rect.width) + 'x' + Math.round(rect.height) + ')';
+                        tooltip.style.left = Math.min(rect.left, window.innerWidth - 150) + 'px';
+                        tooltip.style.top = Math.max(0, rect.top - 28) + 'px';
+                    }
+                }
+
+                function handleClick(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (currentElement) {
+                        const path = getElementPath(currentElement);
+                        window.webkit.messageHandlers.elementPicked.postMessage({
+                            tag: currentElement.tagName.toLowerCase(),
+                            id: currentElement.id || null,
+                            className: (typeof currentElement.className === 'string') ? currentElement.className : null,
+                            path: path
+                        });
+                    }
+                }
+
+                document.addEventListener('mousemove', handleMove, true);
+                document.addEventListener('touchmove', handleMove, true);
+                document.addEventListener('click', handleClick, true);
+                document.addEventListener('touchend', handleClick, true);
+
+                window.__wina_element_picker__ = {
+                    destroy: function() {
+                        document.removeEventListener('mousemove', handleMove, true);
+                        document.removeEventListener('touchmove', handleMove, true);
+                        document.removeEventListener('click', handleClick, true);
+                        document.removeEventListener('touchend', handleClick, true);
+                        overlay.remove();
+                        window.__wina_element_picker__ = null;
+                    }
+                };
+
+                return 'Element picker enabled';
+            })();
+            """
+
+        Task {
+            _ = await navigator?.evaluateJavaScript(script)
+        }
+    }
+
+    private func disableElementPicker() {
+        let script = """
+            (function() {
+                if (window.__wina_element_picker__) {
+                    window.__wina_element_picker__.destroy();
+                    return 'Element picker disabled';
+                }
+                return 'No picker active';
+            })();
+            """
+
+        Task {
+            _ = await navigator?.evaluateJavaScript(script)
+        }
     }
 
     // MARK: - Search Bar
@@ -497,25 +659,43 @@ struct SourcesView: View {
             switch elementsViewMode {
             case .tree:
                 if let root = manager.domTree {
-                    ScrollViewReader { proxy in
-                        ScrollView {
-                            LazyVStack(alignment: .leading, spacing: 0) {
-                                DOMNodeRow(
-                                    node: root,
-                                    depth: 0,
-                                    manager: manager,
-                                    searchText: debouncedSearchText,
-                                    currentMatchPath: currentMatchPath,
-                                    onSelect: { node in
-                                        selectedNode = node
-                                    }
-                                )
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                    VStack(spacing: 0) {
+                        // Breadcrumbs bar
+                        if !breadcrumbPath.isEmpty {
+                            breadcrumbsBar
                         }
-                        .onChange(of: currentMatchIndex) { _, _ in
-                            scrollToCurrentMatch(proxy: proxy)
+
+                        ScrollViewReader { proxy in
+                            ScrollView {
+                                LazyVStack(alignment: .leading, spacing: 0) {
+                                    DOMNodeRow(
+                                        node: root,
+                                        depth: 0,
+                                        manager: manager,
+                                        searchText: debouncedSearchText,
+                                        currentMatchPath: currentMatchPath,
+                                        onSelect: { node in
+                                            selectedNode = node
+                                        },
+                                        onBreadcrumbTap: { node in
+                                            updateBreadcrumbs(for: node, root: root)
+                                        }
+                                    )
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                            }
+                            .onChange(of: currentMatchIndex) { _, _ in
+                                scrollToCurrentMatch(proxy: proxy)
+                            }
+                            .onChange(of: breadcrumbPath) { _, newPath in
+                                // Scroll to the last breadcrumb node
+                                if let last = newPath.last {
+                                    withAnimation(.easeOut(duration: 0.2)) {
+                                        proxy.scrollTo(last.id, anchor: .center)
+                                    }
+                                }
+                            }
                         }
                     }
                     .background(Color(uiColor: .systemBackground))
@@ -545,6 +725,76 @@ struct SourcesView: View {
             withAnimation(.easeOut(duration: 0.2)) {
                 proxy.scrollTo(targetId, anchor: .center)
             }
+        }
+    }
+
+    // MARK: - Breadcrumbs
+
+    private var breadcrumbsBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(Array(breadcrumbPath.enumerated()), id: \.element.id) { index, node in
+                    if index > 0 {
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+
+                    Button {
+                        // Trim breadcrumb path to this node
+                        breadcrumbPath = Array(breadcrumbPath.prefix(index + 1))
+                    } label: {
+                        Text(node.displayName)
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(index == breadcrumbPath.count - 1 ? .primary : .secondary)
+                            .lineLimit(1)
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                // Clear button
+                if !breadcrumbPath.isEmpty {
+                    Button {
+                        withAnimation(.easeOut(duration: 0.15)) {
+                            breadcrumbPath = []
+                        }
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 12))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 8)
+                }
+            }
+            .padding(.horizontal, 12)
+        }
+        .frame(height: 32)
+        .background(.ultraThinMaterial)
+    }
+
+    private func updateBreadcrumbs(for node: DOMNode, root: DOMNode) {
+        // Build path from root to node using path indices
+        var path: [DOMNode] = []
+        var current: DOMNode? = root
+
+        // The node's path tells us how to navigate from root
+        // path[0] is root's index (0), path[1] is first child index, etc.
+        for index in node.path.dropFirst() {
+            guard let curr = current else { break }
+            path.append(curr)
+            if index < curr.children.count {
+                current = curr.children[index]
+            } else {
+                break
+            }
+        }
+
+        // Add the final node
+        path.append(node)
+
+        withAnimation(.easeOut(duration: 0.15)) {
+            breadcrumbPath = path
         }
     }
 
