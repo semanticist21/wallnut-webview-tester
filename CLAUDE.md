@@ -143,6 +143,19 @@ func resetToDefaults() { localValue = false }  // 저장 X
 
 ### Console Features
 
+#### Smart Quotes Sanitization
+iOS keyboard auto-converts straight quotes to curly quotes, causing JS syntax errors. The console input sanitizes them:
+```swift
+// Converts: ' ' " " → ' "
+private func sanitizeSmartQuotes(_ input: String) -> String {
+    input
+        .replacingOccurrences(of: "\u{2018}", with: "'")  // '
+        .replacingOccurrences(of: "\u{2019}", with: "'")  // '
+        .replacingOccurrences(of: "\u{201C}", with: "\"") // "
+        .replacingOccurrences(of: "\u{201D}", with: "\"") // "
+}
+```
+
 #### %c CSS Styling
 ```javascript
 console.log("%cRed Bold", "color: red; font-weight: bold");
