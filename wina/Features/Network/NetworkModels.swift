@@ -7,6 +7,34 @@
 
 import SwiftUI
 
+// MARK: - Stack Frame (for request initiator tracking)
+
+struct StackFrame: Identifiable, Equatable, Codable {
+    let id: UUID
+    let functionName: String
+    let fileName: String
+    let lineNumber: Int
+    let columnNumber: Int
+
+    init(id: UUID = UUID(), functionName: String, fileName: String, lineNumber: Int, columnNumber: Int) {
+        self.id = id
+        self.functionName = functionName
+        self.fileName = fileName
+        self.lineNumber = lineNumber
+        self.columnNumber = columnNumber
+    }
+
+    /// Display format: "functionName (fileName:lineNumber:columnNumber)"
+    var displayText: String {
+        "\(functionName) (\(fileName):\(lineNumber):\(columnNumber))"
+    }
+
+    /// Just file name without path
+    var displayFileName: String {
+        (fileName as NSString).lastPathComponent
+    }
+}
+
 // MARK: - Network Request Model
 
 struct NetworkRequest: Identifiable, Equatable {
@@ -24,6 +52,8 @@ struct NetworkRequest: Identifiable, Equatable {
     var endTime: Date?
     var error: String?
     var requestType: RequestType
+    var stackFrames: [StackFrame]?  // JavaScript call stack at request time
+    var initiatorFunction: String?  // Top-level function name from stack
 
     // Preview length for memory storage
     static let previewLength = 500

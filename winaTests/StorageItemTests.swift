@@ -173,6 +173,16 @@ struct StorageItemStorageTypeTests {
         #expect(allCases.contains(.sessionStorage))
         #expect(allCases.contains(.cookies))
     }
+
+    @Test("Storage types have stable sort order")
+    func testSortOrder() {
+        #expect(StorageItem.StorageType.localStorage.sortOrder == 0)
+        #expect(StorageItem.StorageType.sessionStorage.sortOrder == 1)
+        #expect(StorageItem.StorageType.cookies.sortOrder == 2)
+
+        let sorted = StorageItem.StorageType.allCases.sorted { $0.sortOrder < $1.sortOrder }
+        #expect(sorted == [.localStorage, .sessionStorage, .cookies])
+    }
 }
 
 // MARK: - StorageValueType Tests

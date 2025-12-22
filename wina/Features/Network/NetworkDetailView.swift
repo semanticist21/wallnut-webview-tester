@@ -591,6 +591,7 @@ struct DetailSection<Content: View>: View {
     var onShare: (() -> Void)?
     @ViewBuilder let content: () -> Content
     @State private var showRaw: Bool = false
+    @State private var isExpanded: Bool = true
 
     init(
         title: String,
@@ -608,63 +609,78 @@ struct DetailSection<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Section header with Raw toggle, Share, and Copy buttons
-            HStack(spacing: 8) {
-                Text(title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.secondary)
+            // Section header with expand/collapse, Raw toggle, Share, and Copy buttons
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    isExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 8) {
+                    // Chevron to indicate expand/collapse
+                    Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 12)
 
-                Spacer()
+                    Text(title)
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.secondary)
 
-                if let rawText, !rawText.isEmpty {
-                    // Raw/Table toggle button
-                    Button {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            showRaw.toggle()
+                    Spacer()
+
+                    if let rawText, !rawText.isEmpty {
+                        // Raw/Table toggle button
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                showRaw.toggle()
+                            }
+                        } label: {
+                            Text(showRaw ? "Table" : "Raw")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(.primary)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
                         }
-                    } label: {
-                        Text(showRaw ? "Table" : "Raw")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.primary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                    }
-                    .buttonStyle(.plain)
-                    .backport.glassEffect(in: .capsule)
+                        .buttonStyle(.plain)
+                        .backport.glassEffect(in: .capsule)
 
-                    // Share button (optional)
-                    if let onShare {
+                        // Share button (optional)
+                        if let onShare {
+                            GlassIconButton(
+                                icon: "square.and.arrow.up",
+                                size: .small,
+                                accessibilityLabel: "Share"
+                            ) {
+                                onShare()
+                            }
+                        }
+
+                        // Copy button
                         GlassIconButton(
-                            icon: "square.and.arrow.up",
+                            icon: "doc.on.doc",
                             size: .small,
-                            accessibilityLabel: "Share"
+                            accessibilityLabel: "Copy to clipboard"
                         ) {
-                            onShare()
+                            onCopy?(rawText, title)
                         }
                     }
+                }
+            }
+            .buttonStyle(.plain)
 
-                    // Copy button
-                    GlassIconButton(
-                        icon: "doc.on.doc",
-                        size: .small,
-                        accessibilityLabel: "Copy to clipboard"
-                    ) {
-                        onCopy?(rawText, title)
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 0) {
+                    if showRaw, let rawText {
+                        // Raw text view with UITextView for proper text selection
+                        SelectableTextView(text: rawText)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        content()
                     }
                 }
+                .background(Color(uiColor: .secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 10))
             }
-
-            VStack(alignment: .leading, spacing: 0) {
-                if showRaw, let rawText {
-                    // Raw text view with UITextView for proper text selection
-                    SelectableTextView(text: rawText)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    content()
-                }
-            }
-            .background(Color(uiColor: .secondarySystemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 10))
         }
     }
 }

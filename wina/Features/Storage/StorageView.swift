@@ -64,6 +64,22 @@ struct StorageItem: Identifiable, Equatable {
             case .cookies: return "Cookies"
             }
         }
+
+        var sortOrder: Int {
+            switch self {
+            case .localStorage: return 0
+            case .sessionStorage: return 1
+            case .cookies: return 2
+            }
+        }
+
+        var tintColor: Color {
+            switch self {
+            case .localStorage: return .blue
+            case .sessionStorage: return .orange
+            case .cookies: return .green
+            }
+        }
     }
 
     static func == (lhs: StorageItem, rhs: StorageItem) -> Bool {
@@ -329,13 +345,19 @@ struct StorageView: View {
     let navigator: WebViewNavigator?
     @Environment(\.dismiss) private var dismiss
     @State private var selectedType: StorageItem.StorageType = .localStorage
+    @State private var showsAllStorage: Bool = false
     @State private var searchText: String = ""
     @State private var shareItem: StorageShareContent?
     @State private var selectedItem: StorageItem?
     @State private var showAddSheet: Bool = false
 
     private var filteredItems: [StorageItem] {
-        var result = storageManager.items.filter { $0.storageType == selectedType }
+        var result: [StorageItem]
+        if showsAllStorage {
+            result = storageManager.items
+        } else {
+            result = storageManager.items.filter { $0.storageType == selectedType }
+        }
 
         if !searchText.isEmpty {
             result = result.filter {
@@ -344,14 +366,21 @@ struct StorageView: View {
             }
         }
 
-        return result.sorted { $0.key < $1.key }
+        return result.sorted { lhs, rhs in
+            if showsAllStorage, lhs.storageType != rhs.storageType {
+                return lhs.storageType.sortOrder < rhs.storageType.sortOrder
+            }
+            return lhs.key < rhs.key
+        }
     }
 
     var body: some View {
         VStack(spacing: 0) {
             storageHeader
             searchBar
-            storageTypePicker
+            if !showsAllStorage {
+                storageTypePicker
+            }
 
             Divider()
 
@@ -409,7 +438,7 @@ struct StorageView: View {
                 },
                 .init(
                     icon: "trash",
-                    isDisabled: filteredItems.isEmpty
+                    isDisabled: filteredItems.isEmpty || showsAllStorage
                 ) {
                     Task {
                         if await storageManager.clearStorage(type: selectedType) {
@@ -425,7 +454,19 @@ struct StorageView: View {
                 }
             ],
             rightButtons: [
-                .init(icon: "plus") {
+                .init(
+                    icon: "square.stack.3d.up",
+                    activeIcon: "square.stack.3d.up.fill",
+                    color: .secondary,
+                    activeColor: .blue,
+                    isActive: showsAllStorage
+                ) {
+                    showsAllStorage.toggle()
+                },
+                .init(
+                    icon: "plus",
+                    isDisabled: showsAllStorage
+                ) {
                     showAddSheet = true
                 },
                 .init(icon: "arrow.clockwise") {
@@ -467,6 +508,7 @@ struct StorageView: View {
     // MARK: - Table Header
 
     private let keyColumnWidth: CGFloat = 140
+    private let storageTypeColumnWidth: CGFloat = 72
 
     private var tableHeader: some View {
         HStack(spacing: 12) {
@@ -479,6 +521,13 @@ struct StorageView: View {
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+
+            if showsAllStorage {
+                Text("Storage")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: storageTypeColumnWidth, alignment: .trailing)
+            }
 
             // Placeholder for chevron alignment
             Image(systemName: "chevron.right")
@@ -497,10 +546,10 @@ struct StorageView: View {
             ScrollView {
                 VStack(spacing: 8) {
                     Spacer(minLength: 0)
-                    Image(systemName: selectedType.icon)
+                    Image(systemName: showsAllStorage ? "tray.full" : selectedType.icon)
                         .font(.system(size: 36))
                         .foregroundStyle(.tertiary)
-                    Text("No \(selectedType.label.lowercased()) data")
+                    Text(showsAllStorage ? "No storage data" : "No \(selectedType.label.lowercased()) data")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                     if let error = storageManager.errorMessage {
@@ -548,7 +597,9 @@ struct StorageView: View {
                     StorageItemRow(
                         item: item,
                         keyColumnWidth: keyColumnWidth,
+                        storageTypeColumnWidth: storageTypeColumnWidth,
                         searchText: searchText,
+                        showsStorageType: showsAllStorage,
                         onEdit: { selectedItem = $0 },
                         onDelete: { deleteItem($0) },
                         onCopy: { copyToClipboard($0) },
@@ -581,11 +632,16 @@ struct StorageView: View {
     // MARK: - Export
 
     private func exportAsText() -> String {
-        var output = "# \(selectedType.label) Storage Export\n"
+        let title = showsAllStorage ? "All Storage Export" : "\(selectedType.label) Storage Export"
+        var output = "# \(title)\n"
         output += "# \(Date().formatted())\n\n"
 
         for item in filteredItems {
-            output += "\(item.key) = \(item.value)\n"
+            if showsAllStorage {
+                output += "[\(item.storageType.label)] \(item.key) = \(item.value)\n"
+            } else {
+                output += "\(item.key) = \(item.value)\n"
+            }
         }
 
         return output
@@ -597,7 +653,9 @@ struct StorageView: View {
 private struct StorageItemRow: View {
     let item: StorageItem
     let keyColumnWidth: CGFloat
+    let storageTypeColumnWidth: CGFloat
     let searchText: String
+    let showsStorageType: Bool
     let onEdit: (StorageItem) -> Void
     let onDelete: (StorageItem) -> Void
     let onCopy: (String) -> Void
@@ -706,6 +764,13 @@ private struct StorageItemRow: View {
                 Text(valueType.label)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(valueType.color)
+            }
+
+            if showsStorageType {
+                Text(item.storageType.label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(item.storageType.tintColor)
+                    .frame(width: storageTypeColumnWidth, alignment: .trailing)
             }
 
             // Chevron indicator

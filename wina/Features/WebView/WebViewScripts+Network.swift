@@ -8,7 +8,7 @@
 import Foundation
 
 extension WebViewScripts {
-    /// Network hooking script - intercepts fetch and XMLHttpRequest
+    /// Network hooking script - intercepts fetch and XMLHttpRequest with stack trace capture
     static let networkHook = """
         (function() {
             if (window.__networkHooked) return;
@@ -29,6 +29,47 @@ extension WebViewScripts {
                     return new URL(url, document.baseURI).href;
                 } catch(e) {
                     return url;
+                }
+            }
+
+            // Capture and parse stack trace at request time
+            function captureStackTrace() {
+                try {
+                    var stack = new Error().stack || '';
+                    var frames = [];
+                    var lines = stack.split('\\n');
+
+                    for (var i = 1; i < lines.length && frames.length < 10; i++) {
+                        var line = lines[i];
+                        // Parse "at functionName (fileName:line:col)" or "at https://url:line:col"
+                        var match = line.match(/at\\s+(.*?)\\s+\\(([^:]+):(\\d+):(\\d+)\\)/);
+                        if (!match) {
+                            match = line.match(/at\\s+([^\\s]+):(\\d+):(\\d+)/);
+                            if (match) {
+                                frames.push({
+                                    functionName: '<anonymous>',
+                                    fileName: match[1],
+                                    lineNumber: parseInt(match[2]),
+                                    columnNumber: parseInt(match[3])
+                                });
+                            }
+                        } else {
+                            var fileName = match[2];
+                            try {
+                                fileName = new URL(fileName, document.baseURI).href;
+                            } catch(e) {}
+
+                            frames.push({
+                                functionName: match[1],
+                                fileName: fileName,
+                                lineNumber: parseInt(match[3]),
+                                columnNumber: parseInt(match[4])
+                            });
+                        }
+                    }
+                    return frames;
+                } catch(e) {
+                    return [];
                 }
             }
 
@@ -72,6 +113,7 @@ extension WebViewScripts {
                 var method = (init && init.method) || (input && input.method) || 'GET';
                 var headers = (init && init.headers) || (input && input.headers) || null;
                 var body = (init && init.body) || null;
+                var stackFrames = captureStackTrace();
 
                 try {
                     window.webkit.messageHandlers.networkRequest.postMessage({
@@ -81,7 +123,9 @@ extension WebViewScripts {
                         url: url,
                         type: 'fetch',
                         headers: headersToObject(headers),
-                        body: truncateBody(body)
+                        body: truncateBody(body),
+                        stackFrames: stackFrames,
+                        initiatorFunction: stackFrames.length > 0 ? stackFrames[0].functionName : null
                     });
                 } catch(e) {}
 
@@ -156,6 +200,7 @@ extension WebViewScripts {
             XHR.prototype.send = function(body) {
                 var xhr = this;
                 var requestId = xhr.__networkRequestId;
+                var stackFrames = captureStackTrace();
 
                 try {
                     window.webkit.messageHandlers.networkRequest.postMessage({
@@ -165,7 +210,9 @@ extension WebViewScripts {
                         url: xhr.__networkUrl || '',
                         type: 'xhr',
                         headers: xhr.__networkHeaders,
-                        body: truncateBody(body)
+                        body: truncateBody(body),
+                        stackFrames: stackFrames,
+                        initiatorFunction: stackFrames.length > 0 ? stackFrames[0].functionName : null
                     });
                 } catch(e) {}
 
