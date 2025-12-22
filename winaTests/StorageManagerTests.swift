@@ -37,28 +37,23 @@ final class StorageManagerTests: XCTestCase {
     }
 
     @MainActor
-    func testRefreshIncludesAllCookiesWhenEnabled() async {
+    func testRefreshFiltersCookiesWithNoURL() async {
         let manager = StorageManager()
         let mock = MockStorageNavigator()
         mock.jsResult = "[]"
         mock.cookies = [
-            makeCookie(name: "a", value: "1", domain: ".example.com"),
-            makeCookie(name: "b", value: "2", domain: "sub.example.com"),
-            makeCookie(name: "c", value: "3", domain: "other.com")
+            makeCookie(name: "a", value: "1", domain: ".example.com")
         ]
 
         manager.setNavigator(mock)
-        await manager.refresh(
-            includeAllCookies: true,
-            pageURL: URL(string: "https://sub.example.com/path")
-        )
+        await manager.refresh(pageURL: nil)
 
         let cookieKeys = manager.items
             .filter { $0.storageType == .cookies }
             .map(\.key)
             .sorted()
 
-        XCTAssertEqual(cookieKeys, ["a", "b", "c"])
+        XCTAssertEqual(cookieKeys, [])
     }
 }
 

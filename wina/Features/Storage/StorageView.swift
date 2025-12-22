@@ -163,7 +163,7 @@ class StorageManager {
 
     // SWR: Fetch all storage data from WebView (keep stale data while revalidating)
     @MainActor
-    func refresh(includeAllCookies: Bool = false, pageURL: URL? = nil) async {
+    func refresh(pageURL: URL? = nil) async {
         guard let navigator else {
             errorMessage = "WebView not connected"
             return
@@ -187,8 +187,7 @@ class StorageManager {
         // Fetch cookies
         if let cookieData = await fetchCookies(
             navigator: navigator,
-            pageURL: pageURL,
-            includeAllDomains: includeAllCookies
+            pageURL: pageURL
         ) {
             newItems.append(contentsOf: cookieData)
         }
@@ -245,15 +244,13 @@ class StorageManager {
 
     private func fetchCookies(
         navigator: StorageNavigator,
-        pageURL: URL?,
-        includeAllDomains: Bool
+        pageURL: URL?
     ) async -> [StorageItem]? {
         // Use native WKHTTPCookieStore for full cookie metadata
         let cookies = await navigator.getAllCookies()
         let host = pageURL?.host?.lowercased()
 
         let filteredCookies = cookies.filter { cookie in
-            guard !includeAllDomains else { return true }
             guard let host else { return false }
             let domain = cookie.domain.lowercased()
             if domain.hasPrefix(".") {
@@ -375,7 +372,6 @@ struct StorageView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedType: StorageItem.StorageType = .localStorage
     @State private var showsAllStorage: Bool = false
-    @State private var showsAllCookies: Bool = false
     @State private var searchText: String = ""
     @State private var shareItem: StorageShareContent?
     @State private var selectedItem: StorageItem?
@@ -431,20 +427,10 @@ struct StorageView: View {
                 item: item,
                 storageManager: storageManager,
                 onSave: {
-                    Task {
-                        await storageManager.refresh(
-                            includeAllCookies: showsAllCookies,
-                            pageURL: navigator?.currentURL
-                        )
-                    }
+                    Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
                 },
                 onDelete: {
-                    Task {
-                        await storageManager.refresh(
-                            includeAllCookies: showsAllCookies,
-                            pageURL: navigator?.currentURL
-                        )
-                    }
+                    Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
                 }
             )
         }
@@ -453,12 +439,7 @@ struct StorageView: View {
                 storageManager: storageManager,
                 storageType: selectedType,
                 onSave: {
-                    Task {
-                        await storageManager.refresh(
-                            includeAllCookies: showsAllCookies,
-                            pageURL: navigator?.currentURL
-                        )
-                    }
+                    Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
                 }
             )
         }
@@ -468,18 +449,10 @@ struct StorageView: View {
                 adUnitId: AdManager.interstitialAdUnitId
             )
             storageManager.setNavigator(navigator)
-            await storageManager.refresh(
-                includeAllCookies: showsAllCookies,
-                pageURL: navigator?.currentURL
-            )
+            await storageManager.refresh(pageURL: navigator?.currentURL)
         }
         .onChange(of: navigator?.currentURL) { _, _ in
-            Task {
-                await storageManager.refresh(
-                    includeAllCookies: showsAllCookies,
-                    pageURL: navigator?.currentURL
-                )
-            }
+            Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
         }
     }
 
@@ -498,10 +471,7 @@ struct StorageView: View {
                 ) {
                     Task {
                         if await storageManager.clearStorage(type: selectedType) {
-                            await storageManager.refresh(
-                                includeAllCookies: showsAllCookies,
-                                pageURL: navigator?.currentURL
-                            )
+                            await storageManager.refresh(pageURL: navigator?.currentURL)
                         }
                     }
                 },
@@ -523,33 +493,13 @@ struct StorageView: View {
                     showsAllStorage.toggle()
                 },
                 .init(
-                    icon: "globe",
-                    activeIcon: "globe.americas.fill",
-                    color: .secondary,
-                    activeColor: .blue,
-                    isActive: showsAllCookies
-                ) {
-                    showsAllCookies.toggle()
-                    Task {
-                        await storageManager.refresh(
-                            includeAllCookies: showsAllCookies,
-                            pageURL: navigator?.currentURL
-                        )
-                    }
-                },
-                .init(
                     icon: "plus",
                     isDisabled: showsAllStorage
                 ) {
                     showAddSheet = true
                 },
                 .init(icon: "arrow.clockwise") {
-                    Task {
-                        await storageManager.refresh(
-                            includeAllCookies: showsAllCookies,
-                            pageURL: navigator?.currentURL
-                        )
-                    }
+                    Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
                 }
             ]
         )
@@ -697,10 +647,7 @@ struct StorageView: View {
     private func deleteItem(_ item: StorageItem) {
         Task {
             if await storageManager.removeItem(key: item.key, type: item.storageType) {
-                await storageManager.refresh(
-                    includeAllCookies: showsAllCookies,
-                    pageURL: navigator?.currentURL
-                )
+                await storageManager.refresh(pageURL: navigator?.currentURL)
             }
         }
     }

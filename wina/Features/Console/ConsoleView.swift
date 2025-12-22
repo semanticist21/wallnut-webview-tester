@@ -32,7 +32,7 @@ struct ConsoleLog: Identifiable, Equatable {
     var stackTrace: String?
 
     // ✨ Styled Segments Support (console.log("%c..."))
-    var styledSegments: [ConsoleStyledSegment]?
+    var styledSegments: [[String: Any]]?  // Raw JSON from JavaScript
 
     // ✨ Object Support (console.dir, console.log with objects)
     var objectValue: ConsoleValue?
@@ -189,7 +189,8 @@ class ConsoleManager {
         message: String,
         source: String? = nil,
         tableData: [[String: String]]? = nil,
-        objectValue: ConsoleValue? = nil
+        objectValue: ConsoleValue? = nil,
+        styledSegments: [[String: Any]]? = nil
     ) {
         guard isCapturing else { return }
 
@@ -205,6 +206,7 @@ class ConsoleManager {
             var log = ConsoleLog(type: logType, message: message, source: source, timestamp: Date())
             log.tableData = tableData
             log.objectValue = objectValue
+            log.styledSegments = styledSegments
 
             // Handle group levels
             switch logType {
@@ -720,6 +722,9 @@ private struct LogRow: View {
                 if log.type == .table, let tableData = parsedTableData {
                     // Table rendering
                     tableView(data: tableData)
+                } else if let segments = log.styledSegments, !segments.isEmpty {
+                    // Styled segments rendering (console.log "%c" formatting)
+                    styledSegmentsView(segments: segments)
                 } else if let objValue = log.objectValue {
                     // Object value rendering (using ConsoleValueView)
                     VStack(alignment: .leading, spacing: 6) {
@@ -848,6 +853,65 @@ private struct LogRow: View {
             Divider()
                 .padding(.leading, 12 + indentation)
         }
+    }
+
+    // MARK: - Styled Segments View (console.log "%c" with CSS)
+
+    @ViewBuilder
+    private func styledSegmentsView(segments: [[String: Any]]) -> some View {
+        HStack(alignment: .top, spacing: 2) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+                let text = segment["text"] as? String ?? ""
+                let colorStr = segment["color"] as? String ?? nil
+                let bgColorStr = segment["backgroundColor"] as? String ?? nil
+                let isBold = segment["isBold"] as? Bool ?? false
+                let fontSize = segment["fontSize"] as? Int ?? nil
+
+                Text(text)
+                    .font(.system(size: CGFloat(fontSize ?? 12), weight: isBold ? .semibold : .regular, design: .monospaced))
+                    .foregroundStyle(colorFromString(colorStr) ?? .primary)
+                    .background(colorFromString(bgColorStr) ?? Color.clear)
+                    .textSelection(.enabled)
+            }
+            Spacer()
+        }
+    }
+
+    private func colorFromString(_ cssColor: String?) -> Color? {
+        guard let cssColor = cssColor?.lowercased().trimmingCharacters(in: .whitespaces) else { return nil }
+
+        // Common CSS color names
+        let colorMap: [String: Color] = [
+            "red": .red, "blue": .blue, "green": .green, "yellow": .yellow,
+            "orange": .orange, "purple": .purple, "pink": .pink, "gray": .gray,
+            "black": .black, "white": .white, "cyan": .cyan, "indigo": .indigo,
+            "mint": .mint, "teal": .teal
+        ]
+
+        if let color = colorMap[cssColor] {
+            return color
+        }
+
+        // Handle hex colors (simplified)
+        if cssColor.hasPrefix("#") {
+            let hex = String(cssColor.dropFirst())
+            if hex.count == 6 {
+                if let rgbValue = UInt(hex, radix: 16) {
+                    let r = Double((rgbValue >> 16) & 0xFF) / 255.0
+                    let g = Double((rgbValue >> 8) & 0xFF) / 255.0
+                    let b = Double(rgbValue & 0xFF) / 255.0
+                    return Color(red: r, green: g, blue: b)
+                }
+            }
+        }
+
+        // Handle rgb/rgba
+        if cssColor.hasPrefix("rgb") {
+            // Simplified: just return primary for now
+            return nil
+        }
+
+        return nil
     }
 
     // MARK: - Table View
