@@ -47,8 +47,8 @@ indirect enum ConsoleValue {
             return "ƒ \(name)()"
         case .date(let date):
             return "Date \(date.formatted())"
-        case .domElement(let tag, _):
-            return "<\(tag)>"
+        case .domElement(let tag, let attributes):
+            return domPreview(tag: tag, attributes: attributes)
         case .map(let entries):
             return "Map(\(entries.count)) { ... }"
         case .set(let values):
@@ -79,12 +79,57 @@ indirect enum ConsoleValue {
     /// 확장 가능 여부 (자식 요소가 있는가)
     var isExpandable: Bool {
         switch self {
-        case .object, .array, .map, .set:
+        case .object, .array, .map, .set, .domElement:
             return true
         default:
             return false
         }
     }
+}
+
+private func domPreview(tag: String, attributes: [String: String]) -> String {
+    let id = attributes["id"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let classValue = attributes["class"]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    let classes = classValue
+        .split(whereSeparator: { $0 == " " || $0 == "\t" })
+        .map(String.init)
+        .filter { !$0.isEmpty }
+
+    var suffix = ""
+    if !id.isEmpty {
+        suffix += "#\(id)"
+    }
+    if !classes.isEmpty {
+        suffix += "." + classes.joined(separator: ".")
+    }
+
+    return "<\(tag)\(suffix)>"
+}
+
+// MARK: - Inline Segments (Console Line Coloring)
+
+enum ConsoleInlineKind: String, Equatable {
+    case string
+    case number
+    case boolean
+    case null
+    case undefined
+    case function
+    case date
+    case symbol
+    case bigint
+    case error
+    case dom
+    case map
+    case set
+    case array
+    case object
+    case circular
+}
+
+struct ConsoleInlineSegment: Equatable {
+    let text: String
+    let kind: ConsoleInlineKind?
 }
 
 // MARK: - Console Object Model

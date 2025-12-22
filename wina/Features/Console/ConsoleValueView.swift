@@ -126,6 +126,27 @@ struct ConsoleValueView: View {
                 }
             }
 
+        case .domElement(let tag, let attributes):
+            VStack(alignment: .leading, spacing: 4) {
+                let items = domProperties(tag: tag, attributes: attributes)
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    HStack(alignment: .top, spacing: 6) {
+                        Text(item.key)
+                            .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(keyColor)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                            .padding(.leading, 4)
+
+                        Text(":")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+
+                        ConsoleValueView(value: item.value)
+                    }
+                }
+            }
+
         case .array(let arr):
             VStack(alignment: .leading, spacing: 4) {
                 let chunks = makeArrayChunks(arr.elements, chunkSize: 100)
@@ -199,6 +220,15 @@ struct ConsoleValueView: View {
         default:
             EmptyView()
         }
+    }
+
+    private func domProperties(tag: String, attributes: [String: String]) -> [(key: String, value: ConsoleValue)] {
+        var items: [(String, ConsoleValue)] = [("tag", .string(tag))]
+        let sorted = attributes.sorted { $0.key < $1.key }
+        for (key, value) in sorted {
+            items.append((key, .string(value)))
+        }
+        return items
     }
 
     // MARK: - Text Color (Eruda-like syntax highlighting)

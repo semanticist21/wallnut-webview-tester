@@ -653,10 +653,6 @@ struct StorageView: View {
 
     // MARK: - Item List
 
-    private var canScroll: Bool {
-        contentHeight > scrollViewHeight + 20
-    }
-
     private func scrollUp(proxy: ScrollViewProxy?) {
         guard let proxy else { return }
         guard !filteredItems.isEmpty else { return }
@@ -719,40 +715,14 @@ struct StorageView: View {
                 .onChange(of: outerGeo.size.height) { _, newHeight in
                     scrollViewHeight = newHeight
                 }
-                .overlay(alignment: .bottomTrailing) {
-                    VStack(spacing: 4) {
-                        Button(
-                            action: { scrollUp(proxy: scrollProxy) },
-                            label: {
-                                Image(systemName: "chevron.up.circle.fill")
-                                    .font(.system(size: 28))
-                                    .foregroundStyle(.white)
-                            }
-                        )
-                        .backport
-                        .glassEffect(in: .circle)
-                        .disabled(!canScroll || scrollOffset <= 20)
-                        .opacity(canScroll && scrollOffset > 20 ? 1 : 0.3)
-                        .animation(.easeInOut(duration: 0.2), value: canScroll && scrollOffset > 20)
-
-                        Button(
-                            action: { scrollDown(proxy: scrollProxy) },
-                            label: {
-                                Image(systemName: "chevron.down.circle.fill")
-                                    .font(.system(size: 28))
-                                    .foregroundStyle(.white)
-                            }
-                        )
-                        .backport
-                        .glassEffect(in: .circle)
-                        .disabled(!canScroll || (contentHeight - scrollOffset - scrollViewHeight) <= 20)
-                        .opacity(canScroll && (contentHeight - scrollOffset - scrollViewHeight) > 20 ? 1 : 0.3)
-                        .animation(.easeInOut(duration: 0.2), value: canScroll && (contentHeight - scrollOffset - scrollViewHeight) > 20)
-                    }
-                    .frame(height: 28 * 2 + 4)
-                    .padding(.trailing, 12)
-                    .padding(.bottom, 12)
-                }
+                .scrollNavigationOverlay(
+                    scrollOffset: scrollOffset,
+                    contentHeight: contentHeight,
+                    viewportHeight: scrollViewHeight,
+                    showProgress: true,
+                    onScrollUp: { scrollUp(proxy: scrollProxy) },
+                    onScrollDown: { scrollDown(proxy: scrollProxy) }
+                )
             }
             .onAppear {
                 scrollProxy = proxy

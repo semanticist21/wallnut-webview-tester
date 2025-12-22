@@ -452,6 +452,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             }
 
             var objectValue: ConsoleValue?
+            var inlineSegments: [ConsoleInlineSegment]?
             if let args = body["args"] as? [Any] {
                 let parsedValues = args.compactMap { ConsoleValue.fromSerializedAny($0) }
                 let hasExpandable = parsedValues.contains(where: { $0.isExpandable })
@@ -476,6 +477,10 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                 } else if parsedValues.count == 1, case .string(let only) = parsedValues[0] {
                     messageText = only
                 }
+
+                if objectValue == nil, (styledSegments?.isEmpty ?? true) {
+                    inlineSegments = buildInlineSegments(from: args, hasExpandable: hasExpandable)
+                }
             }
 
             if objectValue != nil {
@@ -489,8 +494,190 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                 message: messageText,
                 source: source,
                 objectValue: objectValue,
-                styledSegments: styledSegments
+                styledSegments: styledSegments,
+                inlineSegments: inlineSegments
             )
+        }
+
+        private func buildInlineSegments(from args: [Any], hasExpandable: Bool) -> [ConsoleInlineSegment]? {
+            guard !hasExpandable else { return nil }
+            guard args.count >= 2 else { return nil }
+
+            if let format = stringValue(from: args.first) {
+                if hasFormatSpecifiers(format) {
+                    return parseFormatSegments(format: format, args: args)
+                }
+                return joinSegments(label: format, values: Array(args.dropFirst()))
+            }
+
+            return joinValueSegments(args)
+        }
+
+        private func hasFormatSpecifiers(_ format: String) -> Bool {
+            format.range(of: "%[sdifoOc%]", options: .regularExpression) != nil
+        }
+
+        private func parseFormatSegments(format: String, args: [Any]) -> [ConsoleInlineSegment] {
+            var segments: [ConsoleInlineSegment] = []
+            var buffer = ""
+            var index = format.startIndex
+            var argIndex = 1
+
+            func flushBuffer() {
+                if !buffer.isEmpty {
+                    segments.append(ConsoleInlineSegment(text: buffer, kind: nil))
+                    buffer = ""
+                }
+            }
+
+            while index < format.endIndex {
+                let char = format[index]
+                if char == "%" {
+                    let nextIndex = format.index(after: index)
+                    if nextIndex < format.endIndex {
+                        let spec = format[nextIndex]
+                        switch spec {
+                        case "%":
+                            buffer.append("%")
+                        case "c":
+                            flushBuffer()
+                            argIndex += 1
+                        case "s", "d", "i", "f", "o", "O":
+                            flushBuffer()
+                            if argIndex < args.count, let seg = inlineSegment(for: args[argIndex]) {
+                                segments.append(seg)
+                            }
+                            argIndex += 1
+                        default:
+                            buffer.append("%")
+                            buffer.append(spec)
+                        }
+                        index = format.index(after: nextIndex)
+                        continue
+                    }
+                }
+                buffer.append(char)
+                index = format.index(after: index)
+            }
+
+            flushBuffer()
+
+            while argIndex < args.count {
+                segments.append(ConsoleInlineSegment(text: " ", kind: nil))
+                if let seg = inlineSegment(for: args[argIndex]) {
+                    segments.append(seg)
+                }
+                argIndex += 1
+            }
+
+            return segments
+        }
+
+        private func joinSegments(label: String, values: [Any]) -> [ConsoleInlineSegment] {
+            var segments: [ConsoleInlineSegment] = [ConsoleInlineSegment(text: label, kind: nil)]
+            for value in values {
+                segments.append(ConsoleInlineSegment(text: " ", kind: nil))
+                if let seg = inlineSegment(for: value) {
+                    segments.append(seg)
+                }
+            }
+            return segments
+        }
+
+        private func joinValueSegments(_ args: [Any]) -> [ConsoleInlineSegment]? {
+            var segments: [ConsoleInlineSegment] = []
+            for (idx, value) in args.enumerated() {
+                if idx > 0 {
+                    segments.append(ConsoleInlineSegment(text: " ", kind: nil))
+                }
+                if let seg = inlineSegment(for: value) {
+                    segments.append(seg)
+                }
+            }
+            return segments.isEmpty ? nil : segments
+        }
+
+        private func stringValue(from raw: Any?) -> String? {
+            guard let dict = raw as? [String: Any],
+                  let type = dict["type"] as? String,
+                  type == "string" else {
+                return nil
+            }
+            return dict["value"] as? String ?? ""
+        }
+
+        private func inlineSegment(for raw: Any) -> ConsoleInlineSegment? {
+            guard let dict = raw as? [String: Any],
+                  let type = dict["type"] as? String else {
+                return nil
+            }
+
+            switch type {
+            case "string":
+                return ConsoleInlineSegment(text: dict["value"] as? String ?? "", kind: .string)
+            case "number":
+                return ConsoleInlineSegment(text: formattedNumber(dict["value"]), kind: .number)
+            case "boolean":
+                let value = dict["value"] as? Bool ?? false
+                return ConsoleInlineSegment(text: value ? "true" : "false", kind: .boolean)
+            case "null":
+                return ConsoleInlineSegment(text: "null", kind: .null)
+            case "undefined":
+                return ConsoleInlineSegment(text: "undefined", kind: .undefined)
+            case "function":
+                let name = dict["name"] as? String ?? "anonymous"
+                return ConsoleInlineSegment(text: "[Function: \(name)]", kind: .function)
+            case "date":
+                let value = dict["value"] as? String ?? ""
+                return ConsoleInlineSegment(text: "Date(\(value))", kind: .date)
+            case "symbol":
+                let value = dict["value"] as? String ?? "Symbol()"
+                return ConsoleInlineSegment(text: value, kind: .symbol)
+            case "bigint":
+                let value = dict["value"] as? String ?? "0n"
+                return ConsoleInlineSegment(text: value, kind: .bigint)
+            case "error":
+                let message = dict["message"] as? String ?? "Error"
+                let stack = dict["stack"] as? String
+                let text = stack?.isEmpty == false ? "Error: \(message)\n\(stack ?? "")" : "Error: \(message)"
+                return ConsoleInlineSegment(text: text, kind: .error)
+            case "dom":
+                let tag = dict["tag"] as? String ?? "element"
+                let attributes = dict["attributes"] as? [String: String] ?? [:]
+                let id = attributes["id"].map { $0.isEmpty ? "" : "#\($0)" } ?? ""
+                let classList = attributes["class"]
+                    .map { $0.split(whereSeparator: { $0 == " " || $0 == "\t" }).joined(separator: ".") } ?? ""
+                let classSuffix = classList.isEmpty ? "" : ".\(classList)"
+                return ConsoleInlineSegment(text: "<\(tag)\(id)\(classSuffix)>", kind: .dom)
+            case "map":
+                let entries = dict["entries"] as? [[String: Any]] ?? []
+                return ConsoleInlineSegment(text: "Map(\(entries.count)) { ... }", kind: .map)
+            case "set":
+                let values = dict["values"] as? [Any] ?? []
+                return ConsoleInlineSegment(text: "Set(\(values.count)) { ... }", kind: .set)
+            case "array":
+                let length = dict["length"] as? Int ?? 0
+                return ConsoleInlineSegment(text: "[ \(length) items ]", kind: .array)
+            case "object":
+                let props = dict["properties"] as? [String: Any] ?? [:]
+                return ConsoleInlineSegment(text: "{ \(props.count) properties }", kind: .object)
+            case "circular":
+                let path = dict["path"] as? String ?? "root"
+                return ConsoleInlineSegment(text: "[Circular \(path)]", kind: .circular)
+            default:
+                return nil
+            }
+        }
+
+        private func formattedNumber(_ value: Any?) -> String {
+            if let number = value as? NSNumber {
+                let doubleValue = number.doubleValue
+                if doubleValue == Double(Int(doubleValue)) {
+                    return String(Int(doubleValue))
+                }
+                return String(doubleValue)
+            }
+            return String(describing: value ?? "")
         }
 
         private func handleNetworkMessage(_ message: WKScriptMessage) {

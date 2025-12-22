@@ -6,23 +6,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Wallnut (wina)** - WKWebView & SFSafariViewController 테스터 앱
 
-WKWebView와 SFSafariViewController 설정을 실시간 테스트하는 개발자 도구. SwiftUI 기반, iOS 26.1+ (Tahoe), ~100 Swift files
+WKWebView와 SFSafariViewController 설정을 실시간 테스트하는 개발자 도구. SwiftUI 기반, iOS 18.4+, ~100 Swift files
 
 **주요 기능**:
 - **WKWebView**: 설정 옵션 테스트, DevTools (Console/Network/Storage/Performance/Sources/Accessibility), 스크린샷
 - **SFSafariViewController**: Safari 쿠키/세션 공유, Content Blocker, Reader Mode, Safari 확장 지원
 - **공통**: URL 테스트, API Capability 감지, 북마크, 반응형 크기 조절
 
-**Recent Focus** (as of Dec 22, 2024):
-- ✅ Scroll buttons implementation (NetworkView, PerformanceView, StorageView, AccessibilityAuditView)
-  - glassEffect modifier placement fix: apply to Button, not label
-  - .backport.glassEffect(in: .circle) for iOS compatibility
-  - State-based opacity/disabled visualization with smooth animations
-- ✅ StorageView UX: URL change detection (Timer-based polling) even during drawer interaction
-- Console %c CSS styling (color, background-color, font-weight, font-size)
-- Console array chunking for large outputs (100+ items → collapsed groups)
-- Network tab scroll buttons (bottom-right, Liquid Glass design)
-- Fetch/XHR filter separation in Network tab
+**Dependencies** (SPM):
+- GoogleMobileAds - 광고
+- UAParserSwift - User-Agent 파싱
+- SwiftSoup - HTML 파싱
+- Runestone + TreeSitterHTMLRunestone - 코드 하이라이팅
+- SwiftUIBackports - iOS 하위 버전 호환성
 
 ## Quick Reference
 
@@ -147,7 +143,7 @@ func resetToDefaults() { localValue = false }  // 저장 X
 
 ### Console Features
 
-#### %c CSS Styling (WebViewScripts+Console.swift:76)
+#### %c CSS Styling
 ```javascript
 console.log("%cRed Bold", "color: red; font-weight: bold");
 console.log("%cSuccess%cDetailed", "color: green", "color: gray");
@@ -161,7 +157,7 @@ Supported CSS:
 
 **Implementation**: `formatConsoleMessage()` detects %c → `parseCSS()` parses → `styledSegments` JSON → ConsoleValueView renders with SwiftUI modifiers
 
-#### Array Chunking (ConsoleValue.swift:133)
+#### Array Chunking
 Large arrays (100+ items) auto-divide into 100-item chunks with collapsed UI:
 ```swift
 var chunks: [(range: Range<Int>, label: String, elements: [ConsoleValue])]? {
@@ -182,18 +178,6 @@ console.timeEnd("fetch");  // "fetch: 456.789ms" (delete timer)
 Timer maintained across timeLog, only deleted on timeEnd. 3-digit millisecond precision.
 
 ### Network Tab Architecture
-
-**Recent Changes**:
-- Fetch + XHR unified filter (both captured as fetch hooks)
-- Separate `.fetch` and `.xhr` cases in `NetworkResourceFilter` enum
-- Cross-origin resource domain-based filtering
-- Scroll buttons (bottom-right, Liquid Glass 0.3 opacity when inactive)
-
-**Scroll Buttons** (NetworkView.swift):
-- Uses `onScrollGeometryChange(for: Double.self)` (iOS 26 standard API)
-- Position: `.bottomTrailing` with fixed frame (prevents layout shifts)
-- Opacity: 0.3 inactive, 1.0 active (Liquid Glass principle)
-- Animation: 0.2s easeInOut fade
 
 **NetworkManager struct**:
 ```swift
@@ -683,19 +667,6 @@ See `.swiftlint.yml` for rules. Key points:
 
 ---
 
-## Recent Session Work
-
-**Latest Changes** (Dec 2024):
-- ✅ Fixed SwiftLint violations in ResponseFormatterView.swift (cyclomatic complexity, duplicate conditions, unused parameters)
-- ✅ Fixed StackTraceView button closure syntax (trailing closure)
-- ✅ Fixed ConsoleValue identifier names (s→stringValue, n→numberValue, l→lhsValue)
-- ✅ Fixed ConsoleValueView unused parameters and trailing closure syntax
-- ✅ Verified 0 violations in all modified files
-
-**Know When to Lint**: After EVERY change. Run `swiftlint lint --fix && swiftlint lint` before commit.
-
----
-
 ## Troubleshooting
 
 ### Xcode Build Failures
@@ -731,8 +702,8 @@ brew uninstall swiftlint && brew install swiftlint
 
 | Tool | Version | Required |
 |------|---------|----------|
-| Xcode | 16.1+ | ✅ |
-| iOS Target | 26.1+ | ✅ |
+| Xcode | 16.0+ | ✅ |
+| iOS Target | 18.4+ | ✅ |
 | SwiftLint | 0.62.2+ | ✅ (pre-commit) |
 | swift-format | 6.2.1+ | 🟡 (optional, avoid complex SwiftUI) |
 | Google Mobile Ads | 11.0+ | ✅ (ads) |

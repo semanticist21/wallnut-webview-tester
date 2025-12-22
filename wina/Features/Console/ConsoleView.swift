@@ -34,6 +34,9 @@ struct ConsoleLog: Identifiable, Equatable {
     // ✨ Styled Segments Support (console.log("%c..."))
     var styledSegments: [[String: Any]]?  // Raw JSON from JavaScript
 
+    // ✨ Inline Segments Support (console.log("label", 1, true))
+    var inlineSegments: [ConsoleInlineSegment]?
+
     // ✨ Object Support (console.dir, console.log with objects)
     var objectValue: ConsoleValue?
     var repeatCount: Int = 1
@@ -191,7 +194,8 @@ class ConsoleManager {
         source: String? = nil,
         tableData: [[String: String]]? = nil,
         objectValue: ConsoleValue? = nil,
-        styledSegments: [[String: Any]]? = nil
+        styledSegments: [[String: Any]]? = nil,
+        inlineSegments: [ConsoleInlineSegment]? = nil
     ) {
         guard isCapturing else { return }
 
@@ -208,6 +212,7 @@ class ConsoleManager {
             log.tableData = tableData
             log.objectValue = objectValue
             log.styledSegments = styledSegments
+            log.inlineSegments = inlineSegments
 
             // Handle group levels
             switch logType {
@@ -268,7 +273,8 @@ class ConsoleManager {
               lhs.groupLevel == rhs.groupLevel,
               lhs.groupId == rhs.groupId,
               lhs.tableData == rhs.tableData,
-              lhs.objectValue == rhs.objectValue else {
+              lhs.objectValue == rhs.objectValue,
+              lhs.inlineSegments == rhs.inlineSegments else {
             return false
         }
         return styledSegmentsEqual(lhs.styledSegments, rhs.styledSegments)
@@ -773,6 +779,8 @@ private struct LogRow: View {
                         if let segments = log.styledSegments, !segments.isEmpty {
                             // Styled segments rendering (console.log "%c" formatting)
                             styledSegmentsView(segments: segments)
+                        } else if let inlineSegments = log.inlineSegments, !inlineSegments.isEmpty, !isGroupHeader {
+                            inlineSegmentsView(segments: inlineSegments)
                         } else if !log.message.isEmpty || isGroupHeader {
                             // Regular message
                             HStack(alignment: .top, spacing: 4) {
@@ -821,11 +829,11 @@ private struct LogRow: View {
                     }
 
                     // Source location (if available)
-                    if let source = log.source {
-                        Text(source)
-                            .font(.system(size: 10, design: .monospaced))
-                            .foregroundStyle(.blue)
-                    }
+                if let source = log.source {
+                    Text(source)
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundStyle(.tertiary)
+                }
                 }
             }
 
@@ -908,6 +916,44 @@ private struct LogRow: View {
                     .textSelection(.enabled)
             }
             Spacer()
+        }
+    }
+
+    private func inlineSegmentsView(segments: [ConsoleInlineSegment]) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
+                Text(segment.text)
+                    .foregroundStyle(inlineSegmentColor(segment.kind))
+                    .textSelection(.enabled)
+            }
+            Spacer()
+        }
+        .font(.system(size: 12, design: .monospaced))
+    }
+
+    private func inlineSegmentColor(_ kind: ConsoleInlineKind?) -> Color {
+        guard let kind else {
+            return .primary
+        }
+        switch kind {
+        case .string:
+            return Color(red: 0.9, green: 0.6, blue: 0.0)
+        case .number:
+            return Color(red: 0.2, green: 0.7, blue: 1.0)
+        case .boolean:
+            return Color(red: 0.8, green: 0.2, blue: 0.8)
+        case .null, .undefined:
+            return Color(red: 0.7, green: 0.7, blue: 0.7)
+        case .function:
+            return .orange
+        case .date:
+            return .purple
+        case .error:
+            return .red
+        case .dom:
+            return .red
+        case .symbol, .bigint, .map, .set, .array, .object, .circular:
+            return .secondary
         }
     }
 

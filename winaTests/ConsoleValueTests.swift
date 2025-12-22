@@ -142,9 +142,36 @@ final class ConsoleValueTests: XCTestCase {
         let attrs = ["class": "container", "id": "main"]
         let value = ConsoleValue.domElement(tag: "div", attributes: attrs)
 
-        XCTAssertEqual(value.preview, "<div>")
+        XCTAssertEqual(value.preview, "<div#main.container>")
         XCTAssertEqual(value.typeColor, .red)
-        XCTAssertFalse(value.isExpandable)
+        XCTAssertTrue(value.isExpandable)
+    }
+
+    func testDOMElementPreviewWithMultipleClasses() {
+        let attrs = ["class": "test primary", "id": "root"]
+        let value = ConsoleValue.domElement(tag: "div", attributes: attrs)
+
+        XCTAssertEqual(value.preview, "<div#root.test.primary>")
+    }
+
+    func testSerializedDOMPayloadParses() {
+        let payload: [String: Any] = [
+            "type": "dom",
+            "tag": "div",
+            "attributes": [
+                "class": "test",
+                "id": ""
+            ]
+        ]
+
+        let parsed = ConsoleValue.fromSerializedAny(payload)
+        guard case let .domElement(tag, attributes)? = parsed else {
+            XCTFail("Expected domElement payload to parse")
+            return
+        }
+        XCTAssertEqual(tag, "div")
+        XCTAssertEqual(attributes["class"], "test")
+        XCTAssertEqual(attributes["id"], "")
     }
 
     // MARK: - Collections
