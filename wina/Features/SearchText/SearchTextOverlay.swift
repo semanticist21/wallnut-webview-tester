@@ -1,0 +1,329 @@
+//
+//  SearchTextOverlay.swift
+//  wina
+//
+//  Search and highlight text on the current page.
+//  Based on Eruda's Search Text snippet.
+//
+
+import SwiftUI
+import SwiftUIBackports
+
+// MARK: - Search Text Overlay
+
+struct SearchTextOverlay: View {
+    let navigator: WebViewNavigator
+    @Binding var isPresented: Bool
+
+    @State private var searchText: String = ""
+    @State private var matchCount: Int = 0
+    @State private var currentIndex: Int = 0
+    @State private var isSearching: Bool = false
+    @FocusState private var isTextFieldFocused: Bool
+
+    var body: some View {
+        VStack {
+            Spacer()
+
+            // Search bar at bottom
+            HStack(spacing: 12) {
+                // Close button
+                Button {
+                    clearHighlights()
+                    isPresented = false
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+
+                // Search field
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+
+                    TextField("Search in page", text: $searchText)
+                        .font(.system(size: 15))
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .focused($isTextFieldFocused)
+                        .submitLabel(.search)
+                        .onSubmit {
+                            performSearch()
+                        }
+
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                            clearHighlights()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(.tertiary)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .frame(height: 36)
+                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 10))
+
+                // Match count & navigation
+                if matchCount > 0 {
+                    HStack(spacing: 4) {
+                        Text("\(currentIndex + 1)/\(matchCount)")
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(.secondary)
+                            .frame(minWidth: 40)
+
+                        Button {
+                            navigateToPrevious()
+                        } label: {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .frame(width: 28, height: 28)
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(matchCount <= 1)
+
+                        Button {
+                            navigateToNext()
+                        } label: {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(.primary)
+                                .frame(width: 28, height: 28)
+                                .contentShape(Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(matchCount <= 1)
+                    }
+                } else if !searchText.isEmpty && !isSearching {
+                    Text("No matches")
+                        .font(.system(size: 12))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(.ultraThinMaterial)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .padding(.horizontal, 12)
+            .padding(.bottom, 80) // Above bottom bar
+        }
+        .ignoresSafeArea(.keyboard)
+        .onAppear {
+            isTextFieldFocused = true
+        }
+        .onChange(of: searchText) { _, newValue in
+            if newValue.isEmpty {
+                clearHighlights()
+            } else {
+                // Debounce search
+                Task {
+                    try? await Task.sleep(for: .milliseconds(300))
+                    if searchText == newValue {
+                        performSearch()
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Search Actions
+
+    private func performSearch() {
+        guard !searchText.isEmpty else { return }
+        isSearching = true
+
+        let escapedText = searchText
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: "'", with: "\\'")
+            .replacingOccurrences(of: "\"", with: "\\\"")
+
+        let script = """
+        (function() {
+            // Remove previous highlights
+            document.querySelectorAll('.__wina_search_highlight__').forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+
+            const keyword = '\(escapedText)';
+            if (!keyword) return JSON.stringify({count: 0, index: 0});
+
+            const regex = new RegExp(keyword, 'gi');
+            let matchCount = 0;
+            const elements = [];
+
+            function traverse(node) {
+                if (node.nodeType === 3) { // Text node
+                    const text = node.nodeValue;
+                    if (regex.test(text)) {
+                        regex.lastIndex = 0;
+                        const span = document.createElement('span');
+                        span.innerHTML = text.replace(regex, match => {
+                            matchCount++;
+                            return '<span class="__wina_search_highlight__" style="background-color: #FFEB3B; color: #000; padding: 1px 2px; border-radius: 2px;">' + match + '</span>';
+                        });
+                        const frag = document.createDocumentFragment();
+                        while (span.firstChild) {
+                            if (span.firstChild.className === '__wina_search_highlight__') {
+                                elements.push(span.firstChild);
+                            }
+                            frag.appendChild(span.firstChild);
+                        }
+                        node.parentNode.replaceChild(frag, node);
+                    }
+                } else if (node.nodeType === 1 && !['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(node.tagName)) {
+                    Array.from(node.childNodes).forEach(traverse);
+                }
+            }
+
+            traverse(document.body);
+
+            // Scroll to first match
+            if (elements.length > 0) {
+                elements[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+                elements[0].style.backgroundColor = '#FF9800';
+            }
+
+            window.__wina_search_elements__ = elements;
+            window.__wina_search_index__ = 0;
+
+            return JSON.stringify({count: matchCount, index: 0});
+        })();
+        """
+
+        Task {
+            let result = await navigator.evaluateJavaScript(script)
+            await MainActor.run {
+                isSearching = false
+                if let jsonString = result as? String,
+                   let data = jsonString.data(using: .utf8),
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    matchCount = json["count"] as? Int ?? 0
+                    currentIndex = json["index"] as? Int ?? 0
+                }
+            }
+        }
+    }
+
+    private func navigateToNext() {
+        let script = """
+        (function() {
+            const elements = window.__wina_search_elements__ || [];
+            if (elements.length === 0) return JSON.stringify({index: 0});
+
+            let index = window.__wina_search_index__ || 0;
+
+            // Reset previous highlight
+            if (elements[index]) {
+                elements[index].style.backgroundColor = '#FFEB3B';
+            }
+
+            // Move to next
+            index = (index + 1) % elements.length;
+            window.__wina_search_index__ = index;
+
+            // Highlight current
+            if (elements[index]) {
+                elements[index].style.backgroundColor = '#FF9800';
+                elements[index].scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+
+            return JSON.stringify({index: index});
+        })();
+        """
+
+        Task {
+            let result = await navigator.evaluateJavaScript(script)
+            await MainActor.run {
+                if let jsonString = result as? String,
+                   let data = jsonString.data(using: .utf8),
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    currentIndex = json["index"] as? Int ?? 0
+                }
+            }
+        }
+    }
+
+    private func navigateToPrevious() {
+        let script = """
+        (function() {
+            const elements = window.__wina_search_elements__ || [];
+            if (elements.length === 0) return JSON.stringify({index: 0});
+
+            let index = window.__wina_search_index__ || 0;
+
+            // Reset previous highlight
+            if (elements[index]) {
+                elements[index].style.backgroundColor = '#FFEB3B';
+            }
+
+            // Move to previous
+            index = (index - 1 + elements.length) % elements.length;
+            window.__wina_search_index__ = index;
+
+            // Highlight current
+            if (elements[index]) {
+                elements[index].style.backgroundColor = '#FF9800';
+                elements[index].scrollIntoView({behavior: 'smooth', block: 'center'});
+            }
+
+            return JSON.stringify({index: index});
+        })();
+        """
+
+        Task {
+            let result = await navigator.evaluateJavaScript(script)
+            await MainActor.run {
+                if let jsonString = result as? String,
+                   let data = jsonString.data(using: .utf8),
+                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    currentIndex = json["index"] as? Int ?? 0
+                }
+            }
+        }
+    }
+
+    private func clearHighlights() {
+        matchCount = 0
+        currentIndex = 0
+
+        let script = """
+        (function() {
+            document.querySelectorAll('.__wina_search_highlight__').forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+            window.__wina_search_elements__ = [];
+            window.__wina_search_index__ = 0;
+        })();
+        """
+
+        Task {
+            await navigator.evaluateJavaScript(script)
+        }
+    }
+}
+
+#Preview {
+    ZStack {
+        Color.blue.opacity(0.3)
+            .ignoresSafeArea()
+
+        SearchTextOverlay(
+            navigator: WebViewNavigator(),
+            isPresented: .constant(true)
+        )
+    }
+}

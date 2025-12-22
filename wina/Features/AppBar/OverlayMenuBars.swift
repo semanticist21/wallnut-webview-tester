@@ -28,6 +28,8 @@ struct OverlayMenuBars: View {
     @Binding var showPerformance: Bool
     @Binding var showEditor: Bool
     @Binding var showAccessibility: Bool
+    @Binding var showSnippets: Bool
+    @Binding var showSearchText: Bool
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
@@ -238,6 +240,16 @@ struct OverlayMenuBars: View {
                                 }
                             }
 
+                            // Snippets button
+                            BottomBarIconButton(icon: "scroll") {
+                                showSnippets = true
+                            }
+
+                            // Search in page button
+                            BottomBarIconButton(icon: "doc.text.magnifyingglass") {
+                                showSearchText = true
+                            }
+
                             // Screenshot button (always visible)
                             BottomBarIconButton(icon: "camera") {
                                 takeScreenshotWithFeedback()
@@ -397,7 +409,9 @@ private struct BottomBarIconButton: View {
             showStorage: .constant(false),
             showPerformance: .constant(false),
             showEditor: .constant(false),
-            showAccessibility: .constant(false)
+            showAccessibility: .constant(false),
+            showSnippets: .constant(false),
+            showSearchText: .constant(false)
         )
     }
 }
@@ -425,7 +439,9 @@ private struct BottomBarIconButton: View {
             showStorage: .constant(false),
             showPerformance: .constant(false),
             showEditor: .constant(false),
-            showAccessibility: .constant(false)
+            showAccessibility: .constant(false),
+            showSnippets: .constant(false),
+            showSearchText: .constant(false)
         )
     }
 }

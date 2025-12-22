@@ -153,7 +153,27 @@ final class CSSParserTests: XCTestCase {
         XCTAssertEqual(styles.padding?.top, 10)
         XCTAssertEqual(styles.padding?.leading, 20)
     }
-    
+
+    func testParsePaddingThreeValues() {
+        // CSS 3-value: top horizontal bottom
+        let styles = CSSParser.parse("padding: 10px 20px 30px;")
+        XCTAssertNotNil(styles.padding)
+        XCTAssertEqual(styles.padding?.top, 10)
+        XCTAssertEqual(styles.padding?.leading, 20)
+        XCTAssertEqual(styles.padding?.bottom, 30)
+        XCTAssertEqual(styles.padding?.trailing, 20)
+    }
+
+    func testParsePaddingFourValues() {
+        // CSS 4-value: top right bottom left
+        let styles = CSSParser.parse("padding: 10px 20px 30px 40px;")
+        XCTAssertNotNil(styles.padding)
+        XCTAssertEqual(styles.padding?.top, 10)
+        XCTAssertEqual(styles.padding?.trailing, 20)
+        XCTAssertEqual(styles.padding?.bottom, 30)
+        XCTAssertEqual(styles.padding?.leading, 40)
+    }
+
     // MARK: - Multiple Properties Tests
     
     func testParseMultipleProperties() {

@@ -272,16 +272,6 @@ struct LoadedSettingsView: View {
                         )
                     }
 
-                    NavigationLink {
-                        SnippetsSettingsView(navigator: navigator)
-                    } label: {
-                        SettingsCategoryRow(
-                            icon: "scroll.fill",
-                            iconColor: .indigo,
-                            title: "Debug Snippets",
-                            description: "Quick debugging utilities"
-                        )
-                    }
                 }
 
                 Section {

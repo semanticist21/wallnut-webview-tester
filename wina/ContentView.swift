@@ -23,6 +23,8 @@ struct ContentView: View {
     @State private var showPerformance: Bool = false
     @State private var showEditor: Bool = false
     @State private var showAccessibility: Bool = false
+    @State private var showSnippets: Bool = false
+    @State private var showSearchText: Bool = false
     @State var showAbout: Bool = false
     @State var urlValidationState: URLValidationState = .empty
     @State var useSafariWebView: Bool = false
@@ -141,7 +143,9 @@ struct ContentView: View {
                     showStorage: $showStorage,
                     showPerformance: $showPerformance,
                     showEditor: $showEditor,
-                    showAccessibility: $showAccessibility
+                    showAccessibility: $showAccessibility,
+                    showSnippets: $showSnippets,
+                    showSearchText: $showSearchText
                 )
             } else if !showWebView {
                 topBar
@@ -225,6 +229,18 @@ struct ContentView: View {
         .sheet(isPresented: $showAccessibility) {
             AccessibilityAuditView(navigator: webViewNavigator)
                 .devToolsSheet()
+        }
+        .sheet(isPresented: $showSnippets) {
+            SnippetsSettingsView(navigator: webViewNavigator)
+                .devToolsSheet()
+        }
+        .overlay {
+            if showSearchText {
+                SearchTextOverlay(
+                    navigator: webViewNavigator,
+                    isPresented: $showSearchText
+                )
+            }
         }
         .sheet(isPresented: $showAbout) {
             AboutView()

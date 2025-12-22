@@ -282,6 +282,12 @@ struct CSSParser {
             let vertical = CGFloat(values[0])
             let horizontal = CGFloat(values[1])
             return EdgeInsets(top: vertical, leading: horizontal, bottom: vertical, trailing: horizontal)
+        } else if values.count == 3 {
+            // CSS: top horizontal bottom
+            let top = CGFloat(values[0])
+            let horizontal = CGFloat(values[1])
+            let bottom = CGFloat(values[2])
+            return EdgeInsets(top: top, leading: horizontal, bottom: bottom, trailing: horizontal)
         } else if values.count >= 4 {
             return EdgeInsets(
                 top: CGFloat(values[0]),
