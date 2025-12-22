@@ -194,6 +194,7 @@ struct OverlayMenuBars: View {
                     if showWebView {
                         // URL button
                         Button {
+                            showSearchText = false  // 검색바 자동 닫기
                             urlInputText = navigator?.currentURL?.absoluteString ?? ""
                             showURLInput = true
                         } label: {
@@ -216,38 +217,45 @@ struct OverlayMenuBars: View {
                             // DevTools buttons (hidden when Eruda mode is enabled)
                             if !erudaModeEnabled {
                                 BottomBarIconButton(icon: "terminal") {
+                                    showSearchText = false  // 검색바 자동 닫기
                                     showConsole = true
                                 }
 
                                 BottomBarIconButton(icon: "chevron.left.forwardslash.chevron.right") {
+                                    showSearchText = false
                                     showEditor = true
                                 }
 
                                 BottomBarIconButton(icon: "network") {
+                                    showSearchText = false
                                     showNetwork = true
                                 }
 
                                 BottomBarIconButton(icon: "externaldrive") {
+                                    showSearchText = false
                                     showStorage = true
                                 }
 
                                 BottomBarIconButton(icon: "gauge.with.dots.needle.bottom.50percent") {
+                                    showSearchText = false
                                     showPerformance = true
                                 }
 
                                 BottomBarIconButton(icon: "accessibility") {
+                                    showSearchText = false
                                     showAccessibility = true
                                 }
 
                                 // Snippets button
                                 BottomBarIconButton(icon: "scroll") {
+                                    showSearchText = false
                                     showSnippets = true
                                 }
                             }
 
                             // Search in page button
                             BottomBarIconButton(icon: "doc.text.magnifyingglass") {
-                                showSearchText = true
+                                showSearchText.toggle()  // 토글로 변경 (열려있으면 닫기)
                             }
 
                             // Screenshot button (always visible)

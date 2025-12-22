@@ -117,9 +117,12 @@ struct SearchTextOverlay: View {
             .padding(.horizontal, 12)
             .padding(.bottom, 80) // Above bottom bar
         }
-        .ignoresSafeArea(.keyboard)
         .onAppear {
             isTextFieldFocused = true
+        }
+        // 외부에서 닫힐 때 하이라이트 제거
+        .onDisappear {
+            clearHighlights()
         }
         .onChange(of: searchText) { _, newValue in
             if newValue.isEmpty {
