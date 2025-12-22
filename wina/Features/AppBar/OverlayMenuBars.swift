@@ -238,11 +238,11 @@ struct OverlayMenuBars: View {
                                 BottomBarIconButton(icon: "accessibility") {
                                     showAccessibility = true
                                 }
-                            }
 
-                            // Snippets button
-                            BottomBarIconButton(icon: "scroll") {
-                                showSnippets = true
+                                // Snippets button
+                                BottomBarIconButton(icon: "scroll") {
+                                    showSnippets = true
+                                }
                             }
 
                             // Search in page button
