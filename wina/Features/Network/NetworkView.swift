@@ -14,8 +14,7 @@ import SwiftUIBackports
 enum NetworkResourceFilter: String, CaseIterable, Identifiable {
     // Network filters
     case all
-    case fetch
-    case xhr
+    case fetchXhr  // Combined Fetch/XHR like Chrome DevTools
     case doc
     // Resource filters
     case img
@@ -33,8 +32,7 @@ enum NetworkResourceFilter: String, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .all: "All"
-        case .fetch: "Fetch"
-        case .xhr: "XHR"
+        case .fetchXhr: "Fetch/XHR"
         case .doc: "Doc"
         case .img: "Img"
         case .js: "JS"
@@ -49,7 +47,7 @@ enum NetworkResourceFilter: String, CaseIterable, Identifiable {
 
     var isNetworkFilter: Bool {
         switch self {
-        case .all, .fetch, .xhr, .doc, .errors, .mixed: true
+        case .all, .fetchXhr, .doc, .errors, .mixed: true
         default: false
         }
     }
@@ -72,8 +70,7 @@ enum NetworkResourceFilter: String, CaseIterable, Identifiable {
     func matchesNetworkRequest(_ request: NetworkRequest) -> Bool {
         switch self {
         case .all: true
-        case .fetch: request.requestType == .fetch
-        case .xhr: request.requestType == .xhr
+        case .fetchXhr: request.requestType == .fetch || request.requestType == .xhr
         case .doc: request.requestType == .document
         case .errors: request.error != nil || (request.status ?? 0) >= 400
         case .mixed: request.isMixedContent
@@ -200,10 +197,8 @@ struct NetworkView: View {
         switch filterType {
         case .all:
             networkManager.requests.count + resourceManager.resources.count
-        case .fetch:
-            networkManager.requests.filter { $0.requestType == .fetch }.count
-        case .xhr:
-            networkManager.requests.filter { $0.requestType == .xhr }.count
+        case .fetchXhr:
+            networkManager.requests.filter { $0.requestType == .fetch || $0.requestType == .xhr }.count
         case .doc:
             networkManager.requests.filter { $0.requestType == .document }.count
         case .img:
@@ -337,7 +332,7 @@ struct NetworkView: View {
                 }
 
                 // Network request tabs
-                ForEach([NetworkResourceFilter.fetch, .xhr, .doc], id: \.self) { filterType in
+                ForEach([NetworkResourceFilter.fetchXhr, .doc], id: \.self) { filterType in
                     NetworkFilterTab(
                         label: filterType.displayName,
                         count: count(for: filterType),

@@ -62,19 +62,31 @@ struct NetworkDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 4) {
                         Button {
                             shareRequest()
                         } label: {
                             Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Circle())
                         }
+                        .buttonStyle(.plain)
 
                         Button {
                             copyAsCurl()
                         } label: {
                             Image(systemName: "terminal")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundStyle(.primary)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Circle())
                         }
+                        .buttonStyle(.plain)
                     }
+                    .padding(.horizontal, 6)
+                    .backport.glassEffect(in: .capsule)
                 }
 
                 ToolbarItem(placement: .confirmationAction) {
@@ -462,8 +474,11 @@ struct NetworkDetailView: View {
     }
 
     private func shareRequest() {
+        // Header first to prevent iOS from detecting URL as web content
         var text = """
-        \(request.method) \(request.url)
+        === Network Request ===
+        Method: \(request.method)
+        URL: \(request.url)
         Status: \(request.status.map { "\($0)" } ?? "Pending")
         Duration: \(request.durationText)
         Type: \(request.requestType.rawValue.capitalized)

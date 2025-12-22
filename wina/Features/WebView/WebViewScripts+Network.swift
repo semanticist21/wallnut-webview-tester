@@ -33,6 +33,7 @@ extension WebViewScripts {
             }
 
             // Capture and parse stack trace at request time
+            // Supports both Chrome ("at fn (file:line:col)") and Safari ("fn@file:line:col") formats
             function captureStackTrace() {
                 try {
                     var stack = new Error().stack || '';
@@ -40,30 +41,57 @@ extension WebViewScripts {
                     var lines = stack.split('\\n');
 
                     for (var i = 1; i < lines.length && frames.length < 10; i++) {
-                        var line = lines[i];
-                        // Parse "at functionName (fileName:line:col)" or "at https://url:line:col"
-                        var match = line.match(/at\\s+(.*?)\\s+\\(([^:]+):(\\d+):(\\d+)\\)/);
-                        if (!match) {
-                            match = line.match(/at\\s+([^\\s]+):(\\d+):(\\d+)/);
-                            if (match) {
-                                frames.push({
-                                    functionName: '<anonymous>',
-                                    fileName: match[1],
-                                    lineNumber: parseInt(match[2]),
-                                    columnNumber: parseInt(match[3])
-                                });
-                            }
+                        var line = lines[i].trim();
+                        if (!line) continue;
+
+                        var functionName = '<anonymous>';
+                        var fileName = '';
+                        var lineNumber = 0;
+                        var columnNumber = 0;
+
+                        // Chrome format: "at functionName (file:line:col)"
+                        var chromeMatch = line.match(/^at\\s+(.*?)\\s+\\((.+):(\\d+):(\\d+)\\)$/);
+                        if (chromeMatch) {
+                            functionName = chromeMatch[1] || '<anonymous>';
+                            fileName = chromeMatch[2];
+                            lineNumber = parseInt(chromeMatch[3]);
+                            columnNumber = parseInt(chromeMatch[4]);
                         } else {
-                            var fileName = match[2];
+                            // Chrome anonymous: "at file:line:col"
+                            var chromeAnon = line.match(/^at\\s+(.+):(\\d+):(\\d+)$/);
+                            if (chromeAnon) {
+                                fileName = chromeAnon[1];
+                                lineNumber = parseInt(chromeAnon[2]);
+                                columnNumber = parseInt(chromeAnon[3]);
+                            } else {
+                                // Safari format: "functionName@file:line:col" or "@file:line:col"
+                                var safariMatch = line.match(/^(.*)@(.+):(\\d+):(\\d+)$/);
+                                if (safariMatch) {
+                                    functionName = safariMatch[1] || '<anonymous>';
+                                    fileName = safariMatch[2];
+                                    lineNumber = parseInt(safariMatch[3]);
+                                    columnNumber = parseInt(safariMatch[4]);
+                                }
+                            }
+                        }
+
+                        if (fileName) {
+                            // Skip our own hook functions
+                            if (fileName.includes('captureStackTrace') ||
+                                functionName === 'captureStackTrace' ||
+                                functionName.includes('__network')) {
+                                continue;
+                            }
+
                             try {
                                 fileName = new URL(fileName, document.baseURI).href;
                             } catch(e) {}
 
                             frames.push({
-                                functionName: match[1],
+                                functionName: functionName,
                                 fileName: fileName,
-                                lineNumber: parseInt(match[3]),
-                                columnNumber: parseInt(match[4])
+                                lineNumber: lineNumber,
+                                columnNumber: columnNumber
                             });
                         }
                     }

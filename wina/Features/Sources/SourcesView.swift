@@ -67,9 +67,6 @@ struct SourcesView: View {
     @State private var selectedStylesheet: StylesheetInfo?
     @State private var selectedScript: ScriptInfo?
 
-    // Element Picker (Inspect mode)
-    @State private var isElementPickerActive: Bool = false
-
     // Breadcrumbs navigation
     @State private var breadcrumbPath: [DOMNode] = []
 
@@ -101,12 +98,6 @@ struct SourcesView: View {
             lastURL = navigator?.currentURL
             Task {
                 await fetchCurrentTab()
-            }
-        }
-        .onDisappear {
-            // Clean up element picker when view is dismissed
-            if isElementPickerActive {
-                disableElementPicker()
             }
         }
         .task {
@@ -298,153 +289,8 @@ struct SourcesView: View {
                     shareCurrentTab()
                 }
             ],
-            rightButtons: [
-                .init(
-                    icon: "scope",
-                    activeIcon: "scope",
-                    color: .secondary,
-                    activeColor: .cyan,
-                    isActive: isElementPickerActive
-                ) {
-                    toggleElementPicker()
-                }
-            ]
+            rightButtons: []
         )
-    }
-
-    // MARK: - Element Picker
-
-    private func toggleElementPicker() {
-        isElementPickerActive.toggle()
-
-        if isElementPickerActive {
-            enableElementPicker()
-        } else {
-            disableElementPicker()
-        }
-    }
-
-    private func enableElementPicker() {
-        let script = """
-            (function() {
-                // Remove existing picker if any
-                if (window.__wina_element_picker__) {
-                    window.__wina_element_picker__.destroy();
-                }
-
-                const overlay = document.createElement('div');
-                overlay.id = '__wina_picker_overlay__';
-                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:2147483646;pointer-events:none;';
-
-                const highlight = document.createElement('div');
-                highlight.id = '__wina_picker_highlight__';
-                highlight.style.cssText = 'position:absolute;border:2px solid #00BCD4;background:rgba(0,188,212,0.15);pointer-events:none;transition:all 0.1s ease;';
-                overlay.appendChild(highlight);
-
-                const tooltip = document.createElement('div');
-                tooltip.id = '__wina_picker_tooltip__';
-                tooltip.style.cssText = 'position:absolute;background:#333;color:#fff;padding:4px 8px;border-radius:4px;font-family:monospace;font-size:11px;pointer-events:none;white-space:nowrap;z-index:2147483647;';
-                overlay.appendChild(tooltip);
-
-                document.body.appendChild(overlay);
-
-                let currentElement = null;
-
-                function getElementPath(el) {
-                    const parts = [];
-                    while (el && el.nodeType === 1) {
-                        let selector = el.tagName.toLowerCase();
-                        if (el.id) {
-                            selector += '#' + el.id;
-                            parts.unshift(selector);
-                            break;
-                        } else if (el.className && typeof el.className === 'string') {
-                            selector += '.' + el.className.trim().split(/\\s+/).join('.');
-                        }
-                        parts.unshift(selector);
-                        el = el.parentElement;
-                    }
-                    return parts.join(' > ');
-                }
-
-                function handleMove(e) {
-                    const x = e.clientX || (e.touches && e.touches[0].clientX);
-                    const y = e.clientY || (e.touches && e.touches[0].clientY);
-                    overlay.style.pointerEvents = 'none';
-                    const el = document.elementFromPoint(x, y);
-                    overlay.style.pointerEvents = '';
-
-                    if (el && el !== overlay && !overlay.contains(el)) {
-                        currentElement = el;
-                        const rect = el.getBoundingClientRect();
-                        highlight.style.left = rect.left + 'px';
-                        highlight.style.top = rect.top + 'px';
-                        highlight.style.width = rect.width + 'px';
-                        highlight.style.height = rect.height + 'px';
-
-                        let label = el.tagName.toLowerCase();
-                        if (el.id) label += '#' + el.id;
-                        else if (el.className && typeof el.className === 'string')
-                            label += '.' + el.className.trim().split(/\\s+/)[0];
-                        tooltip.textContent = label + ' (' + Math.round(rect.width) + 'x' + Math.round(rect.height) + ')';
-                        tooltip.style.left = Math.min(rect.left, window.innerWidth - 150) + 'px';
-                        tooltip.style.top = Math.max(0, rect.top - 28) + 'px';
-                    }
-                }
-
-                function handleClick(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (currentElement) {
-                        const path = getElementPath(currentElement);
-                        window.webkit.messageHandlers.elementPicked.postMessage({
-                            tag: currentElement.tagName.toLowerCase(),
-                            id: currentElement.id || null,
-                            className: (typeof currentElement.className === 'string') ? currentElement.className : null,
-                            path: path
-                        });
-                    }
-                }
-
-                document.addEventListener('mousemove', handleMove, true);
-                document.addEventListener('touchmove', handleMove, true);
-                document.addEventListener('click', handleClick, true);
-                document.addEventListener('touchend', handleClick, true);
-
-                window.__wina_element_picker__ = {
-                    destroy: function() {
-                        document.removeEventListener('mousemove', handleMove, true);
-                        document.removeEventListener('touchmove', handleMove, true);
-                        document.removeEventListener('click', handleClick, true);
-                        document.removeEventListener('touchend', handleClick, true);
-                        overlay.remove();
-                        window.__wina_element_picker__ = null;
-                    }
-                };
-
-                return 'Element picker enabled';
-            })();
-            """
-
-        Task {
-            _ = await navigator?.evaluateJavaScript(script)
-        }
-    }
-
-    private func disableElementPicker() {
-        let script = """
-            (function() {
-                if (window.__wina_element_picker__) {
-                    window.__wina_element_picker__.destroy();
-                    return 'Element picker disabled';
-                }
-                return 'No picker active';
-            })();
-            """
-
-        Task {
-            _ = await navigator?.evaluateJavaScript(script)
-        }
     }
 
     // MARK: - Search Bar
@@ -767,9 +613,11 @@ struct SourcesView: View {
                     .padding(.leading, 8)
                 }
             }
-            .padding(.horizontal, 12)
+            .frame(height: 32)
         }
-        .frame(height: 32)
+        .contentMargins(.horizontal, 12, for: .scrollContent)
+        .scrollBounceBehavior(.basedOnSize)
+        .defaultScrollAnchor(.trailing)
         .background(.ultraThinMaterial)
     }
 

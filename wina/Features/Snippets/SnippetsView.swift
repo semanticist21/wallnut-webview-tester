@@ -350,57 +350,33 @@ class SnippetsManager {
     }
 }
 
-// MARK: - Snippets View
+// MARK: - Snippets Settings View (Navigation Destination)
 
-struct SnippetsView: View {
+struct SnippetsSettingsView: View {
     let navigator: WebViewNavigator
-    @Environment(\.dismiss) private var dismiss
     @State private var snippetsManager = SnippetsManager()
     @State private var executionResult: String?
     @State private var showResult: Bool = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            DevToolsHeader(
-                title: "Snippets",
-                leftButtons: [
-                    .init(icon: "xmark.circle.fill", color: .secondary) {
-                        dismiss()
-                    }
-                ],
-                rightButtons: []
-            )
-
-            // Info banner
-            HStack(spacing: 8) {
-                Image(systemName: "info.circle.fill")
-                    .foregroundStyle(.blue)
-                Text("Tap to run. Toggle snippets stay active until disabled.")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(Color.blue.opacity(0.08))
-
-            // Snippets list
-            ScrollView {
-                LazyVStack(spacing: 0) {
-                    ForEach(SnippetsManager.defaultSnippets) { snippet in
-                        SnippetRow(
-                            snippet: snippet,
-                            isActive: snippetsManager.isActive(snippet.id),
-                            onTap: {
-                                executeSnippet(snippet)
-                            }
-                        )
-                    }
+        List {
+            Section {
+                ForEach(SnippetsManager.defaultSnippets) { snippet in
+                    SnippetSettingsRow(
+                        snippet: snippet,
+                        isActive: snippetsManager.isActive(snippet.id),
+                        onTap: {
+                            executeSnippet(snippet)
+                        }
+                    )
                 }
+            } header: {
+                Text("Tap to run. Toggle snippets stay active until disabled.")
             }
-
-            // Result toast
+        }
+        .navigationTitle("Debug Snippets")
+        .navigationBarTitleDisplayMode(.inline)
+        .overlay(alignment: .bottom) {
             if showResult, let result = executionResult {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
@@ -411,17 +387,14 @@ struct SnippetsView: View {
                     Spacer()
                 }
                 .padding(12)
-                .background(Color(uiColor: .secondarySystemBackground))
+                .background(.regularMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .padding(.horizontal, 16)
+                .padding(.bottom, 8)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.easeInOut(duration: 0.2), value: showResult)
-        .task {
-            await AdManager.shared.showInterstitialAd(
-                options: AdOptions(id: "snippets_devtools"),
-                adUnitId: AdManager.interstitialAdUnitId
-            )
-        }
     }
 
     private func executeSnippet(_ snippet: DebugSnippet) {
@@ -429,9 +402,7 @@ struct SnippetsView: View {
         let script: String
 
         if snippet.isToggleable {
-            // Toggle state
             snippetsManager.toggle(snippet.id)
-            // Use undo script if deactivating
             script = isCurrentlyActive ? (snippet.undoScript ?? snippet.script) : snippet.script
         } else {
             script = snippet.script
@@ -449,7 +420,6 @@ struct SnippetsView: View {
                 }
                 showResult = true
 
-                // Auto-hide result after 2 seconds
                 Task {
                     try? await Task.sleep(for: .seconds(2))
                     await MainActor.run {
@@ -461,9 +431,9 @@ struct SnippetsView: View {
     }
 }
 
-// MARK: - Snippet Row
+// MARK: - Snippet Settings Row
 
-private struct SnippetRow: View {
+private struct SnippetSettingsRow: View {
     let snippet: DebugSnippet
     let isActive: Bool
     let onTap: () -> Void
@@ -471,17 +441,15 @@ private struct SnippetRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                // Icon
                 Image(systemName: snippet.icon)
-                    .font(.system(size: 18))
+                    .font(.system(size: 16))
                     .foregroundStyle(isActive ? .white : snippet.iconColor)
-                    .frame(width: 36, height: 36)
+                    .frame(width: 32, height: 32)
                     .background(
                         isActive ? snippet.iconColor : snippet.iconColor.opacity(0.15),
                         in: RoundedRectangle(cornerRadius: 8)
                     )
 
-                // Text
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(snippet.name)
@@ -489,7 +457,7 @@ private struct SnippetRow: View {
                             .foregroundStyle(.primary)
 
                         if snippet.isToggleable {
-                            Text("Toggle")
+                            Text(isActive ? "ON" : "Toggle")
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(isActive ? .white : .secondary)
                                 .padding(.horizontal, 6)
@@ -504,29 +472,23 @@ private struct SnippetRow: View {
                     Text(snippet.description)
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
-                        .lineLimit(2)
+                        .lineLimit(1)
                 }
 
                 Spacer()
 
-                // Chevron
                 Image(systemName: "play.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: 11))
                     .foregroundStyle(.tertiary)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(isActive ? snippet.iconColor.opacity(0.08) : Color.clear)
         }
         .buttonStyle(.plain)
-        .overlay(alignment: .bottom) {
-            Divider()
-                .padding(.leading, 64)
-        }
+        .listRowBackground(isActive ? snippet.iconColor.opacity(0.08) : Color.clear)
     }
 }
 
 #Preview {
-    SnippetsView(navigator: WebViewNavigator())
-        .devToolsSheet()
+    NavigationStack {
+        SnippetsSettingsView(navigator: WebViewNavigator())
+    }
 }

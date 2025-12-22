@@ -730,8 +730,18 @@ extension ConsoleView {
 
     // MARK: - JavaScript Execution
 
+    /// Replace iOS smart quotes with straight quotes for valid JavaScript
+    private func sanitizeSmartQuotes(_ input: String) -> String {
+        input
+            .replacingOccurrences(of: "\u{2018}", with: "'")  // '
+            .replacingOccurrences(of: "\u{2019}", with: "'")  // '
+            .replacingOccurrences(of: "\u{201C}", with: "\"") // "
+            .replacingOccurrences(of: "\u{201D}", with: "\"") // "
+    }
+
     private func executeJavaScript() {
-        let command = jsInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        let rawCommand = jsInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        let command = sanitizeSmartQuotes(rawCommand)
         guard !command.isEmpty, let nav = navigator else { return }
 
         // Add to history

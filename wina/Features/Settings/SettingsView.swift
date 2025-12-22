@@ -271,6 +271,17 @@ struct LoadedSettingsView: View {
                             description: "Camera, Microphone, Location"
                         )
                     }
+
+                    NavigationLink {
+                        SnippetsSettingsView(navigator: navigator)
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "scroll.fill",
+                            iconColor: .indigo,
+                            title: "Debug Snippets",
+                            description: "Quick debugging utilities"
+                        )
+                    }
                 }
 
                 Section {

@@ -478,7 +478,7 @@ struct WKWebViewRepresentable: UIViewRepresentable {
                     messageText = only
                 }
 
-                if objectValue == nil, (styledSegments?.isEmpty ?? true) {
+                if objectValue == nil, styledSegments?.isEmpty ?? true {
                     inlineSegments = buildInlineSegments(from: args, hasExpandable: hasExpandable)
                 }
             }

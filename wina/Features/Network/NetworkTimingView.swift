@@ -12,7 +12,7 @@ import SwiftUI
 
 struct NetworkTimingView: View {
     let request: NetworkRequest
-    @State private var isExpanded: Bool = false
+    @State private var isExpanded: Bool = true
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -39,6 +39,7 @@ struct NetworkTimingView: View {
                 }
             }
             .buttonStyle(.plain)
+            .contentShape(Rectangle())
             .padding(.bottom, 4)
 
             if isExpanded {
@@ -88,8 +89,18 @@ struct NetworkTimingView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)
                         .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 6))
+                    } else if request.isPending {
+                        // Request still in progress
+                        HStack(spacing: 8) {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("Waiting for response...")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.secondary)
+                        }
+                        .padding(.vertical, 4)
                     } else {
-                        Text("Request pending or timing not available")
+                        Text("Timing not available")
                             .font(.system(size: 11))
                             .foregroundStyle(.tertiary)
                     }

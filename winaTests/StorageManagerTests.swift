@@ -24,7 +24,6 @@ final class StorageManagerTests: XCTestCase {
 
         manager.setNavigator(mock)
         await manager.refresh(
-            includeAllCookies: false,
             pageURL: URL(string: "https://sub.example.com/path")
         )
 
