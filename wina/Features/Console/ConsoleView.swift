@@ -184,7 +184,13 @@ class ConsoleManager {
         UserDefaults.standard.bool(forKey: "consolePreserveLog")
     }
 
-    func addLog(type: String, message: String, source: String? = nil, tableData: [[String: String]]? = nil) {
+    func addLog(
+        type: String,
+        message: String,
+        source: String? = nil,
+        tableData: [[String: String]]? = nil,
+        objectValue: ConsoleValue? = nil
+    ) {
         guard isCapturing else { return }
 
         // Filter CORS "Script error" - uninformative due to cross-origin security
@@ -198,6 +204,7 @@ class ConsoleManager {
         DispatchQueue.main.async {
             var log = ConsoleLog(type: logType, message: message, source: source, timestamp: Date())
             log.tableData = tableData
+            log.objectValue = objectValue
 
             // Handle group levels
             switch logType {

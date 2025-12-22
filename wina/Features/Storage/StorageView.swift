@@ -142,21 +142,28 @@ enum StorageValueType {
 
 // MARK: - Storage Manager
 
+protocol StorageNavigator: AnyObject {
+    func evaluateJavaScript(_ script: String) async -> Any?
+    func getAllCookies() async -> [HTTPCookie]
+    func deleteCookie(name: String) async
+    func deleteAllCookies() async
+}
+
 @Observable
 class StorageManager {
     var items: [StorageItem] = []
     var lastRefreshTime: Date?
     var errorMessage: String?
 
-    private weak var navigator: WebViewNavigator?
+    private weak var navigator: StorageNavigator?
 
-    func setNavigator(_ navigator: WebViewNavigator?) {
+    func setNavigator(_ navigator: StorageNavigator?) {
         self.navigator = navigator
     }
 
     // SWR: Fetch all storage data from WebView (keep stale data while revalidating)
     @MainActor
-    func refresh() async {
+    func refresh(includeAllCookies: Bool = false, pageURL: URL? = nil) async {
         guard let navigator else {
             errorMessage = "WebView not connected"
             return
@@ -178,7 +185,11 @@ class StorageManager {
         }
 
         // Fetch cookies
-        if let cookieData = await fetchCookies(navigator: navigator) {
+        if let cookieData = await fetchCookies(
+            navigator: navigator,
+            pageURL: pageURL,
+            includeAllDomains: includeAllCookies
+        ) {
             newItems.append(contentsOf: cookieData)
         }
 
@@ -189,7 +200,7 @@ class StorageManager {
 
     private func fetchStorage(
         type: StorageItem.StorageType,
-        navigator: WebViewNavigator
+        navigator: StorageNavigator
     ) async -> [StorageItem]? {
         let storageName = type == .localStorage ? "localStorage" : "sessionStorage"
         let script = """
@@ -232,11 +243,27 @@ class StorageManager {
         }
     }
 
-    private func fetchCookies(navigator: WebViewNavigator) async -> [StorageItem]? {
+    private func fetchCookies(
+        navigator: StorageNavigator,
+        pageURL: URL?,
+        includeAllDomains: Bool
+    ) async -> [StorageItem]? {
         // Use native WKHTTPCookieStore for full cookie metadata
         let cookies = await navigator.getAllCookies()
+        let host = pageURL?.host?.lowercased()
 
-        return cookies.map { cookie in
+        let filteredCookies = cookies.filter { cookie in
+            guard !includeAllDomains else { return true }
+            guard let host else { return false }
+            let domain = cookie.domain.lowercased()
+            if domain.hasPrefix(".") {
+                let trimmed = domain.dropFirst()
+                return host == trimmed || host.hasSuffix(".\(trimmed)")
+            }
+            return host == domain
+        }
+
+        return filteredCookies.map { cookie in
             StorageItem(
                 key: cookie.name,
                 value: cookie.value,
@@ -333,6 +360,8 @@ class StorageManager {
     }
 }
 
+extension WebViewNavigator: StorageNavigator {}
+
 // MARK: - Storage View
 
 struct StorageShareContent: Identifiable {
@@ -346,6 +375,7 @@ struct StorageView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedType: StorageItem.StorageType = .localStorage
     @State private var showsAllStorage: Bool = false
+    @State private var showsAllCookies: Bool = false
     @State private var searchText: String = ""
     @State private var shareItem: StorageShareContent?
     @State private var selectedItem: StorageItem?
@@ -401,10 +431,20 @@ struct StorageView: View {
                 item: item,
                 storageManager: storageManager,
                 onSave: {
-                    Task { await storageManager.refresh() }
+                    Task {
+                        await storageManager.refresh(
+                            includeAllCookies: showsAllCookies,
+                            pageURL: navigator?.currentURL
+                        )
+                    }
                 },
                 onDelete: {
-                    Task { await storageManager.refresh() }
+                    Task {
+                        await storageManager.refresh(
+                            includeAllCookies: showsAllCookies,
+                            pageURL: navigator?.currentURL
+                        )
+                    }
                 }
             )
         }
@@ -413,7 +453,12 @@ struct StorageView: View {
                 storageManager: storageManager,
                 storageType: selectedType,
                 onSave: {
-                    Task { await storageManager.refresh() }
+                    Task {
+                        await storageManager.refresh(
+                            includeAllCookies: showsAllCookies,
+                            pageURL: navigator?.currentURL
+                        )
+                    }
                 }
             )
         }
@@ -423,7 +468,18 @@ struct StorageView: View {
                 adUnitId: AdManager.interstitialAdUnitId
             )
             storageManager.setNavigator(navigator)
-            await storageManager.refresh()
+            await storageManager.refresh(
+                includeAllCookies: showsAllCookies,
+                pageURL: navigator?.currentURL
+            )
+        }
+        .onChange(of: navigator?.currentURL) { _, _ in
+            Task {
+                await storageManager.refresh(
+                    includeAllCookies: showsAllCookies,
+                    pageURL: navigator?.currentURL
+                )
+            }
         }
     }
 
@@ -442,7 +498,10 @@ struct StorageView: View {
                 ) {
                     Task {
                         if await storageManager.clearStorage(type: selectedType) {
-                            await storageManager.refresh()
+                            await storageManager.refresh(
+                                includeAllCookies: showsAllCookies,
+                                pageURL: navigator?.currentURL
+                            )
                         }
                     }
                 },
@@ -464,13 +523,33 @@ struct StorageView: View {
                     showsAllStorage.toggle()
                 },
                 .init(
+                    icon: "globe",
+                    activeIcon: "globe.americas.fill",
+                    color: .secondary,
+                    activeColor: .blue,
+                    isActive: showsAllCookies
+                ) {
+                    showsAllCookies.toggle()
+                    Task {
+                        await storageManager.refresh(
+                            includeAllCookies: showsAllCookies,
+                            pageURL: navigator?.currentURL
+                        )
+                    }
+                },
+                .init(
                     icon: "plus",
                     isDisabled: showsAllStorage
                 ) {
                     showAddSheet = true
                 },
                 .init(icon: "arrow.clockwise") {
-                    Task { await storageManager.refresh() }
+                    Task {
+                        await storageManager.refresh(
+                            includeAllCookies: showsAllCookies,
+                            pageURL: navigator?.currentURL
+                        )
+                    }
                 }
             ]
         )
@@ -515,11 +594,13 @@ struct StorageView: View {
             Text("Key")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .padding(.leading, 4)
                 .frame(width: keyColumnWidth, alignment: .leading)
 
             Text("Value")
                 .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
+                .padding(.leading, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if showsAllStorage {
@@ -616,7 +697,10 @@ struct StorageView: View {
     private func deleteItem(_ item: StorageItem) {
         Task {
             if await storageManager.removeItem(key: item.key, type: item.storageType) {
-                await storageManager.refresh()
+                await storageManager.refresh(
+                    includeAllCookies: showsAllCookies,
+                    pageURL: navigator?.currentURL
+                )
             }
         }
     }
@@ -750,6 +834,7 @@ private struct StorageItemRow: View {
                 .font(.system(size: 13, weight: .medium, design: .monospaced))
                 .foregroundStyle(.primary)
                 .lineLimit(1)
+                .padding(.leading, 4)
                 .frame(width: keyColumnWidth, alignment: .leading)
 
             // Value column with highlight
@@ -757,6 +842,7 @@ private struct StorageItemRow: View {
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(isEmpty ? .tertiary : .secondary)
                 .lineLimit(1)
+                .padding(.leading, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             // Type label (colored text only in list)
