@@ -106,7 +106,7 @@ struct SearchTextOverlay: View {
             .padding(.vertical, 12)
             .backport.glassEffect(in: .rect(cornerRadius: 20))
             .padding(.horizontal, 12)
-            .padding(.bottom, 80) // Above bottom bar
+            .padding(.bottom, 12)
         }
         .onAppear {
             isTextFieldFocused = true
