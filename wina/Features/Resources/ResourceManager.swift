@@ -16,9 +16,9 @@ class ResourceManager {
 
     private let maxResourceCount = 1000
 
-    // Read preserveLog from UserDefaults
+    // Read preserveLog from UserDefaults (shared with NetworkManager)
     var preserveLog: Bool {
-        UserDefaults.standard.bool(forKey: "resourcePreserveLog")
+        UserDefaults.standard.bool(forKey: "networkPreserveLog")
     }
 
     // swiftlint:disable:next function_parameter_count

@@ -769,11 +769,17 @@ struct WKWebViewRepresentable: UIViewRepresentable {
             decidePolicyFor navigationAction: WKNavigationAction,
             decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
         ) {
-            // Clear console and network logs only on reload (unless preserveLog is enabled)
-            // Normal navigation (links, URL changes) preserves logs
+            // Handle reload: use preserveLog setting
             if navigationAction.navigationType == .reload {
                 navigator?.consoleManager.clearIfNotPreserved()
                 navigator?.networkManager.clearIfNotPreserved()
+                navigator?.resourceManager.clearIfNotPreserved()
+            } else if navigationAction.targetFrame?.isMainFrame == true {
+                // Handle navigation: use clearStrategy
+                applyClearStrategy(
+                    currentURL: webView.url,
+                    newURL: navigationAction.request.url
+                )
             }
 
             // Track document navigation for main frame only

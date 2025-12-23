@@ -135,8 +135,11 @@ final class AdManager: NSObject {
     /// - Returns: `true` if ad was shown, `false` if skipped (already shown, probability check failed) or failed.
     @discardableResult
     func showInterstitialAd(options: AdOptions, adUnitId: String) async -> Bool {
+        logger.debug("showInterstitialAd called for id: \(options.id)")
+
         // Skip if user purchased ad removal
         guard !StoreManager.shared.isAdRemoved else {
+            logger.debug("Ad skipped - user has premium")
             return false
         }
 
@@ -152,28 +155,48 @@ final class AdManager: NSObject {
             return false
         }
 
+        logger.debug("Ad passed probability check for id: \(options.id)")
+
         // Load ad if not available
         if interstitialAd == nil {
+            logger.debug("No cached ad, loading new ad...")
             await loadInterstitialAd(adUnitId: adUnitId)
         }
 
         guard let ad = interstitialAd else {
-            logger.warning("No ad available to show")
+            logger.warning("No ad available to show for id: \(options.id)")
             return false
         }
 
-        // Get root view controller
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-              let rootViewController = windowScene.windows.first?.rootViewController
-        else {
-            logger.error("Could not find root view controller")
+        // Find the topmost view controller (works with sheets)
+        guard let viewController = Self.topMostViewController() else {
+            logger.error("Could not find topmost view controller")
             return false
         }
+
+        logger.info("Presenting ad for id: \(options.id) on \(type(of: viewController))")
 
         // Mark as shown and present
         shownAdIds.insert(options.id)
-        ad.present(from: rootViewController)
+        ad.present(from: viewController)
         return true
+    }
+
+    /// Finds the topmost presented view controller (handles sheets and modals)
+    private static func topMostViewController() -> UIViewController? {
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first(where: { $0.isKeyWindow }) ?? windowScene.windows.first,
+              var topController = window.rootViewController
+        else {
+            return nil
+        }
+
+        // Traverse up the presentation chain to find the topmost VC
+        while let presented = topController.presentedViewController {
+            topController = presented
+        }
+
+        return topController
     }
 
     /// Checks if an ad has been shown for the given id.

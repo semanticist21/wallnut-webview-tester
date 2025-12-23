@@ -8,6 +8,30 @@
 
 import SwiftUI
 
+// MARK: - Snippet Category
+
+enum SnippetCategory: String, CaseIterable, Identifiable {
+    case all = "All"
+    case layout = "Layout"
+    case content = "Content"
+    case debug = "Debug"
+    case style = "Style"
+    case storage = "Storage"
+
+    var id: String { rawValue }
+
+    var icon: String {
+        switch self {
+        case .all: "square.grid.2x2"
+        case .layout: "square.dashed"
+        case .content: "doc.text"
+        case .debug: "ant"
+        case .style: "paintbrush"
+        case .storage: "externaldrive"
+        }
+    }
+}
+
 // MARK: - Snippet Definition
 
 struct DebugSnippet: Identifiable {
@@ -17,6 +41,7 @@ struct DebugSnippet: Identifiable {
     let icon: String
     let iconColor: Color
     let isToggleable: Bool
+    let category: SnippetCategory
     let script: String
     let undoScript: String?
 
@@ -27,6 +52,7 @@ struct DebugSnippet: Identifiable {
         icon: String,
         iconColor: Color = .blue,
         isToggleable: Bool = false,
+        category: SnippetCategory = .debug,
         script: String,
         undoScript: String? = nil
     ) {
@@ -36,6 +62,7 @@ struct DebugSnippet: Identifiable {
         self.icon = icon
         self.iconColor = iconColor
         self.isToggleable = isToggleable
+        self.category = category
         self.script = script
         self.undoScript = undoScript
     }
@@ -55,6 +82,7 @@ class SnippetsManager {
             icon: "square.dashed",
             iconColor: .orange,
             isToggleable: true,
+            category: .layout,
             script: """
                 (function() {
                     const id = '__wina_border_style__';
@@ -87,6 +115,7 @@ class SnippetsManager {
             icon: "pencil.line",
             iconColor: .green,
             isToggleable: true,
+            category: .content,
             script: """
                 (function() {
                     document.body.contentEditable = 'true';
@@ -109,6 +138,7 @@ class SnippetsManager {
             icon: "eye",
             iconColor: .purple,
             isToggleable: true,
+            category: .content,
             script: """
                 (function() {
                     const id = '__wina_show_hidden_style__';
@@ -144,6 +174,7 @@ class SnippetsManager {
             icon: "paintbrush.slash",
             iconColor: .red,
             isToggleable: true,
+            category: .style,
             script: """
                 (function() {
                     window.__wina_disabled_styles__ = [];
@@ -173,6 +204,7 @@ class SnippetsManager {
             description: "Log DOM statistics (element count, depth, etc.)",
             icon: "chart.bar.doc.horizontal",
             iconColor: .cyan,
+            category: .debug,
             script: """
                 (function() {
                     const all = document.querySelectorAll('*');
@@ -205,6 +237,7 @@ class SnippetsManager {
             description: "Log all images with dimensions and sources",
             icon: "photo.on.rectangle",
             iconColor: .indigo,
+            category: .debug,
             script: """
                 (function() {
                     const imgs = document.querySelectorAll('img');
@@ -228,6 +261,7 @@ class SnippetsManager {
             description: "Log all links and their targets",
             icon: "link",
             iconColor: .blue,
+            category: .debug,
             script: """
                 (function() {
                     const links = document.querySelectorAll('a[href]');
@@ -257,6 +291,7 @@ class SnippetsManager {
             description: "Log elements with event listeners (requires getEventListeners)",
             icon: "hand.tap",
             iconColor: .mint,
+            category: .debug,
             script: """
                 (function() {
                     // This is a simplified version - full getEventListeners is Chrome-only
@@ -280,6 +315,7 @@ class SnippetsManager {
             icon: "textformat.size",
             iconColor: .yellow,
             isToggleable: true,
+            category: .layout,
             script: """
                 (function() {
                     const id = '__wina_heading_style__';
@@ -321,6 +357,7 @@ class SnippetsManager {
             description: "Clear localStorage and sessionStorage",
             icon: "trash",
             iconColor: .red,
+            category: .storage,
             script: """
                 (function() {
                     const lsCount = localStorage.length;
@@ -350,55 +387,267 @@ class SnippetsManager {
     }
 }
 
-// MARK: - Snippets Settings View (Navigation Destination)
+// MARK: - Snippets View (DevTools Sheet)
 
-struct SnippetsSettingsView: View {
+struct SnippetsView: View {
     let navigator: WebViewNavigator
+    @Environment(\.dismiss) private var dismiss
+    @State private var selectedCategory: SnippetCategory = .all
+    @State private var searchText: String = ""
     @State private var executionResult: String?
     @State private var showResult: Bool = false
+    @State private var scrollOffset: CGFloat = 0
+    @State private var scrollViewHeight: CGFloat = 0
+    @State private var contentHeight: CGFloat = 0
+    @State private var scrollProxy: ScrollViewProxy?
 
     private var snippetsManager: SnippetsManager {
         navigator.snippetsManager
     }
 
+    private var filteredSnippets: [DebugSnippet] {
+        var result = SnippetsManager.defaultSnippets
+
+        // Filter by category
+        if selectedCategory != .all {
+            result = result.filter { $0.category == selectedCategory }
+        }
+
+        // Filter by search
+        if !searchText.isEmpty {
+            result = result.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+                    || $0.description.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+
+        return result
+    }
+
+    private var activeCount: Int {
+        snippetsManager.activeSnippets.count
+    }
+
+    private func count(for category: SnippetCategory) -> Int {
+        if category == .all {
+            return SnippetsManager.defaultSnippets.count
+        }
+        return SnippetsManager.defaultSnippets.filter { $0.category == category }.count
+    }
+
     var body: some View {
-        List {
-            Section {
-                ForEach(SnippetsManager.defaultSnippets) { snippet in
-                    SnippetSettingsRow(
-                        snippet: snippet,
-                        isActive: snippetsManager.isActive(snippet.id),
-                        onTap: {
-                            executeSnippet(snippet)
+        VStack(spacing: 0) {
+            snippetsHeader
+            searchBar
+            filterTabs
+
+            Divider()
+
+            if filteredSnippets.isEmpty {
+                emptyState
+            } else {
+                snippetsList
+            }
+        }
+        .overlay(alignment: .bottom) {
+            resultToast
+        }
+        .animation(.easeInOut(duration: 0.2), value: showResult)
+        .task {
+            await AdManager.shared.showInterstitialAd(
+                options: AdOptions(id: "snippets_devtools"),
+                adUnitId: AdManager.interstitialAdUnitId
+            )
+        }
+    }
+
+    // MARK: - Header
+
+    private var snippetsHeader: some View {
+        DevToolsHeader(
+            title: "Snippets",
+            leftButtons: [
+                .init(icon: "xmark.circle.fill", color: .secondary) {
+                    dismiss()
+                },
+                .init(
+                    icon: "arrow.counterclockwise",
+                    isDisabled: activeCount == 0
+                ) {
+                    resetAllSnippets()
+                }
+            ],
+            rightButtons: [
+                .init(
+                    icon: "checkmark.circle",
+                    activeIcon: "checkmark.circle.fill",
+                    color: .secondary,
+                    activeColor: .green,
+                    isActive: activeCount > 0
+                ) {
+                    // Just indicator, no action
+                }
+            ]
+        )
+    }
+
+    // MARK: - Search Bar
+
+    private var searchBar: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(.secondary)
+            TextField("Search snippets", text: $searchText)
+                .textFieldStyle(.plain)
+            if !searchText.isEmpty {
+                Button {
+                    searchText = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(uiColor: .tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+        .padding(.horizontal, 16)
+        .padding(.bottom, 8)
+    }
+
+    // MARK: - Filter Tabs
+
+    private var filterTabs: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                ForEach(SnippetCategory.allCases) { category in
+                    SnippetFilterTab(
+                        label: category.rawValue,
+                        count: count(for: category),
+                        isSelected: selectedCategory == category
+                    ) {
+                        selectedCategory = category
+                    }
+                }
+            }
+            .padding(.horizontal, 12)
+        }
+        .frame(height: 36)
+        .background(Color(uiColor: .secondarySystemBackground))
+    }
+
+    // MARK: - Empty State
+
+    private var emptyState: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: 8) {
+                    Spacer(minLength: 0)
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: 36))
+                        .foregroundStyle(.tertiary)
+                    Text(searchText.isEmpty ? "No snippets" : "No matches")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                }
+                .frame(width: geometry.size.width)
+                .frame(minHeight: geometry.size.height)
+            }
+        }
+        .background(Color(uiColor: .systemBackground))
+    }
+
+    // MARK: - Snippets List
+
+    private var snippetsList: some View {
+        GeometryReader { outerGeo in
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredSnippets) { snippet in
+                            SnippetRow(
+                                snippet: snippet,
+                                isActive: snippetsManager.isActive(snippet.id)
+                            ) {
+                                executeSnippet(snippet)
+                            }
+                            .id(snippet.id)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        GeometryReader { innerGeo in
+                            Color.clear
+                                .onAppear {
+                                    contentHeight = innerGeo.size.height
+                                }
+                                .onChange(of: innerGeo.size.height) { _, newHeight in
+                                    contentHeight = newHeight
+                                }
                         }
                     )
                 }
-            } header: {
-                Text("Tap to run. Toggle snippets stay active until disabled.")
-            }
-        }
-        .navigationTitle("Debug Snippets")
-        .navigationBarTitleDisplayMode(.inline)
-        .overlay(alignment: .bottom) {
-            if showResult, let result = executionResult {
-                HStack {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                    Text(result)
-                        .font(.system(size: 12, design: .monospaced))
-                        .lineLimit(2)
-                    Spacer()
+                .background(Color(uiColor: .systemBackground))
+                .scrollContentBackground(.hidden)
+                .onScrollGeometryChange(for: Double.self) { geometry in
+                    geometry.contentOffset.y
+                } action: { _, newValue in
+                    scrollOffset = newValue
                 }
-                .padding(12)
-                .background(.regularMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(.horizontal, 16)
-                .padding(.bottom, 8)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .onAppear {
+                    scrollViewHeight = outerGeo.size.height
+                    scrollProxy = proxy
+                }
+                .scrollNavigationOverlay(
+                    scrollOffset: scrollOffset,
+                    contentHeight: contentHeight,
+                    viewportHeight: scrollViewHeight,
+                    onScrollUp: { scrollUp(proxy: scrollProxy) },
+                    onScrollDown: { scrollDown(proxy: scrollProxy) }
+                )
             }
         }
-        .animation(.easeInOut(duration: 0.2), value: showResult)
     }
+
+    // MARK: - Result Toast
+
+    @ViewBuilder
+    private var resultToast: some View {
+        if showResult, let result = executionResult {
+            HStack(spacing: 8) {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text(result)
+                    .font(.system(size: 13, design: .monospaced))
+                    .lineLimit(2)
+                Spacer()
+            }
+            .padding(12)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    // MARK: - Scroll Navigation
+
+    private func scrollUp(proxy: ScrollViewProxy?) {
+        guard let proxy, let firstSnippet = filteredSnippets.first else { return }
+        withAnimation(.easeOut(duration: 0.3)) {
+            proxy.scrollTo(firstSnippet.id, anchor: .top)
+        }
+    }
+
+    private func scrollDown(proxy: ScrollViewProxy?) {
+        guard let proxy, let lastSnippet = filteredSnippets.last else { return }
+        withAnimation(.easeOut(duration: 0.3)) {
+            proxy.scrollTo(lastSnippet.id, anchor: .bottom)
+        }
+    }
+
+    // MARK: - Actions
 
     private func executeSnippet(_ snippet: DebugSnippet) {
         let isCurrentlyActive = snippetsManager.isActive(snippet.id)
@@ -432,11 +681,72 @@ struct SnippetsSettingsView: View {
             }
         }
     }
+
+    private func resetAllSnippets() {
+        let activeIds = snippetsManager.activeSnippets
+        for snippetId in activeIds {
+            if let snippet = SnippetsManager.defaultSnippets.first(where: { $0.id == snippetId }),
+               let undoScript = snippet.undoScript {
+                Task {
+                    _ = await navigator.evaluateJavaScript(undoScript)
+                }
+            }
+            snippetsManager.deactivate(snippetId)
+        }
+        executionResult = "All snippets reset"
+        showResult = true
+        Task {
+            try? await Task.sleep(for: .seconds(2))
+            await MainActor.run {
+                showResult = false
+            }
+        }
+    }
 }
 
-// MARK: - Snippet Settings Row
+// MARK: - Snippet Filter Tab
 
-private struct SnippetSettingsRow: View {
+private struct SnippetFilterTab: View {
+    let label: String
+    let count: Int
+    let isSelected: Bool
+    let action: () -> Void
+
+    // swiftlint:disable:next empty_count
+    private var showBadge: Bool { count > 0 }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(label)
+                    .font(.system(size: 12, weight: isSelected ? .semibold : .regular))
+                if showBadge {
+                    Text("\(count)")
+                        .font(.system(size: 10, weight: .medium))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(
+                            isSelected ? Color.accentColor : Color.secondary.opacity(0.2),
+                            in: Capsule()
+                        )
+                        .foregroundStyle(isSelected ? .white : .secondary)
+                }
+            }
+            .foregroundStyle(isSelected ? .primary : .secondary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(
+                isSelected ? Color.accentColor.opacity(0.15) : Color.clear,
+                in: Capsule()
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Snippet Row
+
+private struct SnippetRow: View {
     let snippet: DebugSnippet
     let isActive: Bool
     let onTap: () -> Void
@@ -444,29 +754,31 @@ private struct SnippetSettingsRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
+                // Icon
                 Image(systemName: snippet.icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(isActive ? .white : snippet.iconColor)
-                    .frame(width: 32, height: 32)
+                    .frame(width: 40, height: 40)
                     .background(
-                        isActive ? snippet.iconColor : snippet.iconColor.opacity(0.15),
-                        in: RoundedRectangle(cornerRadius: 8)
+                        isActive ? snippet.iconColor : snippet.iconColor.opacity(0.12),
+                        in: RoundedRectangle(cornerRadius: 10)
                     )
 
-                VStack(alignment: .leading, spacing: 2) {
+                // Content
+                VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 6) {
                         Text(snippet.name)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.system(size: 15, weight: .medium))
                             .foregroundStyle(.primary)
 
                         if snippet.isToggleable {
                             Text(isActive ? "ON" : "Toggle")
-                                .font(.system(size: 10, weight: .medium))
+                                .font(.system(size: 10, weight: .semibold))
                                 .foregroundStyle(isActive ? .white : .secondary)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(
-                                    isActive ? Color.green : Color.secondary.opacity(0.2),
+                                    isActive ? Color.green : Color.secondary.opacity(0.15),
                                     in: Capsule()
                                 )
                         }
@@ -480,18 +792,34 @@ private struct SnippetSettingsRow: View {
 
                 Spacer()
 
-                Image(systemName: "play.fill")
-                    .font(.system(size: 11))
-                    .foregroundStyle(.tertiary)
+                // Play button
+                Image(systemName: isActive && snippet.isToggleable ? "stop.fill" : "play.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(isActive && snippet.isToggleable ? .orange : .accentColor)
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(isActive ? snippet.iconColor.opacity(0.06) : Color.clear)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .listRowBackground(isActive ? snippet.iconColor.opacity(0.08) : Color.clear)
+
+        Divider()
+            .padding(.leading, 68)
+    }
+}
+
+// MARK: - Legacy Navigation View (Settings)
+
+struct SnippetsSettingsView: View {
+    let navigator: WebViewNavigator
+
+    var body: some View {
+        SnippetsView(navigator: navigator)
+            .navigationBarHidden(true)
     }
 }
 
 #Preview {
-    NavigationStack {
-        SnippetsSettingsView(navigator: WebViewNavigator())
-    }
+    SnippetsView(navigator: WebViewNavigator())
 }

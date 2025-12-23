@@ -116,6 +116,8 @@ struct URLInputOverlayView: View {
             Image(systemName: urlValidationState.iconName)
                 .foregroundStyle(urlValidationState.iconColor)
                 .font(.system(size: 14))
+                .contentTransition(.symbolEffect(.replace))
+                .animation(.easeOut(duration: 0.2), value: urlValidationState)
 
             // URL TextField
             TextField("Enter URL", text: $urlInputText)

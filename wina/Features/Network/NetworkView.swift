@@ -105,7 +105,7 @@ struct NetworkView: View {
     @State private var selectedRequest: NetworkRequest?
     @State private var selectedResource: ResourceEntry?
     @AppStorage("networkPreserveLog") private var preserveLog: Bool = false
-    @AppStorage("resourcePreserveLog") private var resourcePreserveLog: Bool = false
+    @AppStorage("logClearStrategy") private var clearStrategyRaw: String = LogClearStrategy.keep.rawValue
     @State private var scrollOffset: CGFloat = 0
     @State private var scrollViewHeight: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
@@ -184,7 +184,7 @@ struct NetworkView: View {
     }
 
     private var settingsActive: Bool {
-        preserveLog || resourcePreserveLog
+        preserveLog || clearStrategyRaw != LogClearStrategy.keep.rawValue
     }
 
     private var isCapturing: Bool {
@@ -831,19 +831,39 @@ private struct ResourceRow: View {
 
 private struct NetworkSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage("networkPreserveLog") private var networkPreserveLog: Bool = false
-    @AppStorage("resourcePreserveLog") private var resourcePreserveLog: Bool = false
+    @AppStorage("networkPreserveLog") private var preserveLog: Bool = false
+    @AppStorage("logClearStrategy") private var clearStrategyRaw: String = LogClearStrategy.keep.rawValue
+
+    private var clearStrategy: Binding<LogClearStrategy> {
+        Binding(
+            get: { LogClearStrategy(rawValue: clearStrategyRaw) ?? .keep },
+            set: { clearStrategyRaw = $0.rawValue }
+        )
+    }
 
     var body: some View {
         NavigationStack {
             List {
-                Section("Logging") {
-                    Toggle("Preserve Network Log", isOn: $networkPreserveLog)
-                    Toggle("Preserve Resource Log", isOn: $resourcePreserveLog)
+                Section("Clear Strategy") {
+                    Picker("On Navigation", selection: clearStrategy) {
+                        ForEach(LogClearStrategy.allCases, id: \.self) { strategy in
+                            Text(strategy.displayName).tag(strategy)
+                        }
+                    }
                 }
 
                 Section {
-                    Text("Network requests (Fetch/XHR) and resources (images, scripts, styles) are captured separately. Resources are collected using the Resource Timing API.")
+                    Text(clearStrategy.wrappedValue.description)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                Section("Reload Behavior") {
+                    Toggle("Preserve Log on Reload", isOn: $preserveLog)
+                }
+
+                Section {
+                    Text("Keep logs when the page is reloaded (separate from navigation strategy).")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

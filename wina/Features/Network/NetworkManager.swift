@@ -7,6 +7,31 @@
 
 import Foundation
 
+// MARK: - Log Clear Strategy
+
+/// Strategy for clearing logs during navigation
+enum LogClearStrategy: String, CaseIterable {
+    case origin  // Clear when navigating to different origin (domain)
+    case page    // Clear on every page navigation
+    case keep    // Never auto-clear, manual only
+
+    var displayName: String {
+        switch self {
+        case .origin: return "Same Origin"
+        case .page: return "Each Page"
+        case .keep: return "Keep All"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .origin: return "Clear when leaving current domain"
+        case .page: return "Clear on every navigation"
+        case .keep: return "Keep until manually cleared"
+        }
+    }
+}
+
 // MARK: - Network Body Storage (Disk-based)
 
 final class NetworkBodyStorage {
