@@ -553,6 +553,31 @@ Button(
 
 **iOS Compatibility**: Always use `.backport.glassEffect()` for iOS < 26 support via SwiftUIBackports.
 
+### 15. Manager Class Missing @Observable
+
+DevTools Manager 클래스에 `@Observable` 누락 시 상태 변경이 UI에 반영되지 않음:
+```swift
+// ❌ UI 업데이트 안됨 - 버튼 눌러도 로딩 스피너 안 보임
+class SomeManager {
+    var isLoading: Bool = false  // 변경해도 View가 모름
+}
+
+// ✅ 정상 작동
+import Observation
+
+@Observable
+class SomeManager {
+    var isLoading: Bool = false  // 변경 시 View 자동 업데이트
+}
+```
+
+**증상**: Run Audit 등 버튼 누르면 화면 멈춤 → sheet 닫았다 열면 결과 나타남
+
+**체크리스트** (모든 DevTools Manager):
+- ConsoleManager, StorageManager, NetworkManager ✅
+- ResourceManager, PerformanceManager, SourcesManager ✅
+- SnippetsManager, AccessibilityManager ✅
+
 ---
 
 ## Design System
