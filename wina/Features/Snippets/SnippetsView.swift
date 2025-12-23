@@ -744,58 +744,51 @@ private struct SnippetRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
-                // Icon
+                // Icon - 항상 동일한 스타일 유지
                 Image(systemName: snippet.icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(isActive ? .white : snippet.iconColor)
-                    .frame(width: 40, height: 40)
+                    .font(.system(size: 16))
+                    .foregroundStyle(snippet.iconColor.opacity(0.7))
+                    .frame(width: 36, height: 36)
                     .background(
-                        isActive ? snippet.iconColor : snippet.iconColor.opacity(0.12),
-                        in: RoundedRectangle(cornerRadius: 10)
+                        snippet.iconColor.opacity(0.08),
+                        in: RoundedRectangle(cornerRadius: 8)
                     )
 
                 // Content
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text(snippet.name)
-                            .font(.system(size: 15, weight: .medium))
+                            .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.primary)
 
-                        if snippet.isToggleable {
-                            Text(isActive ? "ON" : "Toggle")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundStyle(isActive ? .white : .secondary)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(
-                                    isActive ? Color.green : Color.secondary.opacity(0.15),
-                                    in: Capsule()
-                                )
+                        if snippet.isToggleable && isActive {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 6, height: 6)
                         }
                     }
 
                     Text(snippet.description)
                         .font(.system(size: 12))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.tertiary)
                         .lineLimit(1)
                 }
 
                 Spacer()
 
-                // Play button
-                Image(systemName: isActive && snippet.isToggleable ? "stop.fill" : "play.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(isActive && snippet.isToggleable ? .orange : .accentColor)
+                // Action indicator
+                Image(systemName: isActive && snippet.isToggleable ? "stop.circle" : "play.circle")
+                    .font(.system(size: 18))
+                    .foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(isActive ? snippet.iconColor.opacity(0.06) : Color.clear)
+            .padding(.vertical, 10)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
 
         Divider()
-            .padding(.leading, 68)
+            .padding(.leading, 64)
     }
 }
 

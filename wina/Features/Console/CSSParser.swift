@@ -276,8 +276,8 @@ struct CSSParser {
         guard !values.isEmpty else { return nil }
         
         if values.count == 1 {
-            let p = CGFloat(values[0])
-            return EdgeInsets(top: p, leading: p, bottom: p, trailing: p)
+            let padding = CGFloat(values[0])
+            return EdgeInsets(top: padding, leading: padding, bottom: padding, trailing: padding)
         } else if values.count == 2 {
             let vertical = CGFloat(values[0])
             let horizontal = CGFloat(values[1])

@@ -291,8 +291,6 @@ struct NetworkView: View {
                 .init(
                     icon: "gearshape",
                     activeIcon: "gearshape.fill",
-                    color: .secondary,
-                    activeColor: .blue,
                     isActive: settingsActive
                 ) {
                     showSettings = true

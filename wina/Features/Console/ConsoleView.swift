@@ -156,9 +156,11 @@ struct ConsoleLog: Identifiable, Equatable {
 
         // Types that can be displayed (excludes internal types like groupEnd)
         static var displayableTypes: [LogType] {
-            [.log, .info, .warn, .error, .debug, .group, .groupCollapsed, .table,
-             .time, .timeLog, .timeEnd, .count, .countReset, .assert, .dir, .trace,
-             .command, .result]
+            [
+                .log, .info, .warn, .error, .debug, .group, .groupCollapsed, .table,
+                .time, .timeLog, .timeEnd, .count, .countReset, .assert, .dir, .trace,
+                .command, .result
+            ]
         }
     }
 
@@ -284,8 +286,8 @@ class ConsoleManager {
         switch (lhs, rhs) {
         case (nil, nil):
             return true
-        case let (l?, r?):
-            return NSArray(array: l).isEqual(r)
+        case let (lhsArray?, rhsArray?):
+            return NSArray(array: lhsArray).isEqual(rhsArray)
         default:
             return false
         }
@@ -422,6 +424,7 @@ struct ConsoleView: View {
     @State private var enabledLogTypes: Set<ConsoleLog.LogType> = Set(ConsoleLog.LogType.displayableTypes)
     // AppStorage for settings indicator (matches ConsoleSettingsSheet)
     @AppStorage("consolePreserveLog") private var preserveLog: Bool = false
+    @AppStorage("logClearStrategy") private var clearStrategyRaw: String = LogClearStrategy.keep.rawValue
     // JavaScript input
     @State private var jsInput: String = ""
     @State private var commandHistory: [String] = []
@@ -473,7 +476,9 @@ struct ConsoleView: View {
 
     // Settings button highlight when any setting is active
     private var settingsActive: Bool {
-        useRegex || preserveLog || enabledLogTypes.count != ConsoleLog.LogType.displayableTypes.count
+        useRegex || preserveLog ||
+        clearStrategyRaw != LogClearStrategy.keep.rawValue ||
+        enabledLogTypes.count != ConsoleLog.LogType.displayableTypes.count
     }
 
     var body: some View {
@@ -553,8 +558,6 @@ struct ConsoleView: View {
                 .init(
                     icon: "gearshape",
                     activeIcon: "gearshape.fill",
-                    color: .secondary,
-                    activeColor: .blue,
                     isActive: settingsActive
                 ) {
                     showSettings = true
@@ -1291,17 +1294,47 @@ private struct ConsoleSettingsSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var useRegex: Bool
     @AppStorage("consolePreserveLog") private var preserveLog: Bool = false
+    @AppStorage("logClearStrategy") private var clearStrategyRaw: String = LogClearStrategy.keep.rawValue
     @Binding var enabledLogTypes: Set<ConsoleLog.LogType>
+
+    private var clearStrategy: Binding<LogClearStrategy> {
+        Binding(
+            get: { LogClearStrategy(rawValue: clearStrategyRaw) ?? .keep },
+            set: { clearStrategyRaw = $0.rawValue }
+        )
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section("Search") {
-                    Toggle("Regex Filter", isOn: $useRegex)
+                    HStack {
+                        Toggle("Regex Filter", isOn: $useRegex)
+                        InfoPopoverButton(text: "Use regular expressions for filtering logs.")
+                    }
                 }
 
                 Section("Logging") {
-                    Toggle("Preserve Log on Reload", isOn: $preserveLog)
+                    HStack {
+                        Picker("Clear Strategy", selection: clearStrategy) {
+                            ForEach(LogClearStrategy.allCases, id: \.self) { strategy in
+                                Text(strategy.displayName).tag(strategy)
+                            }
+                        }
+                        InfoPopoverButton(
+                            text: """
+                            When to clear logs during navigation:
+                            • Keep All: Manual clear only
+                            • Same Origin: Clear when leaving domain
+                            • Each Page: Clear on every navigation
+                            """
+                        )
+                    }
+
+                    HStack {
+                        Toggle("Preserve on Reload", isOn: $preserveLog)
+                        InfoPopoverButton(text: "Keep logs when the page is reloaded.")
+                    }
                 }
 
                 Section("Log Types in 'All' Tab") {
