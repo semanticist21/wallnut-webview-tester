@@ -162,6 +162,21 @@ struct ConsoleLog: Identifiable, Equatable {
                 .command, .result
             ]
         }
+
+        // Types shown in settings (one representative per label group)
+        static var settingsDisplayTypes: [LogType] {
+            [.log, .info, .warn, .error, .debug, .group, .table, .time, .count, .assert, .dir, .trace, .command, .result]
+        }
+
+        // Related types controlled by a representative type (for settings toggles)
+        var relatedTypes: [LogType] {
+            switch self {
+            case .group: return [.group, .groupCollapsed]
+            case .time: return [.time, .timeLog, .timeEnd]
+            case .count: return [.count, .countReset]
+            default: return [self]
+            }
+        }
     }
 
     static func == (lhs: ConsoleLog, rhs: ConsoleLog) -> Bool {

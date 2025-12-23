@@ -41,11 +41,20 @@ struct OverlayMenuBars: View {
 
     // Toolbar customization
     @AppStorage("toolbarItemsOrder") private var toolbarItemsOrderData = Data()
+    @AppStorage("appBarItemsOrder") private var appBarItemsOrderData = Data()
 
     private var visibleToolbarItems: [DevToolsMenuItem] {
         guard let items = try? JSONDecoder().decode([ToolbarItemState].self, from: toolbarItemsOrderData),
               !items.isEmpty else {
             return DevToolsMenuItem.defaultOrder
+        }
+        return items.filter { $0.isVisible }.map { $0.menuItem }
+    }
+
+    private var visibleAppBarItems: [AppBarMenuItem] {
+        guard let items = try? JSONDecoder().decode([AppBarItemState].self, from: appBarItemsOrderData),
+              !items.isEmpty else {
+            return AppBarMenuItem.defaultOrder
         }
         return items.filter { $0.isVisible }.map { $0.menuItem }
     }
@@ -144,33 +153,16 @@ struct OverlayMenuBars: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     if showWebView {
-                        // WebView mode: Home, InitialURL, Back, Forward, Refresh
-                        HomeButton {
-                            urlInputText = ""
-                            onHome()
-                        }
-
-                        // Navigation buttons (only for WKWebView, not SafariVC)
-                        if !useSafariVC, let nav = navigator {
-                            InitialURLButton(isEnabled: nav.canGoToInitialURL) {
-                                nav.goToInitialURL()
-                            }
-                            WebBackButton(isEnabled: nav.canGoBack) {
-                                nav.goBack()
-                            }
-                            WebForwardButton(isEnabled: nav.canGoForward) {
-                                nav.goForward()
-                            }
-                            RefreshButton {
-                                nav.reload()
-                            }
+                        // WebView mode: Navigation buttons based on user customization
+                        ForEach(visibleAppBarItems) { item in
+                            appBarButton(for: item)
                         }
                     } else {
                         ThemeToggleButton()
                         BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: hasBookmarks)
                     }
 
-                    // Info & Settings buttons
+                    // Info & Settings buttons (always visible)
                     InfoSheetButton(showInfo: $showInfo)
                     SettingsButton(showSettings: $showSettings)
                 }
@@ -254,6 +246,43 @@ struct OverlayMenuBars: View {
             .padding(.bottom, -(geometry.safeAreaInsets.bottom * BarConstants.bottomBarSafeAreaRatio))
             .offset(y: bottomOffset)
             .frame(maxHeight: .infinity, alignment: .bottom)
+        }
+    }
+
+    // MARK: - AppBar Button Builder
+
+    @ViewBuilder
+    private func appBarButton(for item: AppBarMenuItem) -> some View {
+        switch item {
+        case .home:
+            HomeButton {
+                urlInputText = ""
+                onHome()
+            }
+        case .initialURL:
+            if !useSafariVC, let nav = navigator {
+                InitialURLButton(isEnabled: nav.canGoToInitialURL) {
+                    nav.goToInitialURL()
+                }
+            }
+        case .back:
+            if !useSafariVC, let nav = navigator {
+                WebBackButton(isEnabled: nav.canGoBack) {
+                    nav.goBack()
+                }
+            }
+        case .forward:
+            if !useSafariVC, let nav = navigator {
+                WebForwardButton(isEnabled: nav.canGoForward) {
+                    nav.goForward()
+                }
+            }
+        case .refresh:
+            if !useSafariVC, let nav = navigator {
+                RefreshButton {
+                    nav.reload()
+                }
+            }
         }
     }
 

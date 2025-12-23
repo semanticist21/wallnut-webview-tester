@@ -21,7 +21,7 @@ enum AppBarMenuItem: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .home: return "house"
-        case .initialURL: return "arrow.uturn.backward"
+        case .initialURL: return "flag"
         case .back: return "chevron.left"
         case .forward: return "chevron.right"
         case .refresh: return "arrow.clockwise"

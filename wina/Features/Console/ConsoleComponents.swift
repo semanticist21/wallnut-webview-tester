@@ -482,14 +482,16 @@ struct ConsoleSettingsSheet: View {
                 }
 
                 Section("Log Types in 'All' Tab") {
-                    ForEach(ConsoleLog.LogType.displayableTypes, id: \.self) { type in
+                    ForEach(ConsoleLog.LogType.settingsDisplayTypes, id: \.self) { type in
                         Toggle(isOn: Binding(
-                            get: { enabledLogTypes.contains(type) },
+                            get: { type.relatedTypes.allSatisfy { enabledLogTypes.contains($0) } },
                             set: { isEnabled in
-                                if isEnabled {
-                                    enabledLogTypes.insert(type)
-                                } else {
-                                    enabledLogTypes.remove(type)
+                                for relatedType in type.relatedTypes {
+                                    if isEnabled {
+                                        enabledLogTypes.insert(relatedType)
+                                    } else {
+                                        enabledLogTypes.remove(relatedType)
+                                    }
                                 }
                             }
                         )) {
