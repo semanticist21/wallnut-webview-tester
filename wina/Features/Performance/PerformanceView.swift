@@ -45,18 +45,30 @@ struct PerformanceView: View {
     }
 
     var body: some View {
-        Group {
-            if performanceManager.isLoading {
-                loadingState
-            } else if let error = performanceManager.lastError {
-                errorState(error)
-            } else if performanceManager.data.resources.isEmpty && performanceManager.data.navigation == nil {
-                emptyState
-            } else {
-                mainContent
+        VStack(spacing: 0) {
+            // 헤더 영역 (닫기, 새로고침 버튼)
+            performanceHeader
+
+            // 컨텐츠 영역
+            Group {
+                if performanceManager.isLoading {
+                    loadingState
+                } else if let error = performanceManager.lastError {
+                    errorState(error)
+                } else if performanceManager.data.resources.isEmpty && performanceManager.data.navigation == nil {
+                    emptyState
+                } else {
+                    mainContent
+                }
             }
         }
         .background(Color(uiColor: .systemBackground))
+        // Sheet 열릴 때 자동으로 데이터 수집
+        .onAppear {
+            if !hasData && !performanceManager.isLoading {
+                onCollect()
+            }
+        }
     }
 
     private var mainContent: some View {
