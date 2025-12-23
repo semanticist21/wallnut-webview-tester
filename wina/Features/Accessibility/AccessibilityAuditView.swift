@@ -158,17 +158,20 @@ struct AccessibilityAuditView: View {
     let navigator: WebViewNavigator?
 
     @Environment(\.dismiss) private var dismiss
-    @State private var issues: [AccessibilityIssue] = []
-    @State private var isScanning: Bool = false
-    @State private var hasScanned: Bool = false
-    @State private var filterSeverity: AccessibilityIssue.Severity?
-    @State private var searchText: String = ""
     @State private var copiedFeedback: String?
     @State private var showingShareSheet: Bool = false
     @State private var scrollOffset: CGFloat = 0
     @State private var scrollViewHeight: CGFloat = 0
     @State private var contentHeight: CGFloat = 0
     @State private var scrollProxy: ScrollViewProxy?
+
+    // manager에서 상태 가져오기 (sheet 닫아도 유지됨)
+    private var manager: AccessibilityManager? { navigator?.accessibilityManager }
+    private var issues: [AccessibilityIssue] { manager?.issues ?? [] }
+    private var isScanning: Bool { manager?.isScanning ?? false }
+    private var hasScanned: Bool { manager?.hasScanned ?? false }
+    private var filterSeverity: AccessibilityIssue.Severity? { manager?.filterSeverity }
+    private var searchText: String { manager?.searchText ?? "" }
 
     private var filteredIssues: [AccessibilityIssue] {
         var result = issues
@@ -248,8 +251,8 @@ struct AccessibilityAuditView: View {
                     icon: "trash",
                     isDisabled: issues.isEmpty || isScanning
                 ) {
-                    issues = []
-                    hasScanned = false
+                    // manager의 clear 메서드로 결과 초기화
+                    manager?.clear()
                 },
                 .init(
                     icon: "square.and.arrow.up",
@@ -325,11 +328,19 @@ struct AccessibilityAuditView: View {
 
     // MARK: - Search Bar
 
+    // searchText binding (manager 연결)
+    private var searchTextBinding: Binding<String> {
+        Binding(
+            get: { manager?.searchText ?? "" },
+            set: { manager?.searchText = $0 }
+        )
+    }
+
     private var searchBar: some View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
-            TextField("Filter issues", text: $searchText)
+            TextField("Filter issues", text: searchTextBinding)
                 .textFieldStyle(.plain)
         }
         .padding(.horizontal, 12)
@@ -349,7 +360,7 @@ struct AccessibilityAuditView: View {
                     count: issues.count,
                     isSelected: filterSeverity == nil
                 ) {
-                    filterSeverity = nil
+                    manager?.filterSeverity = nil
                 }
 
                 ForEach(AccessibilityIssue.Severity.allCases, id: \.self) { severity in
@@ -359,7 +370,7 @@ struct AccessibilityAuditView: View {
                         isSelected: filterSeverity == severity,
                         color: severity.color
                     ) {
-                        filterSeverity = severity
+                        manager?.filterSeverity = severity
                     }
                 }
             }
@@ -517,27 +528,27 @@ struct AccessibilityAuditView: View {
     // MARK: - Audit Logic
 
     private func runAudit() async {
-        guard let navigator else { return }
+        guard let navigator, let manager else { return }
 
-        isScanning = true
-        issues = []
+        manager.isScanning = true
+        manager.issues = []
 
-        // Step 1: Inject axe-core if not already loaded
+        // Step 1: axe-core 로드 확인
         let checkAxe = "typeof axe !== 'undefined'"
         let axeLoaded = await navigator.evaluateJavaScript(checkAxe) as? Bool ?? false
 
         if !axeLoaded {
             guard let axeURL = Bundle.main.url(forResource: "axe.min", withExtension: "js"),
                   let axeScript = try? String(contentsOf: axeURL, encoding: .utf8) else {
-                // axe.min.js not found - user needs to add Scripts folder to Xcode project
-                isScanning = false
-                hasScanned = true
+                // axe.min.js not found
+                manager.isScanning = false
+                manager.hasScanned = true
                 return
             }
             _ = await navigator.evaluateJavaScript(axeScript)
         }
 
-        // Step 2: Run axe-core audit using callAsyncJavaScript (supports Promises)
+        // Step 2: axe-core audit 실행 (Promise 지원)
         let auditScript = """
             const results = await axe.run();
             return JSON.stringify(results.violations);
@@ -546,53 +557,11 @@ struct AccessibilityAuditView: View {
         if let result = await navigator.callAsyncJavaScript(auditScript) as? String,
            let data = result.data(using: .utf8),
            let violations = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] {
-            issues = parseAxeViolations(violations)
+            manager.issues = manager.parseAxeViolations(violations)
         }
 
-        isScanning = false
-        hasScanned = true
-    }
-
-    private func parseAxeViolations(_ violations: [[String: Any]]) -> [AccessibilityIssue] {
-        var result: [AccessibilityIssue] = []
-
-        for violation in violations {
-            guard let ruleId = violation["id"] as? String,
-                  let impact = violation["impact"] as? String,
-                  let help = violation["help"] as? String,
-                  let nodes = violation["nodes"] as? [[String: Any]] else {
-                continue
-            }
-
-            let tags = violation["tags"] as? [String] ?? []
-            let helpUrl = violation["helpUrl"] as? String
-            let severity = AccessibilityIssue.Severity.from(impact: impact)
-            let category = AccessibilityIssue.Category.from(tags: tags, ruleId: ruleId)
-
-            for node in nodes {
-                let fullHtml = node["html"] as? String ?? ""
-                let targets = node["target"] as? [String] ?? []
-                let selector = targets.first
-                let failureSummary = node["failureSummary"] as? String ?? ""
-
-                // Create truncated element for collapsed display
-                let element = fullHtml.count > 60 ? String(fullHtml.prefix(60)) + "..." : fullHtml
-
-                result.append(AccessibilityIssue(
-                    severity: severity,
-                    category: category,
-                    help: help,
-                    failureSummary: failureSummary,
-                    element: element,
-                    fullHtml: fullHtml,
-                    selector: selector,
-                    helpUrl: helpUrl,
-                    ruleId: ruleId
-                ))
-            }
-        }
-
-        return result
+        manager.isScanning = false
+        manager.hasScanned = true
     }
 }
 
