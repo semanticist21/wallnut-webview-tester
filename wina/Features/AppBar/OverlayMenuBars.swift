@@ -192,7 +192,7 @@ struct OverlayMenuBars: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     if showWebView {
-                        // URL button
+                        // URL button (glassEffect capsule 통일)
                         Button {
                             showSearchText = false  // 검색바 자동 닫기
                             urlInputText = navigator?.currentURL?.absoluteString ?? ""
@@ -208,9 +208,9 @@ struct OverlayMenuBars: View {
                             .foregroundStyle(.primary)
                             .padding(.horizontal, 12)
                             .frame(height: 44)
-                            .background(.ultraThinMaterial, in: Capsule())
                         }
                         .buttonStyle(.plain)
+                        .backport.glassEffect(in: .capsule)
 
                         // WKWebView-only buttons
                         if !useSafariVC {
@@ -377,6 +377,7 @@ struct OverlayMenuBars: View {
 // MARK: - Bottom Bar Icon Button
 
 /// Bottom bar icon button matching header button size (44×44, 18pt icon)
+/// GlassIconButton과 동일한 스타일 적용 (glassEffect 통일)
 private struct BottomBarIconButton: View {
     let icon: String
     let action: () -> Void
@@ -387,8 +388,8 @@ private struct BottomBarIconButton: View {
                 .font(.system(size: 18))
                 .foregroundStyle(.primary)
                 .frame(width: 44, height: 44)
-                .background(.ultraThinMaterial, in: Circle())
                 .contentShape(Circle())
+                .backport.glassEffect(in: .circle)
         }
         .buttonStyle(.plain)
     }

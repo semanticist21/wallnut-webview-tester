@@ -37,7 +37,8 @@ struct GlassIconButton: View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: size.iconSize))
-                .foregroundStyle(isDisabled ? Color.secondary.opacity(0.5) : color)
+                // Disabled 상태에서 .tertiary 사용 (BackButton 등과 스타일 통일)
+                .foregroundStyle(isDisabled ? .tertiary : color)
                 .frame(width: size.frame, height: size.frame)
                 .contentShape(Circle())
                 .backport.glassEffect(in: .circle)
