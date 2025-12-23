@@ -756,17 +756,9 @@ private struct SnippetRow: View {
 
                 // Content
                 VStack(alignment: .leading, spacing: 2) {
-                    HStack(spacing: 6) {
-                        Text(snippet.name)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundStyle(.primary)
-
-                        if snippet.isToggleable && isActive {
-                            Circle()
-                                .fill(Color.green)
-                                .frame(width: 6, height: 6)
-                        }
-                    }
+                    Text(snippet.name)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.primary)
 
                     Text(snippet.description)
                         .font(.system(size: 12))
@@ -776,10 +768,10 @@ private struct SnippetRow: View {
 
                 Spacer()
 
-                // Action indicator
-                Image(systemName: isActive && snippet.isToggleable ? "stop.circle" : "play.circle")
-                    .font(.system(size: 18))
-                    .foregroundStyle(.tertiary)
+                // Action indicator - 활성화 상태에 따라 색상 변경
+                Image(systemName: isActive && snippet.isToggleable ? "stop.circle.fill" : "play.circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(isActive && snippet.isToggleable ? Color.green : Color.gray)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
