@@ -69,6 +69,7 @@ struct ScriptDetailView: View {
             rightButtons: [
                 .init(icon: "doc.on.doc") {
                     UIPasteboard.general.string = scriptContent
+                    showCopiedFeedback("Script")
                 }
             ]
         )
@@ -147,11 +148,15 @@ struct ScriptDetailView: View {
         .background(Color(uiColor: .systemBackground))
     }
 
-    private func showCopiedFeedback() {
-        copiedFeedback = "URL copied"
+    private func showCopiedFeedback(_ label: String = "URL") {
+        copiedFeedback = "\(label) copied"
         Task {
             try? await Task.sleep(for: .seconds(1.5))
-            copiedFeedback = nil
+            await MainActor.run {
+                if copiedFeedback == "\(label) copied" {
+                    copiedFeedback = nil
+                }
+            }
         }
     }
 

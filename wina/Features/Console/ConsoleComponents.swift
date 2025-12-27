@@ -157,11 +157,21 @@ struct LogRow: View {
                                     Menu {
                                         Button {
                                             UIPasteboard.general.string = json.formatted
+                                            copyFeedbackMessage = "Copied formatted JSON"
+                                            showCopyFeedback = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                                showCopyFeedback = false
+                                            }
                                         } label: {
                                             Label("Copy Formatted", systemImage: "doc.on.doc")
                                         }
                                         Button {
                                             UIPasteboard.general.string = json.minified
+                                            copyFeedbackMessage = "Copied minified JSON"
+                                            showCopyFeedback = true
+                                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                                                showCopyFeedback = false
+                                            }
                                         } label: {
                                             Label("Copy Minified", systemImage: "arrow.right.arrow.left")
                                         }

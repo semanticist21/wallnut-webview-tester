@@ -13,6 +13,8 @@ struct SourceInfoRow: View {
     let label: String
     let value: String
 
+    @State private var showCopied: Bool = false
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             Text(label)
@@ -26,10 +28,21 @@ struct SourceInfoRow: View {
             Spacer()
             Button {
                 UIPasteboard.general.string = value
+                withAnimation(.easeOut(duration: 0.15)) {
+                    showCopied = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    await MainActor.run {
+                        withAnimation(.easeOut(duration: 0.15)) {
+                            showCopied = false
+                        }
+                    }
+                }
             } label: {
-                Image(systemName: "doc.on.doc")
+                Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
                     .font(.system(size: 12))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(showCopied ? .green : .tertiary)
                     .frame(width: 28, height: 28)
                     .contentShape(Circle())
             }
@@ -43,6 +56,8 @@ struct SourceInfoRow: View {
 struct AttributeRow: View {
     let name: String
     let value: String
+
+    @State private var showCopied: Bool = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
@@ -58,10 +73,21 @@ struct AttributeRow: View {
             Spacer()
             Button {
                 UIPasteboard.general.string = "\(name)=\"\(value)\""
+                withAnimation(.easeOut(duration: 0.15)) {
+                    showCopied = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    await MainActor.run {
+                        withAnimation(.easeOut(duration: 0.15)) {
+                            showCopied = false
+                        }
+                    }
+                }
             } label: {
-                Image(systemName: "doc.on.doc")
+                Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
                     .font(.system(size: 12))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(showCopied ? .green : .tertiary)
                     .frame(width: 28, height: 28)
                     .contentShape(Circle())
             }
@@ -81,6 +107,7 @@ struct CSSPropertyRow: View {
     let value: String
 
     @State private var isExpanded: Bool = false
+    @State private var showCopied: Bool = false
 
     /// Threshold for showing expand/collapse
     private var isLongValue: Bool {
@@ -137,10 +164,21 @@ struct CSSPropertyRow: View {
 
             Button {
                 UIPasteboard.general.string = "\(property): \(value);"
+                withAnimation(.easeOut(duration: 0.15)) {
+                    showCopied = true
+                }
+                Task {
+                    try? await Task.sleep(for: .seconds(1.2))
+                    await MainActor.run {
+                        withAnimation(.easeOut(duration: 0.15)) {
+                            showCopied = false
+                        }
+                    }
+                }
             } label: {
-                Image(systemName: "doc.on.doc")
+                Image(systemName: showCopied ? "checkmark" : "doc.on.doc")
                     .font(.system(size: 10))
-                    .foregroundStyle(.tertiary)
+                    .foregroundStyle(showCopied ? .green : .tertiary)
                     .frame(width: 24, height: 24)
                     .contentShape(Circle())
             }
