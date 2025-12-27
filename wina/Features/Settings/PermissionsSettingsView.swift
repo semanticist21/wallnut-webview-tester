@@ -24,7 +24,7 @@ struct PermissionsSettingsView: View {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
-                    Text("Changing permissions in Settings will restart the app")
+                    Text("Changing permissions in Settings may restart the app")
                         .font(.subheadline)
                 }
             }

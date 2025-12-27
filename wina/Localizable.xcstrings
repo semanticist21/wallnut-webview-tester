@@ -289,7 +289,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "2D 그리기 연산\nfillRect, arc, stroke\n소프트웨어 렌더링"
+            "value" : "2D 그리기 성능을 측정합니다.\nfillRect, arc, stroke 등을 테스트합니다."
           }
         }
       }
@@ -329,7 +329,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "가속도계 데이터 접근\naccelerationIncludingGravity\niOS 13+: 사용자 권한 필요"
+            "value" : "가속도계 데이터에 접근합니다.\niOS 13부터 권한이 필요합니다."
           }
         }
       }
@@ -339,7 +339,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iCloud 키체인을 통한 저장된 비밀번호 접근"
+            "value" : "iCloud 키체인의 비밀번호에 접근합니다."
           }
         }
       }
@@ -353,6 +353,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Accessibility Audit"
+          }
+        }
+      }
+    },
+    "Accessibility audit (axe-core)" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "접근성 감사 (axe-core)"
           }
         }
       }
@@ -477,7 +487,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "전체"
+            "value" : "모두 선택"
           }
         }
       }
@@ -487,7 +497,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "모든 변경사항은 SafariVC를 새로고침합니다"
+            "value" : "모든 변경 시 SafariVC 새로고침"
           }
         }
       }
@@ -497,7 +507,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "모든 변경사항은 SafariVC 새로고침이 필요합니다"
+            "value" : "SafariVC 새로고침 필요"
           }
         }
       }
@@ -528,7 +538,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "팝업 창 허용\n끄면 = 팝업 차단\n일부 사이트는 이 기능 필요"
+            "value" : "팝업 창을 허용합니다.\n일부 사이트에 필요합니다."
           }
         }
       }
@@ -549,7 +559,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "요소의 전체 화면 모드 진입 허용. iPad에서만 전체 API 사용 가능; iPhone은 비디오 요소로 제한됩니다."
+            "value" : "전체 화면 모드를 허용합니다. iPad에서만 전체 기능 사용 가능하고, iPhone은 비디오만 됩니다."
           }
         }
       }
@@ -559,7 +569,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지가 viewport 메타 태그로 줌을 비활성화해도 핀치 줌 허용."
+            "value" : "페이지의 줌 제한을 무시합니다."
           }
         }
       }
@@ -569,7 +579,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아래로 스크롤할 때 내비게이션 바가 접히도록 허용."
+            "value" : "스크롤하면 내비게이션 바가 접힙니다."
           }
         }
       }
@@ -579,7 +589,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "비디오가 플로팅 창에서 계속 재생되도록 허용."
+            "value" : "플로팅 창에서 비디오 재생을 허용합니다."
           }
         }
       }
@@ -589,7 +599,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "autoplay 속성이 있는 비디오가 사용자 상호작용 없이 시작되도록 허용."
+            "value" : "autoplay 속성이 있는 비디오를 자동 재생합니다."
           }
         }
       }
@@ -599,7 +609,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "사용자 제스처 없이 window.open() 허용. 팝업 차단하려면 비활성화."
+            "value" : "window.open()을 허용합니다. 팝업 차단하려면 끕니다."
           }
         }
       }
@@ -642,7 +652,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "적응형 스트리밍용 API (예: DASH). WKWebView에서 미지원"
+            "value" : "적응형 스트리밍 API입니다. WKWebView에서는 지원하지 않습니다."
           }
         }
       }
@@ -692,7 +702,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SoC에 통합된 Apple GPU\nMetal API 지원\nCPU와 메모리 공유"
+            "value" : "SoC에 통합된 Apple GPU입니다.\nMetal API를 지원합니다."
           }
         }
       }
@@ -713,7 +723,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple Pay 통합. HTTPS 필요."
+            "value" : "Apple Pay 통합 기능입니다. HTTPS가 필요합니다."
           }
         }
       }
@@ -723,7 +733,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple의 JS 엔진 (Nitro)\n속도를 위한 JIT 컴파일\nSafari와 동일한 엔진"
+            "value" : "Apple의 JS 엔진 Nitro입니다.\nSafari와 같은 엔진입니다."
           }
         }
       }
@@ -764,7 +774,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ArrayBuffer, TypedArray\n메모리 할당 속도\nGC 압력 지표"
+            "value" : "ArrayBuffer, TypedArray 성능입니다.\n메모리 할당 속도를 측정합니다."
           }
         }
       }
@@ -774,7 +784,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "비동기 클립보드 API\n쓰기에 사용자 제스처 필요\n읽기에 권한 필요할 수 있음"
+            "value" : "비동기 클립보드 API입니다.\n쓰기에는 사용자 동작이 필요합니다."
           }
         }
       }
@@ -816,7 +826,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "특수 콘텐츠 자동 링크\n전화번호, 주소, 날짜\n탭하여 전화, 지도, 일정 추가"
+            "value" : "전화번호, 주소, 날짜를 자동 링크합니다.\n탭하면 바로 연결됩니다."
           }
         }
       }
@@ -836,7 +846,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "자동 보안 연결\nHTTP → HTTPS 업그레이드\n데이터 보호"
+            "value" : "HTTP 요청을 HTTPS로 자동 업그레이드합니다."
           }
         }
       }
@@ -846,7 +856,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지에 사용 가능한 경우 자동으로 읽기 모드로 진입."
+            "value" : "가능하면 자동으로 읽기 모드로 들어갑니다."
           }
         }
       }
@@ -856,7 +866,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지에 사용 가능할 때 자동으로 읽기 모드로 진입."
+            "value" : "가능하면 자동으로 읽기 모드로 들어갑니다."
           }
         }
       }
@@ -866,7 +876,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "알려진 보안 호스트에 대해 HTTP 요청을 HTTPS로 자동 업그레이드."
+            "value" : "보안 호스트의 HTTP 요청을 HTTPS로 업그레이드합니다."
           }
         }
       }
@@ -951,7 +961,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "내비게이션 바의 배경색."
+            "value" : "내비게이션 바의 배경색입니다."
           }
         }
       }
@@ -961,7 +971,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "내비게이션 바의 배경색."
+            "value" : "내비게이션 바의 배경색입니다."
           }
         }
       }
@@ -971,7 +981,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 경계를 벗어나 스크롤할 때 표시되는 배경색"
+            "value" : "오버스크롤 시 표시되는 배경색입니다."
           }
         }
       }
@@ -981,7 +991,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "오프라인용 백그라운드 스크립트\nSafari 또는 홈 화면 앱에서만\n임베디드 브라우저에서 사용 불가"
+            "value" : "오프라인용 백그라운드 스크립트입니다.\nSafari나 홈 화면 앱에서만 됩니다."
           }
         }
       }
@@ -1033,7 +1043,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹사이트용 배터리 정보\niOS: 개인정보 보호로 미지원\n기기 핑거프린팅 방지"
+            "value" : "웹사이트에 배터리 정보를 제공합니다.\niOS에서는 개인정보 보호로 안 됩니다."
           }
         }
       }
@@ -1056,7 +1066,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "색상당 비트 수\n24비트 = 1670만 색상\n30비트 = 10억 색상 (HDR)"
+            "value" : "색상당 비트 수입니다.\n24비트=1670만, 30비트=10억(HDR)"
           }
         }
       }
@@ -1066,7 +1076,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "알파 포함 픽셀당 비트\n보통 색상 심도와 동일"
+            "value" : "알파 포함 픽셀당 비트입니다.\n보통 색상 심도와 같습니다."
           }
         }
       }
@@ -1118,7 +1128,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "비공개 세션으로 탐색"
+            "value" : "Private Browsing으로 탐색"
           }
         }
       }
@@ -1142,7 +1152,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "내장 개발자 도구 메뉴가 비활성화됨"
+            "value" : "내장 DevTools 메뉴가 비활성화됩니다."
           }
         }
       }
@@ -1183,7 +1193,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "왼쪽 상단에 표시되는 버튼 스타일."
+            "value" : "왼쪽 상단에 표시되는 버튼 스타일입니다."
           }
         }
       }
@@ -1235,7 +1245,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Safari 앱에서 URL을 열기 전에 호출됨. 정리하거나 상태 저장."
+            "value" : "Safari에서 URL 열기 전에 호출됩니다."
           }
         }
       }
@@ -1245,7 +1255,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "초기 로드가 새 URL로 리디렉션될 때 호출됨. 최종 랜딩 URL 추적."
+            "value" : "리디렉션될 때 호출됩니다. 최종 URL을 추적합니다."
           }
         }
       }
@@ -1255,7 +1265,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "초기 페이지 로드 완료 시 호출됨 (성공 또는 실패). 분석에 유용."
+            "value" : "페이지 로드 끝나면 호출됩니다. 분석에 유용합니다."
           }
         }
       }
@@ -1265,7 +1275,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "사용자가 완료 버튼을 탭할 때 호출됨. 뷰 컨트롤러를 닫는 데 사용."
+            "value" : "완료 버튼 탭하면 호출됩니다."
           }
         }
       }
@@ -1286,7 +1296,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "카메라 및 마이크 접근\n사용자 권한 필요\n영상 통화, 녹화에 사용"
+            "value" : "카메라와 마이크에 접근합니다.\n권한이 필요합니다."
           }
         }
       }
@@ -1296,7 +1306,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "카메라, 마이크, 위치 권한을 관리해요"
+            "value" : "카메라, 마이크, 위치"
           }
         }
       }
@@ -1316,7 +1326,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "표시 후 URL을 변경할 수 없음. 닫고 새 인스턴스를 만들어야 함"
+            "value" : "표시 후에는 URL을 못 바꿉니다.\n닫고 새로 만들어야 합니다."
           }
         }
       }
@@ -1326,7 +1336,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "사용자 정의 JavaScript 코드를 실행할 수 없음. evaluateJavaScript() 메서드 없음"
+            "value" : "커스텀 JavaScript를 실행할 수 없습니다."
           }
         }
       }
@@ -1336,7 +1346,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "탐색을 가로채거나 리디렉션할 수 없음. 요청 차단이나 수정 불가"
+            "value" : "탐색을 가로채거나 수정할 수 없습니다."
           }
         }
       }
@@ -1346,7 +1356,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 콘텐츠를 읽거나 수정할 수 없음. 텍스트, 이미지 또는 페이지 데이터 추출 불가"
+            "value" : "페이지 콘텐츠를 읽거나 수정할 수 없습니다."
           }
         }
       }
@@ -1358,6 +1368,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Canvas"
+          }
+        }
+      }
+    },
+    "Capture page screenshot" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지 스크린샷 찍기"
           }
         }
       }
@@ -1389,7 +1409,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "설정을 바꾸면 바로 반영돼요"
+            "value" : "즉시 적용됩니다."
           }
         }
       }
@@ -1399,7 +1419,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "설정을 바꾸면 페이지가 다시 로드돼요"
+            "value" : "WebView 새로고침이 필요합니다."
           }
         }
       }
@@ -1409,7 +1429,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "변경사항이 App Bar에 적용됩니다"
+            "value" : "앱 바에 즉시 반영됩니다."
           }
         }
       }
@@ -1419,7 +1439,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "변경사항이 Toolbar에 적용됩니다"
+            "value" : "툴바에 즉시 반영됩니다."
           }
         }
       }
@@ -1429,7 +1449,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "변경사항이 WebView에 적용됩니다"
+            "value" : "WebView에 즉시 반영됩니다."
           }
         }
       }
@@ -1439,7 +1459,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "변경 시 페이지 새로고침"
+            "value" : "변경 시 페이지가 새로고침됩니다."
           }
         }
       }
@@ -1449,7 +1469,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "변경 시 SafariVC 새로고침"
+            "value" : "변경 시 SafariVC가 새로고침됩니다."
           }
         }
       }
@@ -1459,17 +1479,17 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "변경 시 WebView 새로고침"
+            "value" : "변경 시 WebView가 새로고침됩니다."
           }
         }
       }
     },
-    "Changing permissions in Settings will restart the app" : {
+    "Changing permissions in Settings may restart the app" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "설정에서 권한을 변경하면 앱이 재시작됩니다"
+            "value" : "권한 변경 시 앱이 재시작될 수 있습니다."
           }
         }
       }
@@ -1533,7 +1553,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "클라이언트 측 데이터베이스\n7일 미사용 시 삭제될 수 있음\nLocalStorage보다 큰 저장소"
+            "value" : "클라이언트 측 데이터베이스입니다.\n7일 안 쓰면 삭제될 수 있습니다."
           }
         }
       }
@@ -1597,7 +1617,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "코덱 지원은 기기와 OS 버전에 따라 다를 수 있습니다."
+            "value" : "코덱 지원은 기기와 OS 버전에 따라 달라집니다."
           }
         }
       }
@@ -1721,7 +1741,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "블루투스 기기 연결\niOS: 브라우저에서 미지원\n네이티브 앱 사용"
+            "value" : "블루투스 기기 연결입니다.\niOS 브라우저에서는 안 됩니다."
           }
         }
       }
@@ -1731,7 +1751,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "USB 기기 연결\niOS: 브라우저에서 미지원\n네이티브 앱 사용"
+            "value" : "USB 기기 연결입니다.\niOS 브라우저에서는 안 됩니다."
           }
         }
       }
@@ -1764,7 +1784,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "콘솔 로그가 여기에 표시됩니다"
+            "value" : "콘솔 로그가 여기 나타나요"
           }
         }
       }
@@ -1835,7 +1855,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CORS 정책으로 콘텐츠를 사용할 수 없습니다."
+            "value" : "CORS 정책 때문에 볼 수 없습니다."
           }
         }
       }
@@ -1855,7 +1875,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹 페이지의 스크립트만 제어. 비활성화해도 앱 주입 스크립트는 작동."
+            "value" : "웹 페이지 스크립트만 제어합니다.\n앱 주입 스크립트는 계속 작동합니다."
           }
         }
       }
@@ -1865,7 +1885,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "URL 형식 텍스트를 탭 가능한 링크로 변환."
+            "value" : "URL 형식 텍스트를 탭 가능한 링크로 변환합니다."
           }
         }
       }
@@ -1917,7 +1937,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "쿠키는 Safari 앱과 공유되지 않습니다. 각 앱은 별도의 쿠키 저장소를 가집니다."
+            "value" : "쿠키는 앱별로 분리됩니다. Safari와 공유되지 않습니다."
           }
         }
       }
@@ -2094,7 +2114,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "JavaScript 코드를 저장하고 재사용할 스니펫을 생성하세요"
+            "value" : "JavaScript 코드를 저장하고 재사용할 스니펫을 만들 수 있습니다."
           }
         }
       }
@@ -2104,7 +2124,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "createElement, appendChild\n노드 생성 오버헤드\nVirtual DOM 비교"
+            "value" : "createElement, appendChild 성능입니다.\n노드 생성 속도를 측정합니다."
           }
         }
       }
@@ -2125,7 +2145,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "자격 증명 관리 API\n비밀번호, 연합 로그인\n제한된 iOS 지원"
+            "value" : "자격 증명 관리 API입니다.\niOS에서는 제한적으로 지원합니다."
           }
         }
       }
@@ -2146,7 +2166,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "크로스 오리진: 규칙에 접근 불가"
+            "value" : "크로스 오리진: 규칙 접근 불가"
           }
         }
       }
@@ -2177,7 +2197,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CSS 픽셀 대 기기 픽셀 비율"
+            "value" : "CSS 픽셀 대 기기 픽셀 비율입니다."
           }
         }
       }
@@ -2228,7 +2248,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 SafariVC 뷰포트 크기 (포인트)."
+            "value" : "현재 SafariVC 뷰포트 크기입니다. (포인트)"
           }
         }
       }
@@ -2238,7 +2258,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 화면 밝기\n0.0 (최소) ~ 1.0 (최대)\n사용자 또는 자동 밝기 조절"
+            "value" : "현재 화면 밝기입니다.\n0.0(최소)~1.0(최대)"
           }
         }
       }
@@ -2258,7 +2278,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 WebView 크기 (포인트)."
+            "value" : "현재 WebView 크기입니다. (포인트)"
           }
         }
       }
@@ -2268,7 +2288,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 활성 코어\n다음에 따라 스로틀링 가능:\n발열 상태, 저전력 모드"
+            "value" : "현재 활성 코어 수입니다.\n발열이나 저전력 모드로 달라집니다."
           }
         }
       }
@@ -2288,7 +2308,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "툴바의 사용자 정의 공유 확장"
+            "value" : "툴바의 사용자 정의 공유 확장입니다."
           }
         }
       }
@@ -2318,7 +2338,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "개발자 도구 버튼을 원하는 대로 배치해요"
+            "value" : "DevTools 버튼을 배치합니다."
           }
         }
       }
@@ -2328,7 +2348,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "탐색 버튼을 원하는 대로 배치해요"
+            "value" : "내비게이션 버튼을 배치합니다."
           }
         }
       }
@@ -2360,7 +2380,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다크 모드, 모션 감소, 대비 설정을 확인해요"
+            "value" : "다크 모드, 모션 줄이기, 대비"
           }
         }
       }
@@ -2370,7 +2390,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Darwin 커널 빌드 번호\n특정 OS 빌드의\nWebKit 버그 추적에 유용"
+            "value" : "Darwin 커널 빌드 번호입니다.\nWebKit 버그 추적에 유용합니다."
           }
         }
       }
@@ -2410,7 +2430,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "7일간 비활동 시 데이터가 삭제될 수 있습니다."
+            "value" : "7일 미사용 시 데이터가 삭제될 수 있습니다."
           }
         }
       }
@@ -2514,7 +2534,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iOS 26에서 더 이상 사용되지 않음. Liquid Glass 배경 효과와 충돌합니다."
+            "value" : "iOS 26에서 deprecated됐습니다. Liquid Glass 효과와 충돌합니다."
           }
         }
       }
@@ -2556,7 +2576,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "서버가 Timing-Allow-Origin 헤더를 포함하지 않으면 크로스 오리진 리소스에 대한 상세 타이밍 데이터(DNS, TCP, TLS 등)를 사용할 수 없습니다. 이는 브라우저 보안 제한입니다."
+            "value" : "서버에 Timing-Allow-Origin 헤더가 없으면 크로스 오리진 리소스의 상세 타이밍을 볼 수 없습니다. 브라우저 보안 제한입니다."
           }
         }
       }
@@ -2577,7 +2597,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "날짜와 시간을 감지하여 캘린더에 추가 가능."
+            "value" : "날짜와 시간을 감지하고 캘린더에 추가합니다."
           }
         }
       }
@@ -2646,7 +2666,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "커스터마이징 가능한 외관의 방해 없는 기사 보기"
+            "value" : "방해 없이 기사를 볼 수 있습니다."
           }
         }
       }
@@ -2688,7 +2708,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "DOM 변경 감지\nMutation Events 대체\n속성, 자식, 하위 트리"
+            "value" : "DOM 변경을 감지합니다.\nMutation Events를 대체합니다."
           }
         }
       }
@@ -2700,6 +2720,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DOM Tree"
+          }
+        }
+      }
+    },
+    "DOM tree, stylesheets, scripts" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DOM 트리, 스타일시트, 스크립트"
           }
         }
       }
@@ -2739,7 +2769,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "드래그하여 순서 변경. 토글하여 표시/숨김."
+            "value" : "드래그로 순서를 바꾸고 토글로 표시를 변경합니다."
           }
         }
       }
@@ -2771,7 +2801,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "각 SFSafariViewController 인스턴스는 별도 저장소를 가집니다. 닫고 다시 열면 세션이 삭제됩니다."
+            "value" : "SFSafariViewController는 인스턴스마다 저장소가 따로입니다. 닫았다 열면 세션이 사라집니다."
           }
         }
       }
@@ -2864,7 +2894,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "요소 크기 변경\n반응형 컴포넌트\nwindow.resize보다 우수"
+            "value" : "요소 크기 변경을 감지합니다.\nwindow.resize보다 효율적입니다."
           }
         }
       }
@@ -2874,7 +2904,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "요소 가시성 감지\n지연 로딩, 무한 스크롤\n효율적인 스크롤 처리"
+            "value" : "요소가 보이는지 감지합니다.\n지연 로딩, 무한 스크롤에 좋습니다."
           }
         }
       }
@@ -2935,7 +2965,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "모든 JavaScript 활성화/비활성화\n끄면 = 스크립트 실행 안 함\n대부분의 웹사이트가 작동하지 않습니다."
+            "value" : "모든 JavaScript를 켜거나 끕니다.\n끄면 스크립트가 전혀 안 돌아갑니다.\n대부분의 웹사이트가 안 될 겁니다."
           }
         }
       }
@@ -2956,7 +2986,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple TV 및 기타 AirPlay 기기로 미디어 스트리밍 활성화."
+            "value" : "AirPlay로 스트리밍합니다."
           }
         }
       }
@@ -2966,7 +2996,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "가장자리에서 스와이프하여 히스토리 탐색 활성화."
+            "value" : "가장자리에서 스와이프로 앞뒤로 갑니다."
           }
         }
       }
@@ -2976,7 +3006,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "텍스트 선택, 복사 및 기타 텍스트 상호작용 활성화."
+            "value" : "텍스트 선택 및 복사가 가능합니다."
           }
         }
       }
@@ -2986,7 +3016,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "시스템 찾기 패널 활성화 (iPad 키보드에서 Cmd+F)."
+            "value" : "시스템 찾기 패널을 활성화합니다. iPad 키보드에서 Cmd+F로 사용합니다."
           }
         }
       }
@@ -3016,7 +3046,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "유효한 User Agent 문자열을 입력하세요"
+            "value" : "User Agent 문자열을 입력하십시오."
           }
         }
       }
@@ -3099,7 +3129,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eruda는 웹 페이지에 주입되는 서드파티 인페이지 콘솔입니다.\n\n• 오픈 소스 소프트웨어입니다 (MIT 라이선스)\n• 사용에 따른 책임은 본인에게 있습니다\n• Eruda 모드가 활성화되면 내장 DevTools 메뉴가 비활성화됩니다\n\n설정에서 언제든지 Eruda 모드를 비활성화할 수 있습니다."
+            "value" : "Eruda는 웹 페이지에 주입되는 서드파티 콘솔입니다.\n\n• 오픈 소스입니다 (MIT 라이선스)\n• 사용은 본인 책임입니다\n• Eruda 켜면 내장 DevTools는 꺼집니다.\n\n설정에서 언제든 끌 수 있습니다."
           }
         }
       }
@@ -3109,7 +3139,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Eruda는 서드파티 모바일 콘솔입니다."
+            "value" : "서드파티 모바일 콘솔입니다."
           }
         }
       }
@@ -3212,7 +3242,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "메트릭 수집 실패"
+            "value" : "메트릭 수집에 실패했습니다."
           }
         }
       }
@@ -3265,7 +3295,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "배열 채우기, 복사, 정렬\n메모리 대역폭 테스트\nCPU 캐시 효율성"
+            "value" : "배열 채우기, 복사, 정렬 성능입니다.\n메모리 대역폭을 테스트합니다.\nCPU 캐시 효율성을 측정합니다."
           }
         }
       }
@@ -3331,6 +3361,16 @@
         }
       }
     },
+    "Find text in page" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지에서 텍스트 찾기"
+          }
+        }
+      }
+    },
     "First Contentful Paint" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3358,7 +3398,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "플로팅 비디오 창\n다른 앱 사용 중에도 시청\n위로 스와이프 또는 버튼 탭"
+            "value" : "플로팅 비디오 창입니다.\n다른 앱 사용 중에도 시청 가능합니다.\n위로 스와이프하거나 버튼을 탭합니다."
           }
         }
       }
@@ -3379,7 +3419,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "핀치 줌 강제\n줌 비활성화 페이지 무시\n접근성 향상"
+            "value" : "핀치 줌을 강제합니다.\n줌 비활성화 페이지를 무시합니다.\n접근성이 향상됩니다."
           }
         }
       }
@@ -3432,7 +3472,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPad에서만 전체 지원."
+            "value" : "iPad에서만 전체 지원됩니다."
           }
         }
       }
@@ -3442,7 +3482,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "전이중 통신\n서버와의 지속적 연결\n실시간 앱에 적합"
+            "value" : "전이중 통신을 지원합니다.\n서버와 지속적으로 연결합니다.\n실시간 앱에 적합합니다."
           }
         }
       }
@@ -3463,7 +3503,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "게임 컨트롤러 입력\nMFi 컨트롤러 지원\nPS/Xbox도 작동할 수 있음"
+            "value" : "게임 컨트롤러 입력입니다.\nMFi 컨트롤러를 지원합니다.\nPS/Xbox도 작동할 수 있습니다."
           }
         }
       }
@@ -3521,6 +3561,17 @@
         }
       }
     },
+    "Go to first loaded URL" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "처음 URL로 이동"
+          }
+        }
+      }
+    },
     "Go to home" : {
       "localizations" : {
         "ko" : {
@@ -3557,7 +3608,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPS/네트워크 위치 접근\n사용자 권한 필요\n지도, 로컬 검색에 사용"
+            "value" : "GPS/네트워크 위치에 접근합니다.\n사용자 권한이 필요합니다.\n지도, 로컬 검색에 씁니다."
           }
         }
       }
@@ -3567,7 +3618,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "GPU 가속 그래픽\nclear, bindBuffer\n하드웨어 렌더링"
+            "value" : "GPU 가속 그래픽을 사용합니다.\nclear, bindBuffer 등이 있습니다.\n하드웨어 렌더링입니다."
           }
         }
       }
@@ -3598,7 +3649,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "좋습니다! 이 페이지는 기본 접근성 검사를 통과했습니다."
+            "value" : "기본 접근성 검사를 통과했습니다."
           }
         }
       }
@@ -3618,7 +3669,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "자이로스코프 데이터 접근\nalpha/beta/gamma 회전\niOS 13+: 사용자 권한 필요"
+            "value" : "자이로스코프 데이터에 접근합니다.\niOS 13부터 권한이 필요합니다."
           }
         }
       }
@@ -3628,7 +3679,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹사이트의 햅틱 피드백\niOS: 개인정보 보호로 미지원\n네이티브 앱은 햅틱 사용 가능"
+            "value" : "웹사이트 햅틱 피드백입니다.\niOS에서는 개인정보 보호로 안 됩니다."
           }
         }
       }
@@ -3669,7 +3720,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "해싱 알고리즘 테스트\nCPU 집약적 연산\n보안 연산 속도"
+            "value" : "해싱 알고리즘을 테스트합니다.\nCPU 집약적인 연산입니다."
           }
         }
       }
@@ -3742,7 +3793,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "고대비 모드\niOS: 사용 안 함 (Windows 기능)\nCSS: forced-colors 미디어 쿼리"
+            "value" : "고대비 모드입니다.\niOS에서는 안 씁니다 (Windows 기능)."
           }
         }
       }
@@ -3752,7 +3803,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HDR 디스플레이\n더 밝은 하이라이트, 더 깊은 블랙\niPhone 12+ HDR10/Dolby Vision 지원"
+            "value" : "HDR 디스플레이입니다.\niPhone 12 이상에서 지원합니다."
           }
         }
       }
@@ -3817,7 +3868,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HTTPS 또는 localhost 출처\n많은 최신 API에 필요\n민감한 작업 보호"
+            "value" : "HTTPS 또는 localhost 출처입니다.\n많은 최신 API에 필요합니다."
           }
         }
       }
@@ -3869,7 +3920,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 안에서 바로 쓰는 개발자 도구예요"
+            "value" : "인페이지 개발자 도구입니다."
           }
         }
       }
@@ -3920,7 +3971,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "정보 및 설정 버튼은 항상 표시됩니다."
+            "value" : "정보랑 설정 버튼은 항상 보여요."
           }
         }
       }
@@ -4003,7 +4054,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iOS 17 이상 전용."
+            "value" : "iOS 17 이상에서 사용할 수 있습니다."
           }
         }
       }
@@ -4013,7 +4064,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPad: 전체 드래그/드롭 지원\n앱 간, 앱 내\n분할 보기 호환"
+            "value" : "iPad에서 전체 드래그/드롭을 지원합니다."
           }
         }
       }
@@ -4023,7 +4074,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPad: 전체 요소 전체화면 지원."
+            "value" : "iPad에서 전체 요소 전체화면을 지원합니다."
           }
         }
       }
@@ -4033,7 +4084,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPad: 전체 화면 모드 전체 지원\n모든 요소가 전체 화면 가능\n비디오, 게임, 프레젠테이션"
+            "value" : "iPad에서 전체 화면 모드를 완전 지원합니다."
           }
         }
       }
@@ -4043,7 +4094,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPad: 전체 지원\n모든 요소가 전체 화면 가능\n비디오, 게임, 프레젠테이션"
+            "value" : "iPad에서 완전 지원합니다."
           }
         }
       }
@@ -4063,7 +4114,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone: 제한된 지원\n제스처가 스크롤과 충돌\niPad 권장"
+            "value" : "iPhone에서는 제한적으로 지원합니다.\niPad를 권장합니다."
           }
         }
       }
@@ -4073,7 +4124,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone: 비디오 요소에만 제한됨."
+            "value" : "iPhone에서는 비디오만 지원합니다."
           }
         }
       }
@@ -4083,7 +4134,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone: 미지원\n비디오만 전체 화면 가능\niPad는 전체 API 지원"
+            "value" : "iPhone에서는 지원하지 않습니다.\n비디오만 전체 화면이 가능합니다."
           }
         }
       }
@@ -4093,7 +4144,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone: 비디오 전체 화면만\niPad에서만 전체 API\n비디오는 정상 작동"
+            "value" : "iPhone에서는 비디오 전체 화면만 지원합니다."
           }
         }
       }
@@ -4168,7 +4219,17 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "JavaScript API 제한: DNS, TCP, SSL 시간을 사용할 수 없습니다"
+            "value" : "JavaScript API 제한으로 DNS, TCP, SSL 시간을 볼 수 없습니다."
+          }
+        }
+      }
+    },
+    "JavaScript console logs" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript 콘솔 로그"
           }
         }
       }
@@ -4240,7 +4301,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 새로고침 시 로그 유지"
+            "value" : "페이지 새로고침 시 로그를 유지합니다."
           }
         }
       }
@@ -4260,7 +4321,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "키 '%@'이(가) 이미 존재합니다"
+            "value" : "'%@' 키가 이미 있어요"
           }
         }
       }
@@ -4283,7 +4344,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "앱 언어와 기본 설정을 바꿔요"
+            "value" : "언어, 환경설정"
           }
         }
       }
@@ -4471,6 +4532,16 @@
         }
       }
     },
+    "localStorage, sessionStorage, cookies" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "로컬 스토리지, 세션 스토리지, 쿠키"
+          }
+        }
+      }
+    },
     "Location" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -4518,7 +4589,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "포인트 단위의 논리적 크기\n1포인트 = 기기에 따라 2-3픽셀"
+            "value" : "포인트 단위의 논리적 크기입니다.\n1포인트는 2-3픽셀입니다."
           }
         }
       }
@@ -4528,7 +4599,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "주소를 탭하여 지도에서 열 수 있게 함."
+            "value" : "주소를 탭하면 지도가 열립니다."
           }
         }
       }
@@ -4538,7 +4609,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "전화번호를 탭하여 전화할 수 있게 함."
+            "value" : "전화번호를 탭하면 전화를 걸 수 있습니다."
           }
         }
       }
@@ -4548,7 +4619,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "map, filter, reduce, sort\n함수형 프로그래밍 연산\n메모리 할당 집약적"
+            "value" : "map, filter, reduce, sort 성능입니다.\n함수형 프로그래밍 연산을 측정합니다."
           }
         }
       }
@@ -4558,7 +4629,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WebView의 모든 JavaScript 실행을 위한 마스터 스위치."
+            "value" : "WebView의 모든 JavaScript 실행을 위한 마스터 스위치입니다."
           }
         }
       }
@@ -4568,7 +4639,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "match, replace, test\n패턴 매칭 속도\n유효성 검사 성능"
+            "value" : "match, replace, test 성능입니다.\n패턴 매칭 속도를 측정합니다."
           }
         }
       }
@@ -4588,7 +4659,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Math.sqrt, sin, cos, random\nJIT 최적화 테스트\n핵심 연산 속도"
+            "value" : "Math.sqrt, sin, cos, random 성능입니다.\nJIT 최적화를 테스트합니다."
           }
         }
       }
@@ -4609,7 +4680,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "최대 동시 터치 수\niPhone/iPad: 보통 5\n멀티터치 제스처에 영향"
+            "value" : "최대 동시 터치 수입니다.\niPhone/iPad는 보통 5개입니다."
           }
         }
       }
@@ -4619,7 +4690,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "불완전하거나 부정확할 수 있음"
+            "value" : "불완전하거나 부정확할 수 있습니다."
           }
         }
       }
@@ -4757,7 +4828,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "최소 텍스트 크기\n작은 텍스트를 읽기 쉽게\n0 = 페이지의 폰트 크기 사용"
+            "value" : "최소 텍스트 크기입니다.\n0이면 페이지 폰트 크기를 씁니다."
           }
         }
       }
@@ -4808,7 +4879,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "모바일 또는 데스크톱 사이트\n권장: 자동 감지\n데스크톱은 iPad에서 유용"
+            "value" : "모바일 또는 데스크톱 사이트입니다.\n자동 감지를 권장합니다."
           }
         }
       }
@@ -4850,7 +4921,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "최신 HTTP 요청 API\nPromise 기반, XHR 대체\n스트리밍 지원"
+            "value" : "최신 HTTP 요청 API입니다.\nPromise 기반이고 스트리밍 지원합니다."
           }
         }
       }
@@ -4881,7 +4952,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "적응형 스트리밍용 MSE\niOS 17+: ManagedMediaSource\n이전 iOS: 미지원"
+            "value" : "적응형 스트리밍용 MSE입니다.\niOS 17 이상에서만 됩니다."
           }
         }
       }
@@ -4891,7 +4962,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "멀티터치 지원\ntouchstart/move/end 이벤트\niOS 네이티브 터치 처리"
+            "value" : "멀티터치를 지원합니다.\niOS 네이티브 터치 처리입니다."
           }
         }
       }
@@ -4933,7 +5004,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "네이티브 iOS 공유 시트\nSafari 브라우저에서만\n링크, 텍스트, 파일 공유"
+            "value" : "네이티브 iOS 공유 시트입니다.\nSafari에서만 쓸 수 있습니다."
           }
         }
       }
@@ -4943,7 +5014,29 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "메트릭을 수집하려면 페이지로 이동하세요"
+            "value" : "메트릭을 수집하려면 페이지로 이동하십시오."
+          }
+        }
+      }
+    },
+    "Navigate to next page" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음 페이지로 이동"
+          }
+        }
+      }
+    },
+    "Navigate to previous page" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 페이지로 이동"
           }
         }
       }
@@ -4983,7 +5076,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아래로 스크롤할 때 내비게이션 바가 접힘."
+            "value" : "아래로 스크롤할 때 내비게이션 바가 접힙니다."
           }
         }
       }
@@ -5014,7 +5107,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "navigator.hardwareConcurrency\nJS 스레드 풀 크기 조정\n개인정보 보호를 위해\n실제 CPU 코어와 다를 수 있음"
+            "value" : "navigator.hardwareConcurrency입니다.\n개인정보 보호로 실제와 다를 수 있습니다."
           }
         }
       }
@@ -5024,7 +5117,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "navigator.onLine 상태\n기기 네트워크 연결 상태\n실제 인터넷과 다를 수 있음"
+            "value" : "navigator.onLine 상태입니다.\n실제 인터넷과 다를 수 있습니다."
           }
         }
       }
@@ -5049,13 +5142,23 @@
         }
       }
     },
+    "Network requests monitoring" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "네트워크 요청 모니터링"
+          }
+        }
+      }
+    },
     "Network requests will appear here" : {
       "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "네트워크 요청이 여기에 표시됩니다"
+            "value" : "네트워크 요청이 여기에 표시됩니다."
           }
         }
       }
@@ -5202,7 +5305,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "기록 저장 안 함\n종료 시 쿠키 삭제\n시크릿 모드와 유사"
+            "value" : "기록을 저장하지 않습니다.\n시크릿 모드와 비슷합니다."
           }
         }
       }
@@ -5336,7 +5439,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "아직 스니펫이 없습니다"
+            "value" : "아직 스니펫이 없습니다."
           }
         }
       }
@@ -5346,7 +5449,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "스택 트레이스를 사용할 수 없습니다"
+            "value" : "스택 트레이스가 없습니다."
           }
         }
       }
@@ -5376,7 +5479,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nominal: 정상 작동\nFair: 약간 따뜻함\nSerious: 성능 스로틀링\nCritical: 강력한 스로틀링"
+            "value" : "Nominal: 정상 작동\nFair: 약간 따뜻합니다\nSerious: 성능 스로틀링\nCritical: 강력한 스로틀링"
           }
         }
       }
@@ -5386,7 +5489,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "없음"
+            "value" : "모두 해제"
           }
         }
       }
@@ -5451,7 +5554,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "개인정보 보호를 위해 지원되지 않음."
+            "value" : "개인정보 보호를 위해 지원되지 않습니다."
           }
         }
       }
@@ -5461,7 +5564,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iOS에서 지원되지 않음."
+            "value" : "iOS에서 지원되지 않습니다."
           }
         }
       }
@@ -5492,7 +5595,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Object.keys/values, spread\nJSON parse/stringify\n데이터 조작 속도"
+            "value" : "Object.keys/values, spread 성능입니다.\n데이터 조작 속도를 측정합니다."
           }
         }
       }
@@ -5557,7 +5660,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "색상과 닫기 버튼 스타일만 변경 가능. 사용자 정의 툴바 항목 추가 불가"
+            "value" : "색상과 닫기 버튼 스타일만 변경할 수 있습니다."
           }
         }
       }
@@ -5567,7 +5670,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Safari나 홈 화면 웹앱에서만 지원됩니다."
+            "value" : "Safari나 홈 화면 웹앱에서만 사용할 수 있습니다."
           }
         }
       }
@@ -5641,7 +5744,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CSS 미디어 쿼리를 재정의합니다. 적용하려면 페이지 새로고침이 필요합니다."
+            "value" : "CSS 미디어 쿼리를 덮어씁니다. 새로고침이 필요합니다."
           }
         }
       }
@@ -5735,7 +5838,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "P2P 통신\n카메라/마이크 권한 필요\n영상 통화, 화면 공유"
+            "value" : "P2P 통신입니다.\n영상 통화, 화면 공유에 씁니다."
           }
         }
       }
@@ -5766,7 +5869,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "성능 지표\nLCP, FID, CLS 측정\n실제 사용자 모니터링"
+            "value" : "성능 지표입니다.\nLCP, FID, CLS를 측정합니다."
           }
         }
       }
@@ -5776,7 +5879,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "performance.now() 정밀도\nSpectre 완화를 위해 감소\nWKWebView에서 보통 1ms"
+            "value" : "performance.now() 정밀도입니다.\nSpectre 완화로 보통 1ms입니다."
           }
         }
       }
@@ -5796,7 +5899,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "영구 키-값 저장소\n웹사이트당 ~5MB 제한\n브라우저 재시작 후에도 유지"
+            "value" : "영구 키-값 저장소입니다.\n웹사이트당 약 5MB 제한입니다."
           }
         }
       }
@@ -5826,7 +5929,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "물리적 픽셀 밀도\n일부 기기에서 화면 배율과\n다를 수 있음"
+            "value" : "물리적 픽셀 밀도입니다.\n화면 배율과 다를 수 있습니다."
           }
         }
       }
@@ -5867,7 +5970,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 내 비디오 재생\n끄면 = 항상 전체화면\n배경 비디오에 필요"
+            "value" : "페이지 안에서 비디오를 재생합니다.\n배경 비디오에 필요합니다."
           }
         }
       }
@@ -5877,7 +5980,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "전체 화면 대신 인라인으로 비디오 재생. 배경 비디오 효과에 필요."
+            "value" : "인라인으로 비디오를 재생합니다."
           }
         }
       }
@@ -5887,7 +5990,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "스크린샷을 저장하려면 설정에서 사진 라이브러리 접근을 허용해주세요."
+            "value" : "스크린샷을 저장하려면 설정에서 사진 접근을 허용하십시오."
           }
         }
       }
@@ -5907,7 +6010,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "포인트 대 픽셀 비율\n@2x = Retina, @3x = Super Retina"
+            "value" : "포인트 대 픽셀 비율입니다.\n@2x=Retina, @3x=Super Retina"
           }
         }
       }
@@ -5938,7 +6041,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "prefers-color-scheme\n\nCSS 미디어 쿼리용 다크/라이트 모드 에뮬레이션"
+            "value" : "prefers-color-scheme\n\n다크/라이트 모드를 에뮬레이션합니다."
           }
         }
       }
@@ -5948,7 +6051,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "prefers-contrast\n\n더 높은 대비 색상 요청"
+            "value" : "prefers-contrast\n\n더 높은 대비 색상을 요청합니다."
           }
         }
       }
@@ -5958,7 +6061,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "prefers-reduced-motion\n\n애니메이션과 전환 효과 비활성화"
+            "value" : "prefers-reduced-motion\n\n애니메이션과 전환 효과를 끕니다."
           }
         }
       }
@@ -5968,7 +6071,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "prefers-reduced-transparency\n\n블러 및 투명 효과 비활성화"
+            "value" : "prefers-reduced-transparency\n\n블러와 투명 효과를 끕니다."
           }
         }
       }
@@ -6009,7 +6112,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "링크 열기 전 미리보기\n길게 누르거나 3D Touch\n현재 페이지 유지하며 확인"
+            "value" : "링크를 열기 전에 미리볼 수 있습니다.\n길게 누르면 됩니다."
           }
         }
       }
@@ -6050,7 +6153,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "개인정보 보호 브라우징"
+            "value" : "Private Browsing"
           }
         }
       }
@@ -6080,7 +6183,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "공유 시트에 사용자 정의 활동을 제공합니다. UIActivity 객체 배열을 반환하세요."
+            "value" : "공유 시트에 커스텀 활동을 추가합니다. UIActivity 객체 배열을 반환하면 됩니다."
           }
         }
       }
@@ -6133,7 +6236,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹사이트의 푸시 알림\nSafari 또는 홈 화면 앱에서만\niOS 16.4+ 필요"
+            "value" : "웹사이트 푸시 알림입니다.\niOS 16.4 이상에서만 됩니다."
           }
         }
       }
@@ -6143,7 +6246,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "querySelector(All), getElement*\nDOM 탐색 속도\n선택자 엔진 성능"
+            "value" : "querySelector, getElement* 성능입니다.\nDOM 탐색 속도를 측정합니다."
           }
         }
       }
@@ -6184,7 +6287,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "NFC 태그 읽기/쓰기\niOS: 브라우저에서 미지원\n네이티브 앱 사용"
+            "value" : "NFC 태그를 읽고 씁니다.\niOS 브라우저에서는 안 됩니다."
           }
         }
       }
@@ -6224,7 +6327,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "실시간 서버 업데이트."
+            "value" : "실시간 서버 업데이트입니다."
           }
         }
       }
@@ -6244,7 +6347,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "오디오/비디오 스트림 녹화\niOS: MP4/H.264만 지원\nWebM/VP8 미지원"
+            "value" : "오디오/비디오 스트림을 녹화합니다.\niOS에서는 MP4/H.264만 됩니다."
           }
         }
       }
@@ -6321,6 +6424,17 @@
         }
       }
     },
+    "Reload current page" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 페이지 새로고침"
+          }
+        }
+      }
+    },
     "Remove Ads" : {
       "localizations" : {
         "ko" : {
@@ -6386,6 +6500,7 @@
       }
     },
     "Request Details" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -6422,7 +6537,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Geolocation API에 필요\n지도 및 내비게이션\n위치 기반 서비스"
+            "value" : "Geolocation API에 필요합니다.\n위치 기반 서비스에 씁니다."
           }
         }
       }
@@ -6432,7 +6547,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Media Devices API에 필요\nWebRTC 음성 통화\n음성 녹음"
+            "value" : "Media Devices API에 필요합니다.\nWebRTC 음성 통화, 음성 녹음에 씁니다."
           }
         }
       }
@@ -6442,7 +6557,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Media Devices API에 필요\nWebRTC 영상 통화\nQR 코드 스캔"
+            "value" : "Media Devices API에 필요합니다.\nWebRTC 영상 통화, QR 코드 스캔에 사용합니다."
           }
         }
       }
@@ -6452,7 +6567,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "카메라 및 마이크 권한 필요."
+            "value" : "카메라와 마이크 권한이 필요합니다."
           }
         }
       }
@@ -6462,7 +6577,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HTTPS와 사용자 동작 필요. Safari 전용."
+            "value" : "HTTPS와 사용자 동작이 필요합니다. Safari 전용입니다."
           }
         }
       }
@@ -6472,7 +6587,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "HTTPS 필요."
+            "value" : "HTTPS가 필요합니다."
           }
         }
       }
@@ -6482,7 +6597,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "위치 권한 필요."
+            "value" : "위치 권한이 필요합니다."
           }
         }
       }
@@ -6492,7 +6607,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "사용자 상호작용 필요."
+            "value" : "사용자 상호작용이 필요합니다."
           }
         }
       }
@@ -6566,7 +6681,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "정적 리소스의 응답 본문을 사용할 수 없음"
+            "value" : "정적 리소스의 응답 본문은 사용할 수 없습니다."
           }
         }
       }
@@ -6614,6 +6729,17 @@
         }
       }
     },
+    "Return to home screen" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "홈 화면으로 돌아갑니다."
+          }
+        }
+      }
+    },
     "rules" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6657,6 +6783,16 @@
         }
       }
     },
+    "Run JavaScript snippets" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "JavaScript 스니펫 실행"
+          }
+        }
+      }
+    },
     "Run Snippet" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6694,7 +6830,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Safari의 렌더링 엔진\n모든 iOS 브라우저에서 공유\niOS 릴리스와 함께 업데이트"
+            "value" : "Safari의 렌더링 엔진입니다.\n모든 iOS 브라우저에서 공유합니다.\niOS 릴리스와 함께 업데이트됩니다."
           }
         }
       }
@@ -6717,7 +6853,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SafariVC 데이터는 앱별로 샌드박스 처리되며 Safari와 공유되지 않습니다."
+            "value" : "SafariVC 데이터는 앱별로 분리되고 Safari와 공유되지 않습니다."
           }
         }
       }
@@ -6727,7 +6863,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SafariVC 높이 비율\n100% = 전체 화면 높이"
+            "value" : "SafariVC 높이 비율입니다.\n100%가 전체 화면 높이입니다."
           }
         }
       }
@@ -6757,7 +6893,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SafariVC는 http 및 https URL만 지원합니다.\n\n%@"
+            "value" : "SafariVC는 http와 https URL만 지원합니다.\n\n%@"
           }
         }
       }
@@ -6767,7 +6903,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SafariVC 너비 비율\n100% = 전체 화면 너비"
+            "value" : "SafariVC 너비 비율입니다.\n100%가 전체 화면 너비입니다."
           }
         }
       }
@@ -6829,7 +6965,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 콘텐츠 배율\n100% = 기본 크기\n작은 텍스트에 유용"
+            "value" : "페이지 콘텐츠 배율입니다.\n100%가 기본 크기입니다.\n작은 텍스트에 유용합니다."
           }
         }
       }
@@ -6839,7 +6975,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "현재 페이지의 접근성 이슈를 스캔합니다"
+            "value" : "현재 페이지의 접근성 이슈를 검사합니다."
           }
         }
       }
@@ -6954,7 +7090,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹 페이지의 스크립트\n끄면 = 페이지 스크립트만 차단\n앱 기능은 계속 작동합니다."
+            "value" : "웹 페이지 스크립트입니다.\n끄면 페이지 스크립트만 차단됩니다.\n앱 기능은 계속 씁니다."
           }
         }
       }
@@ -7068,7 +7204,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "텍스트 선택 및 복사\n끄면 = 텍스트 선택 불가\n게임류 페이지에서 비활성화"
+            "value" : "텍스트 선택 및 복사입니다.\n끄면 텍스트 선택이 안 됩니다.\n게임류 페이지에서 비활성화하면 좋습니다."
           }
         }
       }
@@ -7088,7 +7224,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "페이지 언로드 시 데이터 전송\n전송 보장 시도\n분석에 적합"
+            "value" : "페이지 언로드 시 데이터를 전송합니다.\n전송 보장을 시도합니다.\n분석에 적합합니다."
           }
         }
       }
@@ -7109,7 +7245,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Server-Sent Events (SSE)\n단방향 서버 → 클라이언트\n자동 재연결 내장"
+            "value" : "Server-Sent Events (SSE)입니다.\n단방향 서버 → 클라이언트 통신입니다.\n자동 재연결이 내장되어 있습니다."
           }
         }
       }
@@ -7130,7 +7266,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Service Worker 캐시 저장소\n7일 미사용 시 삭제될 수 있음\n오프라인 리소스에 적합"
+            "value" : "Service Worker 캐시 저장소입니다.\n7일 미사용 시 삭제될 수 있습니다.\n오프라인 리소스에 적합합니다."
           }
         }
       }
@@ -7161,7 +7297,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "설정 > 손쉬운 사용 > 디스플레이\n모든 화면 색상 반전\nCSS: prefers-color-scheme 대안"
+            "value" : "설정 > 손쉬운 사용 > 디스플레이입니다.\n모든 화면 색상을 반전합니다.\nCSS의 prefers-color-scheme 대안입니다."
           }
         }
       }
@@ -7171,7 +7307,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "설정 > 배터리 토글\nCPU/GPU 성능 감소\n백그라운드 새로고침 비활성화"
+            "value" : "설정 > 배터리 토글입니다.\nCPU/GPU 성능이 감소합니다.\n백그라운드 새로고침이 비활성화됩니다."
           }
         }
       }
@@ -7285,7 +7421,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "링크를 길게 누르거나 3D Touch로 페이지 미리보기 표시."
+            "value" : "링크를 길게 누르거나 3D Touch로 페이지 미리보기를 표시합니다."
           }
         }
       }
@@ -7295,7 +7431,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "의심되는 피싱 또는 맬웨어 사이트에 대한 경고 표시."
+            "value" : "의심되는 피싱 또는 맬웨어 사이트에 대한 경고를 표시합니다."
           }
         }
       }
@@ -7380,7 +7516,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "split, join, indexOf, replace\n텍스트 처리 속도\n웹 앱에서 일반적"
+            "value" : "split, join, indexOf, replace 성능입니다.\n텍스트 처리 속도를 측정합니다.\n웹 앱에서 자주 사용됩니다."
           }
         }
       }
@@ -7390,7 +7526,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "표준 색 공간\n가시 색상의 ~35% 포함\n대부분의 웹 콘텐츠에서 사용"
+            "value" : "표준 색 공간입니다.\n가시 색상의 약 35%를 포함합니다.\n대부분의 웹 콘텐츠에서 씁니다."
           }
         }
       }
@@ -7400,7 +7536,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "표준화된 결제 API\nApple Pay 통합\nHTTPS + 가맹점 설정 필요"
+            "value" : "표준화된 결제 API입니다.\nApple Pay 통합이고\nHTTPS와 가맹점 설정이 필요합니다."
           }
         }
       }
@@ -7420,7 +7556,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "스크립트와 스타일시트 같은 정적 리소스는 브라우저가 직접 로드하며 JavaScript로 가로챌 수 없습니다. fetch/XHR 요청만 응답 본문을 캡처할 수 있습니다."
+            "value" : "스크립트나 스타일시트 같은 정적 리소스는 브라우저가 직접 로드해서 JavaScript로 가로챌 수 없습니다. fetch/XHR 요청만 응답을 캡처할 수 있습니다."
           }
         }
       }
@@ -7463,7 +7599,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "저장소 데이터가 여기에 표시됩니다"
+            "value" : "저장소 데이터가 여기에 표시됩니다."
           }
         }
       }
@@ -7483,7 +7619,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Apple TV로 스트리밍\n끄면 = AirPlay 버튼 숨김\n로컬 재생 전용"
+            "value" : "Apple TV로 스트리밍합니다.\n끄면 AirPlay 버튼이 숨겨집니다.\n로컬 재생 전용입니다."
           }
         }
       }
@@ -7503,7 +7639,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "style, className, attribute\nReflow/repaint 트리거\n애니메이션 성능"
+            "value" : "style, className, attribute 성능입니다.\nReflow/repaint 트리거입니다.\n애니메이션 성능을 측정합니다."
           }
         }
       }
@@ -7524,7 +7660,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CDN 스타일(Tailwind, Bootstrap 등)은 브라우저 보안으로 인해 검사할 수 없습니다"
+            "value" : "CDN 스타일(Tailwind, Bootstrap 등)은 브라우저 보안 때문에 검사할 수 없습니다."
           }
         }
       }
@@ -7534,7 +7670,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "외부 CDN의 스타일(Tailwind, Bootstrap 등)은 브라우저 CORS 보안 정책으로 인해 검사할 수 없습니다."
+            "value" : "외부 CDN 스타일(Tailwind, Bootstrap 등)은 CORS 보안 정책 때문에 검사할 수 없습니다."
           }
         }
       }
@@ -7588,7 +7724,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MP4 형식만 지원."
+            "value" : "MP4 형식만 지원합니다."
           }
         }
       }
@@ -7619,7 +7755,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "스와이프로 뒤로/앞으로\n끄면 = 버튼만 사용\n페이지 제스처 충돌 방지"
+            "value" : "스와이프로 뒤로/앞으로 이동합니다.\n끄면 버튼만 사용합니다.\n페이지 제스처 충돌을 방지합니다."
           }
         }
       }
@@ -7669,7 +7805,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "시스템 찾기 패널\niPad 키보드에서 Cmd+F\n페이지 내 텍스트 검색"
+            "value" : "시스템 찾기 패널입니다.\niPad 키보드에서 Cmd+F로 사용합니다.\n페이지 내 텍스트를 검색합니다."
           }
         }
       }
@@ -7689,7 +7825,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "탭 범위 저장소\n탭 닫으면 삭제됨\n동일 출처 정책 적용"
+            "value" : "탭 범위 저장소입니다.\n탭 닫으면 삭제됩니다.\n동일 출처 정책이 적용됩니다."
           }
         }
       }
@@ -7720,7 +7856,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "탭하여 적용. 변경사항은 다음 페이지 로드 시 적용됩니다."
+            "value" : "탭해서 적용합니다. 다음 로드 시 반영됩니다."
           }
         }
       }
@@ -7751,7 +7887,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "임시 WebView(example.com)로 테스트됨. 실제 결과는 다를 수 있습니다."
+            "value" : "임시 WebView(example.com)로 테스트했습니다. 실제 결과는 다를 수 있습니다."
           }
         }
       }
@@ -7793,7 +7929,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "SFSafariViewController는 사용자 개인정보와 보안을 우선시하기 때문에 이러한 제한이 있습니다. 완전한 제어가 필요하면 WKWebView를 사용하세요."
+            "value" : "SFSafariViewController가 개인정보와 보안을 우선해서 이런 제한이 있습니다. 완전한 제어가 필요하면 WKWebView를 쓰십시오."
           }
         }
       }
@@ -7803,7 +7939,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 옵션들은 iOS 26에서 deprecated되었으며 눈에 띄는 효과가 없을 수 있습니다."
+            "value" : "이 옵션들은 iOS 26에서 deprecated돼서 효과가 안 보일 수 있습니다."
           }
         }
       }
@@ -7824,7 +7960,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이 작업은 취소할 수 없습니다."
+            "value" : "이 작업은 되돌릴 수 없습니다."
           }
         }
       }
@@ -7876,7 +8012,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "교차 출처 리소스의 타이밍 세부정보를 사용할 수 없음"
+            "value" : "교차 출처 리소스 타이밍 정보 불가"
           }
         }
       }
@@ -7886,7 +8022,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "타이밍을 사용할 수 없습니다"
+            "value" : "타이밍 정보가 없습니다."
           }
         }
       }
@@ -7906,7 +8042,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "버튼 및 컨트롤의 틴트 색상."
+            "value" : "버튼 및 컨트롤의 틴트 색상입니다."
           }
         }
       }
@@ -7916,7 +8052,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "버튼 및 기타 컨트롤의 틴트 색상."
+            "value" : "버튼 및 기타 컨트롤의 틴트 색상입니다."
           }
         }
       }
@@ -7936,7 +8072,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toolbar Items"
+            "value" : "툴바 항목"
           }
         }
       }
@@ -7957,7 +8093,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "총 기기 RAM\n시스템과 앱 간에 공유\niPhone: 보통 4-8GB"
+            "value" : "총 기기 RAM입니다.\n시스템과 앱 간에 공유됩니다.\niPhone은 보통 4-8GB입니다."
           }
         }
       }
@@ -7977,7 +8113,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "총 논리 코어\niPhone은 ARM big.LITTLE 사용:\n성능 + 효율 코어"
+            "value" : "총 논리 코어입니다.\niPhone은 ARM big.LITTLE을 사용합니다.\n성능 + 효율 코어로 구성됩니다."
           }
         }
       }
@@ -8082,7 +8218,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "초광색역 (가시광의 ~75%)\nPro Display XDR, 일부 iPad Pro\niPhone: 아직 미지원"
+            "value" : "초광색역입니다 (가시광의 약 75%).\nPro Display XDR, 일부 iPad Pro에서 지원합니다.\niPhone은 아직 미지원입니다."
           }
         }
       }
@@ -8092,7 +8228,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이미지를 로드할 수 없습니다"
+            "value" : "이미지를 불러올 수 없습니다."
           }
         }
       }
@@ -8112,7 +8248,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "통합 입력 이벤트\n마우스, 터치, 펜 결합\n최신 이벤트 처리"
+            "value" : "통합 입력 이벤트입니다.\n마우스, 터치, 펜을 결합합니다.\n최신 이벤트 처리 방식입니다."
           }
         }
       }
@@ -8163,7 +8299,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "대신 네이티브 앱을 사용하세요."
+            "value" : "네이티브 앱을 사용하십시오."
           }
         }
       }
@@ -8173,7 +8309,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "로그 필터링에 정규식 사용"
+            "value" : "정규식으로 로그를 필터링합니다."
           }
         }
       }
@@ -8234,7 +8370,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "사용자가 설치한 Safari 콘텐츠 차단기가 적용됨"
+            "value" : "Safari 콘텐츠 차단기가 적용됩니다."
           }
         }
       }
@@ -8244,7 +8380,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "사용자의 Safari 웹 확장 프로그램 사용 가능"
+            "value" : "Safari 웹 확장 프로그램을 사용할 수 있습니다."
           }
         }
       }
@@ -8254,7 +8390,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "비영구 데이터 저장소 사용. 세션 후 쿠키나 캐시 저장 안 함."
+            "value" : "비영구 데이터 저장소를 사용합니다. 세션 후 쿠키나 캐시가 저장되지 않습니다."
           }
         }
       }
@@ -8326,7 +8462,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "iPhone은 비디오만, iPad는 전체 지원."
+            "value" : "iPhone에서는 비디오만, iPad에서는 전체 지원합니다."
           }
         }
       }
@@ -8336,7 +8472,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "플로팅 창에서 비디오 재생\n비디오 요소에서 작동\n사용자가 시작해야 함"
+            "value" : "플로팅 창에서 비디오를 재생합니다.\n비디오 요소에서 작동합니다.\n사용자가 시작해야 합니다."
           }
         }
       }
@@ -8356,7 +8492,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "비디오 자동 재생\n끄면 = 탭하여 재생\n배터리와 데이터 절약"
+            "value" : "비디오가 자동으로 재생됩니다.\n끄면 배터리와 데이터를 아낍니다."
           }
         }
       }
@@ -8377,7 +8513,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "전체 페이지 로드 대기\n깔끔한 외관\n로딩이 느리게 느껴질 수 있음"
+            "value" : "전체 페이지 로드를 대기합니다.\n깔끔한 외관이지만\n로딩이 느리게 느껴질 수 있습니다."
           }
         }
       }
@@ -8397,7 +8533,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "표시 전에 전체 페이지 로드 대기. 느리게 느껴질 수 있지만 깔끔함."
+            "value" : "표시 전에 전체 페이지 로드를 대기합니다. 느리게 느껴질 수 있지만 깔끔합니다."
           }
         }
       }
@@ -8410,7 +8546,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "위험한 사이트 경고\n피싱 및 맬웨어 알림\n안전을 위해 켜두세요"
+            "value" : "위험한 사이트를 경고합니다.\n안전을 위해 켜두십시오."
           }
         }
       }
@@ -8431,7 +8567,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "의심되는 피싱 사이트에 대해 사용자에게 경고"
+            "value" : "의심되는 피싱 사이트에 대해 사용자에게 경고합니다."
           }
         }
       }
@@ -8452,7 +8588,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Web Cryptography API\n해싱, 암호화, 서명\n전체 API에 HTTPS 필요"
+            "value" : "Web Cryptography API입니다.\n해싱, 암호화, 서명을 지원합니다.\n전체 API에 HTTPS가 필요합니다."
           }
         }
       }
@@ -8464,6 +8600,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Web Vitals"
+          }
+        }
+      }
+    },
+    "Web Vitals & timing metrics" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web Vitals와 타이밍 메트릭"
           }
         }
       }
@@ -8541,7 +8687,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹사이트 쿠키 활성화\n로그인 세션, 설정 저장\n비공개 모드는 종료 시 삭제"
+            "value" : "웹사이트 쿠키를 활성화합니다.\n로그인 세션과 설정을 저장합니다.\n비공개 모드는 종료 시 삭제됩니다."
           }
         }
       }
@@ -8551,7 +8697,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "웹사이트 데이터는 앱별로 샌드박스 처리됩니다. 한 앱에 저장된 데이터는 다른 앱에서 접근할 수 없습니다."
+            "value" : "웹사이트 데이터는 앱별로 분리됩니다. 다른 앱에서는 접근할 수 없습니다."
           }
         }
       }
@@ -8582,7 +8728,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WebView 높이 비율\n100% = 전체 화면 높이"
+            "value" : "WebView 높이 비율입니다.\n100%가 전체 화면 높이입니다."
           }
         }
       }
@@ -8612,7 +8758,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "WebView 너비 비율\n100% = 전체 화면 너비"
+            "value" : "WebView 너비 비율입니다.\n100%가 전체 화면 너비입니다."
           }
         }
       }
@@ -8642,7 +8788,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "광색역 (~sRGB보다 25% 넓음)\niPhone 7 이후 모든 iPhone\n선명한 빨강, 초록, 주황"
+            "value" : "광색역입니다 (~sRGB보다 25% 넓음).\niPhone 7 이후 모든 iPhone에서 지원합니다.\n선명한 빨강, 초록, 주황을 표현합니다."
           }
         }
       }
@@ -8662,7 +8808,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "가로 세로 비율\n깔끔한 표시를 위해 GCD로 계산"
+            "value" : "가로 세로 비율입니다.\nGCD로 계산합니다."
           }
         }
       }

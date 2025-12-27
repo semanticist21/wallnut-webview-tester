@@ -50,7 +50,7 @@ enum DevToolsMenuItem: String, CaseIterable, Identifiable {
         }
     }
 
-    var description: String {
+    var description: LocalizedStringKey {
         switch self {
         case .console: return "JavaScript console logs"
         case .sources: return "DOM tree, stylesheets, scripts"
