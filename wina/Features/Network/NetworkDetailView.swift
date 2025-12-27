@@ -31,84 +31,67 @@ struct NetworkDetailView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                requestSummary
+        VStack(spacing: 0) {
+            header
 
-                Divider()
+            requestSummary
 
-                Picker("Tab", selection: $selectedTab) {
-                    ForEach(DetailTab.allCases, id: \.self) { tab in
-                        Text(tab.rawValue).tag(tab)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .padding()
+            Divider()
 
-                ScrollView {
-                    switch selectedTab {
-                    case .overview:
-                        overviewContent
-                    case .headers:
-                        headersContent
-                    case .request:
-                        requestContent
-                    case .response:
-                        responseContent
-                    }
+            Picker("Tab", selection: $selectedTab) {
+                ForEach(DetailTab.allCases, id: \.self) { tab in
+                    Text(tab.rawValue).tag(tab)
                 }
             }
-            .navigationTitle("Request Details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 4) {
-                        Button {
-                            shareRequest()
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundStyle(.primary)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
+            .pickerStyle(.segmented)
+            .padding()
 
-                        Button {
-                            copyAsCurl()
-                        } label: {
-                            Image(systemName: "terminal")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundStyle(.primary)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal, 6)
-                    .backport.glassEffect(in: .capsule)
+            ScrollView {
+                switch selectedTab {
+                case .overview:
+                    overviewContent
+                case .headers:
+                    headersContent
+                case .request:
+                    requestContent
+                case .response:
+                    responseContent
                 }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
-            .overlay(alignment: .bottom) {
-                if let feedback = copiedFeedback {
-                    CopiedFeedbackToast(message: feedback)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                }
-            }
-            .animation(.easeInOut(duration: 0.2), value: copiedFeedback)
-            .sheet(item: $shareItem) { item in
-                ShareSheet(content: item.content)
-            }
-            .sheet(item: $shareFileURL) { url in
-                ShareSheet(fileURL: url)
             }
         }
+        .overlay(alignment: .bottom) {
+            if let feedback = copiedFeedback {
+                CopiedFeedbackToast(message: feedback)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: copiedFeedback)
+        .sheet(item: $shareItem) { item in
+            ShareSheet(content: item.content)
+        }
+        .sheet(item: $shareFileURL) { url in
+            ShareSheet(fileURL: url)
+        }
+    }
+
+    // MARK: - Header
+
+    private var header: some View {
+        DevToolsHeader(
+            title: "Request Details",
+            leftButtons: [
+                .init(icon: "xmark.circle.fill", color: .secondary) {
+                    dismiss()
+                },
+                .init(icon: "square.and.arrow.up") {
+                    shareRequest()
+                },
+                .init(icon: "terminal") {
+                    copyAsCurl()
+                }
+            ],
+            rightButtons: []
+        )
     }
 
     // MARK: - Summary
