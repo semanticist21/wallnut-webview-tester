@@ -170,7 +170,7 @@ struct InfoView: View {
                     InfoCategoryRow(
                         icon: "safari",
                         title: "Browser",
-                        description: "User Agent, WebKit Version, WebGL Info"
+                        description: "User Agent, WebKit version, WebGL info"
                     )
                 }
 

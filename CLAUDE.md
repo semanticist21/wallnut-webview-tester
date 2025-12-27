@@ -671,6 +671,20 @@ Left: Close → Actions. Right: Toggles.
 
 ---
 
+## Localization (Korean)
+
+**Settings 메뉴 번역 규칙**:
+- **타이틀**: 영어 원문 유지 (App Settings, Live Settings, Configuration, Emulation, Permissions, Toolbar, App Bar 등)
+- **설명**: 자연스러운 문장형 한국어 ("설정을 바꾸면 바로 반영돼요", "개발자 도구 버튼을 원하는 대로 배치해요")
+
+**LocalizedStringKey 패턴**:
+- 컴포넌트 파라미터는 `LocalizedStringKey` 사용 (자동 로컬라이제이션)
+- 동적 문자열(파일명, 가격 등)은 `String` convenience init 추가
+- `Text(stringVariable)` where `stringVariable: String` → 로컬라이제이션 안됨
+- `Text(localizedKey)` where `localizedKey: LocalizedStringKey` → 로컬라이제이션 됨
+
+---
+
 ## SwiftLint Configuration
 
 See `.swiftlint.yml` for rules. Key points:

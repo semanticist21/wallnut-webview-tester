@@ -237,8 +237,8 @@ struct SafariVCInfoView: View {
 
 private struct SafariInfoCategoryRow: View {
     let icon: String
-    let title: String
-    let description: String
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack(spacing: 12) {
@@ -379,7 +379,7 @@ private struct SafariActiveSettingsDetailView: View {
 private struct SafariActiveSettingRow: View {
     let label: String
     let enabled: Bool
-    var info: String?
+    var info: LocalizedStringKey?
     var unavailable = false
 
     var body: some View {
@@ -622,7 +622,7 @@ private struct SafariLimitationsDetailView: View {
 private struct SafariInfoRow: View {
     let label: String
     let value: String
-    var info: String?
+    var info: LocalizedStringKey?
 
     var body: some View {
         HStack {
@@ -641,7 +641,7 @@ private struct SafariInfoRow: View {
 private struct SafariCapabilityRow: View {
     let label: String
     let supported: Bool
-    var info: String?
+    var info: LocalizedStringKey?
     var unavailable = false  // Safari policy: never supported
 
     var body: some View {
@@ -666,7 +666,7 @@ private struct SafariCapabilityRow: View {
 
 private struct SafariAPIRow: View {
     let api: String
-    let description: String
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack {
@@ -682,7 +682,7 @@ private struct SafariAPIRow: View {
 
 private struct SafariPrivacyRow: View {
     let title: String
-    let description: String
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack {
@@ -697,7 +697,7 @@ private struct SafariPrivacyRow: View {
 
 private struct SafariDelegateRow: View {
     let method: String
-    let description: String
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack {

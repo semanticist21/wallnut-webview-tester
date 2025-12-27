@@ -9,7 +9,7 @@ import SwiftUIBackports
 /// Capsule-shaped glass effect button for actions like Reset, Apply, Done
 /// Used in Settings views as inline action buttons
 struct GlassActionButton: View {
-    let title: String
+    let title: LocalizedStringKey
     let icon: String?
     let style: ActionStyle
     let action: () -> Void
@@ -28,13 +28,27 @@ struct GlassActionButton: View {
         }
     }
 
+    /// Primary init for localized titles
+    init(
+        _ title: LocalizedStringKey,
+        icon: String? = nil,
+        style: ActionStyle = .default,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.icon = icon
+        self.style = style
+        self.action = action
+    }
+
+    /// Convenience init for dynamic string titles (e.g., with price)
     init(
         _ title: String,
         icon: String? = nil,
         style: ActionStyle = .default,
         action: @escaping () -> Void
     ) {
-        self.title = title
+        self.title = LocalizedStringKey(stringLiteral: title)
         self.icon = icon
         self.style = style
         self.action = action

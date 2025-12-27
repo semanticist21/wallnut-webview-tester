@@ -30,7 +30,7 @@ struct GlassIconButton: View {
     var size: Size = .regular
     var color: Color = .primary
     var isDisabled: Bool = false
-    var accessibilityLabel: String?
+    var accessibilityLabel: LocalizedStringKey?
     let action: () -> Void
 
     var body: some View {
@@ -45,7 +45,7 @@ struct GlassIconButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isDisabled)
-        .accessibilityLabel(accessibilityLabel ?? "")
+        .accessibilityLabel(accessibilityLabel ?? "Button")
         .accessibilityAddTraits(.isButton)
     }
 }

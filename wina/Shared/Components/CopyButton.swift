@@ -12,10 +12,10 @@ import SwiftUIBackports
 
 /// Compact action button for section headers with icon and text label
 struct HeaderActionButton: View {
-    let label: String
+    let label: LocalizedStringKey
     let icon: String
     var isDisabled: Bool = false
-    var accessibilityLabel: String?
+    var accessibilityLabel: LocalizedStringKey?
     let action: () -> Void
 
     var body: some View {
@@ -41,7 +41,7 @@ struct HeaderActionButton: View {
 /// Copy button with icon and text label for section headers
 struct CopyButton: View {
     let text: String
-    var label: String = "Copy"
+    var label: LocalizedStringKey = "Copy"
     var onCopy: (() -> Void)?
 
     var body: some View {
@@ -92,7 +92,17 @@ struct CopyIconButton: View {
 
 /// Toast message for copy feedback
 struct CopiedFeedbackToast: View {
-    let message: String
+    let message: LocalizedStringKey
+
+    /// Convenience init for dynamic string messages
+    init(message: String) {
+        self.message = LocalizedStringKey(stringLiteral: message)
+    }
+
+    /// Primary init for localized messages
+    init(message: LocalizedStringKey) {
+        self.message = message
+    }
 
     var body: some View {
         Text(message)

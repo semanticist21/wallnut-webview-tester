@@ -3,7 +3,7 @@ import SwiftUIBackports
 
 struct ToggleChipButton: View {
     @Binding var isOn: Bool
-    let label: String
+    let label: LocalizedStringKey
 
     var body: some View {
         Button {

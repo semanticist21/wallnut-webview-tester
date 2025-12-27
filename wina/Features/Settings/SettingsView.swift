@@ -223,6 +223,19 @@ struct LoadedSettingsView: View {
             List {
                 Section {
                     NavigationLink {
+                        AppSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "app.badge.fill",
+                            iconColor: .cyan,
+                            title: "App Settings",
+                            description: "Language, preferences"
+                        )
+                    }
+                }
+
+                Section {
+                    NavigationLink {
                         LiveSettingsView()
                     } label: {
                         SettingsCategoryRow(
@@ -382,8 +395,8 @@ struct LoadedSettingsView: View {
 struct SettingsCategoryRow: View {
     var icon: String?
     var iconColor = Color.accentColor
-    let title: String
-    let description: String
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack(spacing: 12) {
@@ -463,6 +476,9 @@ struct SettingsView: View {
     @AppStorage("erudaModeEnabled") private var erudaModeEnabled: Bool = false
     @State private var showErudaWarning: Bool = false
 
+    // App Language
+    @AppStorage("appLanguage") private var appLanguage: String = ""
+
     private var isIPad: Bool {
         UIDevice.current.isIPad
     }
@@ -470,6 +486,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                appSection
                 coreSection
                 mediaSection
                 contentModeSection
@@ -583,6 +600,24 @@ struct SettingsView: View {
     }
 
     // MARK: - Sections
+
+    @ViewBuilder
+    private var appSection: some View {
+        Section {
+            NavigationLink {
+                AppSettingsView()
+            } label: {
+                HStack {
+                    Text("App Settings")
+                    Spacer()
+                    Text(AppLanguage(rawValue: appLanguage)?.displayName ?? "System")
+                        .foregroundStyle(.secondary)
+                }
+            }
+        } header: {
+            Text("App")
+        }
+    }
 
     @ViewBuilder
     private var coreSection: some View {

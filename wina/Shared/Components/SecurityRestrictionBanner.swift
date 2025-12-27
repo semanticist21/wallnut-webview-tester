@@ -26,12 +26,12 @@ struct SecurityRestrictionBanner: View {
             }
         }
 
-        var message: String {
+        var message: LocalizedStringKey {
             switch self {
             case .crossOriginTiming:
                 "Timing details unavailable for cross-origin resource"
             case .crossOriginStylesheet(let count):
-                "\(count) stylesheet\(count > 1 ? "s" : "") blocked by CORS"
+                "\(count) stylesheet(s) blocked by CORS"
             case .staticResourceBody:
                 "Response body unavailable for static resources"
             }
@@ -63,7 +63,7 @@ struct SecurityRestrictionBanner: View {
         .background(type.color.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
     }
 
-    private var infoText: String {
+    private var infoText: LocalizedStringKey {
         switch type {
         case .crossOriginTiming:
             "Detailed timing data (DNS, TCP, TLS, etc.) is unavailable for cross-origin resources unless the server includes a Timing-Allow-Origin header. This is a browser security restriction."

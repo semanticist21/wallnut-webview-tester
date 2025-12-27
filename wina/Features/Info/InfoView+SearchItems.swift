@@ -78,7 +78,7 @@ extension InfoView {
     }
 
     func apiItems(from info: WebViewInfo) -> [InfoSearchItem] {
-        let apis: [(String, Bool, String?)] = [
+        let apis: [(String, Bool, LocalizedStringKey?)] = [
             ("JavaScript", info.supportsJavaScript, nil),
             ("WebAssembly", info.supportsWebAssembly, nil),
             ("Web Workers", info.supportsWebWorkers, nil),

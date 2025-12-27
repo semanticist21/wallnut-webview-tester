@@ -11,7 +11,7 @@ import SwiftUI
 
 /// A button that shows an info popover when tapped
 struct InfoPopoverButton<S: ShapeStyle>: View {
-    let text: String
+    let text: LocalizedStringKey
     let iconColor: S
 
     @State private var showInfo = false
@@ -38,7 +38,7 @@ struct InfoPopoverButton<S: ShapeStyle>: View {
 
 // Convenience initializer with default color
 extension InfoPopoverButton where S == Color {
-    init(text: String) {
+    init(text: LocalizedStringKey) {
         self.text = text
         self.iconColor = .secondary
     }
@@ -85,7 +85,7 @@ extension RichInfoPopoverButton where S == Color {
 
 /// A button that shows a deprecation warning popover when tapped
 struct DeprecatedPopoverButton: View {
-    let text: String
+    let text: LocalizedStringKey
 
     @State private var showInfo = false
 

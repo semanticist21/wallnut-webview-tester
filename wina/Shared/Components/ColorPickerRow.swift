@@ -11,10 +11,10 @@ import SwiftUI
 
 /// A color picker row with optional info button and clear functionality
 struct ColorPickerRow: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var colorHex: String
-    var info: String?
-    var deprecatedInfo: String?
+    var info: LocalizedStringKey?
+    var deprecatedInfo: LocalizedStringKey?
 
     private var selectedColor: Binding<Color> {
         Binding(

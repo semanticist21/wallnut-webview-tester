@@ -11,8 +11,8 @@ import SwiftUI
 
 struct InfoCategoryRow: View {
     let icon: String
-    let title: String
-    let description: String
+    let title: LocalizedStringKey
+    let description: LocalizedStringKey
 
     var body: some View {
         HStack(spacing: 12) {
@@ -41,7 +41,7 @@ struct InfoSearchItem: Identifiable {
     let category: String
     let label: String
     let value: String
-    var info: String?
+    var info: LocalizedStringKey?
     var linkToPerformance = false
 }
 
@@ -57,7 +57,7 @@ struct CapabilityItem: Identifiable {
     let id = UUID()
     let label: String
     let supported: Bool
-    var info: String?
+    var info: LocalizedStringKey?
     var unavailable = false
     var icon: String?
     var iconColor: Color?
@@ -68,7 +68,7 @@ struct CapabilityItem: Identifiable {
 struct InfoRow: View {
     let label: String
     let value: String
-    var info: String?
+    var info: LocalizedStringKey?
 
     var body: some View {
         HStack {
@@ -89,7 +89,7 @@ struct InfoRow: View {
 struct CapabilityRow: View {
     let label: String
     let supported: Bool
-    var info: String?
+    var info: LocalizedStringKey?
     var unavailable = false  // WebKit policy: never supported
     var icon: String?
     var iconColor: Color?
@@ -169,7 +169,7 @@ struct UserAgentText: View {
 struct BenchmarkRow: View {
     let label: String
     let ops: String
-    var info: String?
+    var info: LocalizedStringKey?
 
     var body: some View {
         HStack {
@@ -237,7 +237,7 @@ struct CodecRow: View {
 struct ActiveSettingRow: View {
     let label: String
     let enabled: Bool
-    var info: String?
+    var info: LocalizedStringKey?
     var unavailable = false
 
     var body: some View {
@@ -269,7 +269,7 @@ struct ActiveSettingRow: View {
 struct PermissionStatusRow: View {
     let label: String
     let status: Any
-    var info: String?
+    var info: LocalizedStringKey?
 
     var body: some View {
         HStack {

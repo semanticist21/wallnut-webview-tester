@@ -11,11 +11,11 @@ import SwiftUI
 
 /// A toggle row with optional info button popover
 struct SettingToggleRow: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var isOn: Bool
-    var info: String?
+    var info: LocalizedStringKey?
     var disabled: Bool = false
-    var disabledLabel: String?
+    var disabledLabel: LocalizedStringKey?
 
     var body: some View {
         Toggle(isOn: $isOn) {

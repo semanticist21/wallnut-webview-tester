@@ -9,9 +9,32 @@ import SwiftUI
 import SwiftUIBackports
 
 struct DevToolsHeader: View {
-    let title: String
+    let title: LocalizedStringKey
     let leftButtons: [HeaderButton]
     let rightButtons: [HeaderButton]
+
+    /// Convenience init for dynamic string titles (e.g., filenames)
+    init(
+        title: String,
+        leftButtons: [HeaderButton],
+        rightButtons: [HeaderButton]
+    ) {
+        // Use verbatim to prevent localization lookup for dynamic strings
+        self.title = LocalizedStringKey(stringLiteral: title)
+        self.leftButtons = leftButtons
+        self.rightButtons = rightButtons
+    }
+
+    /// Primary init for localized titles
+    init(
+        title: LocalizedStringKey,
+        leftButtons: [HeaderButton],
+        rightButtons: [HeaderButton]
+    ) {
+        self.title = title
+        self.leftButtons = leftButtons
+        self.rightButtons = rightButtons
+    }
 
     struct HeaderButton: Identifiable {
         let id = UUID()
