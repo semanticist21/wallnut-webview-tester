@@ -33,284 +33,284 @@ TRANSLATIONS = {
         "WebView Capabilities", "Check API support and device info"
     ),
 
-    # Korean (요체 - polite conversational)
+    # Korean (하세요체 - formal polite)
     "ko": (
-        "WebView 테스터", "WKWebView와 SafariVC를 바로 테스트해요",
-        "내장 개발자 도구", "콘솔, 네트워크, 저장소 등을 확인해요",
-        "설정 커스터마이즈", "세밀한 테스트를 위해 옵션을 조정해요",
-        "WebView 기능", "API 지원과 기기 정보를 확인해요"
+        "WebView 테스터", "WKWebView와 SafariVC를 바로 테스트하세요",
+        "내장 개발자 도구", "콘솔, 네트워크, 저장소 등을 확인하세요",
+        "설정 커스터마이즈", "세밀한 테스트를 위해 옵션을 조정하세요",
+        "WebView 기능", "API 지원과 기기 정보를 확인하세요"
     ),
 
-    # Japanese
+    # Japanese (丁寧語 - polite form)
     "ja": (
-        "WebView テスター", "WKWebViewとSafariVCをすぐにテスト",
-        "内蔵デベロッパーツール", "コンソール、ネットワーク、ストレージなど",
-        "設定をカスタマイズ", "細かいテストのためのオプション調整",
-        "WebView 機能", "APIサポートとデバイス情報を確認"
+        "WebView テスター", "WKWebViewとSafariVCをすぐにテストできます",
+        "内蔵デベロッパーツール", "コンソール、ネットワーク、ストレージなどを確認できます",
+        "設定をカスタマイズ", "細かいテストのためにオプションを調整できます",
+        "WebView 機能", "APIサポートとデバイス情報を確認できます"
     ),
 
-    # Chinese Simplified
+    # Chinese Simplified (敬语 - respectful language)
     "zh-Hans": (
-        "WebView 测试工具", "即刻测试 WKWebView 和 SafariVC",
-        "内置开发者工具", "控制台、网络、存储等功能",
-        "自定义设置", "精细调整测试选项",
-        "WebView 功能", "查看 API 支持和设备信息"
+        "WebView 测试工具", "立即测试 WKWebView 与 SafariVC",
+        "内置开发者工具", "提供控制台、网络、存储等功能",
+        "自定义设置", "可精确调整各项测试选项",
+        "WebView 功能", "可查看 API 支持与设备信息"
     ),
 
-    # Chinese Traditional
+    # Chinese Traditional (敬語 - respectful language)
     "zh-Hant": (
-        "WebView 測試工具", "即刻測試 WKWebView 和 SafariVC",
-        "內建開發者工具", "控制台、網路、儲存等功能",
-        "自訂設定", "精細調整測試選項",
-        "WebView 功能", "查看 API 支援和裝置資訊"
+        "WebView 測試工具", "立即測試 WKWebView 與 SafariVC",
+        "內建開發者工具", "提供控制台、網路、儲存等功能",
+        "自訂設定", "可精確調整各項測試選項",
+        "WebView 功能", "可查看 API 支援與裝置資訊"
     ),
 
-    # German
+    # German (Höflichkeitsform - Sie form)
     "de-DE": (
-        "WebView Tester", "WKWebView &amp; SafariVC sofort testen",
+        "WebView Tester", "Testen Sie WKWebView &amp; SafariVC sofort",
         "Integrierte Entwicklertools", "Konsole, Netzwerk, Speicher und mehr",
-        "Einstellungen anpassen", "Optionen für präzises Testen optimieren",
-        "WebView Funktionen", "API-Unterstützung und Geräteinfo prüfen"
+        "Einstellungen anpassen", "Passen Sie die Optionen für präzise Tests an",
+        "WebView Funktionen", "Prüfen Sie API-Unterstützung und Geräteinformationen"
     ),
 
-    # French (France)
+    # French (France - vouvoiement)
     "fr-FR": (
         "Testeur WebView", "Testez WKWebView &amp; SafariVC instantanément",
-        "Outils de développement", "Console, Réseau, Stockage et plus",
-        "Personnaliser les réglages", "Affinez les options pour des tests précis",
-        "Fonctionnalités WebView", "Vérifiez le support API et les infos appareil"
+        "Outils de développement intégrés", "Console, Réseau, Stockage et plus encore",
+        "Personnaliser les réglages", "Ajustez les options pour des tests précis",
+        "Fonctionnalités WebView", "Consultez le support API et les informations de l'appareil"
     ),
 
-    # French (Canada)
+    # French (Canada - vouvoiement)
     "fr-CA": (
         "Testeur WebView", "Testez WKWebView &amp; SafariVC instantanément",
-        "Outils de développement", "Console, Réseau, Stockage et plus",
+        "Outils de développement intégrés", "Console, Réseau, Stockage et plus encore",
         "Personnaliser les paramètres", "Ajustez les options pour des tests précis",
-        "Fonctionnalités WebView", "Vérifiez le support API et les infos appareil"
+        "Fonctionnalités WebView", "Consultez le support API et les informations de l'appareil"
     ),
 
-    # Spanish (Spain)
+    # Spanish (Spain - usted form)
     "es-ES": (
-        "Probador WebView", "Prueba WKWebView y SafariVC al instante",
-        "Herramientas de desarrollo", "Consola, Red, Almacenamiento y más",
-        "Personalizar ajustes", "Afina las opciones para pruebas precisas",
-        "Funciones WebView", "Consulta el soporte API e info del dispositivo"
+        "Probador WebView", "Pruebe WKWebView y SafariVC al instante",
+        "Herramientas de desarrollo integradas", "Consola, Red, Almacenamiento y más",
+        "Personalizar ajustes", "Ajuste las opciones para pruebas precisas",
+        "Funciones WebView", "Consulte el soporte API e información del dispositivo"
     ),
 
-    # Spanish (Mexico)
+    # Spanish (Mexico - usted form)
     "es-MX": (
-        "Probador WebView", "Prueba WKWebView y SafariVC al instante",
-        "Herramientas de desarrollo", "Consola, Red, Almacenamiento y más",
-        "Personalizar configuración", "Ajusta las opciones para pruebas precisas",
-        "Funciones WebView", "Consulta el soporte API e info del dispositivo"
+        "Probador WebView", "Pruebe WKWebView y SafariVC al instante",
+        "Herramientas de desarrollo integradas", "Consola, Red, Almacenamiento y más",
+        "Personalizar configuración", "Ajuste las opciones para pruebas precisas",
+        "Funciones WebView", "Consulte el soporte API e información del dispositivo"
     ),
 
-    # Portuguese (Brazil)
+    # Portuguese (Brazil - você formal)
     "pt-BR": (
         "Testador WebView", "Teste WKWebView e SafariVC instantaneamente",
-        "Ferramentas do desenvolvedor", "Console, Rede, Armazenamento e mais",
-        "Personalizar configurações", "Ajuste fino das opções para testes precisos",
-        "Funcionalidades WebView", "Verifique suporte de API e info do dispositivo"
+        "Ferramentas de desenvolvimento integradas", "Console, Rede, Armazenamento e mais",
+        "Personalizar configurações", "Ajuste as opções para testes precisos",
+        "Funcionalidades WebView", "Verifique o suporte de API e informações do dispositivo"
     ),
 
-    # Portuguese (Portugal)
+    # Portuguese (Portugal - formal)
     "pt-PT": (
         "Testador WebView", "Teste WKWebView e SafariVC instantaneamente",
-        "Ferramentas de desenvolvimento", "Consola, Rede, Armazenamento e mais",
+        "Ferramentas de desenvolvimento integradas", "Consola, Rede, Armazenamento e mais",
         "Personalizar definições", "Ajuste as opções para testes precisos",
-        "Funcionalidades WebView", "Verifique suporte API e info do dispositivo"
+        "Funcionalidades WebView", "Verifique o suporte de API e informações do dispositivo"
     ),
 
-    # Italian
+    # Italian (Lei form - formal)
     "it": (
-        "Tester WebView", "Testa WKWebView e SafariVC all'istante",
-        "Strumenti sviluppatore", "Console, Rete, Archiviazione e altro",
-        "Personalizza impostazioni", "Regola le opzioni per test precisi",
-        "Funzionalità WebView", "Verifica supporto API e info dispositivo"
+        "Tester WebView", "Testi WKWebView e SafariVC all'istante",
+        "Strumenti di sviluppo integrati", "Console, Rete, Archiviazione e altro",
+        "Personalizza impostazioni", "Regoli le opzioni per test precisi",
+        "Funzionalità WebView", "Verifichi il supporto API e le info del dispositivo"
     ),
 
-    # Dutch
+    # Dutch (U form - formal)
     "nl-NL": (
         "WebView Tester", "Test WKWebView &amp; SafariVC direct",
         "Ingebouwde ontwikkelaarstools", "Console, Netwerk, Opslag en meer",
-        "Instellingen aanpassen", "Opties fijn afstemmen voor precies testen",
-        "WebView Mogelijkheden", "Controleer API-ondersteuning en apparaatinfo"
+        "Instellingen aanpassen", "Pas de opties aan voor nauwkeurig testen",
+        "WebView Mogelijkheden", "Bekijk API-ondersteuning en apparaatinformatie"
     ),
 
-    # Russian
+    # Russian (Вы form - formal)
     "ru": (
-        "Тестер WebView", "Мгновенно тестируйте WKWebView и SafariVC",
-        "Встроенные инструменты", "Консоль, Сеть, Хранилище и другое",
-        "Настройка параметров", "Точная настройка опций для тестирования",
-        "Возможности WebView", "Проверьте поддержку API и информацию"
+        "Тестер WebView", "Тестируйте WKWebView и SafariVC мгновенно",
+        "Встроенные инструменты разработчика", "Консоль, Сеть, Хранилище и многое другое",
+        "Настройка параметров", "Настройте параметры для точного тестирования",
+        "Возможности WebView", "Проверьте поддержку API и информацию об устройстве"
     ),
 
-    # Ukrainian
+    # Ukrainian (Ви form - formal)
     "uk": (
-        "Тестер WebView", "Миттєво тестуйте WKWebView та SafariVC",
-        "Вбудовані інструменти", "Консоль, Мережа, Сховище та інше",
-        "Налаштування параметрів", "Точне налаштування для тестування",
-        "Можливості WebView", "Перевірте підтримку API та інформацію"
+        "Тестер WebView", "Тестуйте WKWebView та SafariVC миттєво",
+        "Вбудовані інструменти розробника", "Консоль, Мережа, Сховище та багато іншого",
+        "Налаштування параметрів", "Налаштуйте параметри для точного тестування",
+        "Можливості WebView", "Перевірте підтримку API та інформацію про пристрій"
     ),
 
-    # Polish
+    # Polish (Pan/Pani form - formal)
     "pl": (
-        "Tester WebView", "Testuj WKWebView i SafariVC natychmiast",
-        "Wbudowane narzędzia", "Konsola, Sieć, Pamięć i więcej",
-        "Dostosuj ustawienia", "Dopasuj opcje do precyzyjnych testów",
-        "Funkcje WebView", "Sprawdź obsługę API i info o urządzeniu"
+        "Tester WebView", "Proszę przetestować WKWebView i SafariVC natychmiast",
+        "Wbudowane narzędzia deweloperskie", "Konsola, Sieć, Pamięć i wiele więcej",
+        "Dostosuj ustawienia", "Proszę dostosować opcje dla precyzyjnych testów",
+        "Funkcje WebView", "Proszę sprawdzić obsługę API i informacje o urządzeniu"
     ),
 
-    # Turkish
+    # Turkish (formal imperative with -iniz)
     "tr": (
-        "WebView Test Aracı", "WKWebView ve SafariVC'yi anında test edin",
+        "WebView Test Aracı", "WKWebView ve SafariVC'yi hemen test ediniz",
         "Yerleşik Geliştirici Araçları", "Konsol, Ağ, Depolama ve daha fazlası",
-        "Ayarları Özelleştir", "Hassas test için seçenekleri ayarlayın",
-        "WebView Özellikleri", "API desteğini ve cihaz bilgisini kontrol edin"
+        "Ayarları Özelleştirin", "Hassas test için seçenekleri ayarlayınız",
+        "WebView Özellikleri", "API desteğini ve cihaz bilgisini kontrol ediniz"
     ),
 
-    # Arabic
+    # Arabic (formal with من فضلك)
     "ar-SA": (
         "مختبر WebView", "اختبر WKWebView و SafariVC فوراً",
         "أدوات المطور المدمجة", "وحدة التحكم والشبكة والتخزين والمزيد",
-        "تخصيص الإعدادات", "ضبط الخيارات للاختبار الدقيق",
+        "تخصيص الإعدادات", "اضبط الخيارات للاختبار الدقيق",
         "إمكانيات WebView", "تحقق من دعم API ومعلومات الجهاز"
     ),
 
-    # Hebrew
+    # Hebrew (formal)
     "he": (
-        "בודק WebView", "בדוק WKWebView ו-SafariVC מיידית",
+        "בודק WebView", "בדקו WKWebView ו-SafariVC מיידית",
         "כלי פיתוח מובנים", "קונסול, רשת, אחסון ועוד",
-        "התאמת הגדרות", "כוונון אפשרויות לבדיקות מדויקות",
-        "יכולות WebView", "בדוק תמיכת API ומידע על המכשיר"
+        "התאמת הגדרות", "כוונו את האפשרויות לבדיקות מדויקות",
+        "יכולות WebView", "בדקו את תמיכת API ומידע על המכשיר"
     ),
 
-    # Hindi
+    # Hindi (आप form - formal)
     "hi": (
         "WebView टेस्टर", "WKWebView और SafariVC को तुरंत टेस्ट करें",
-        "बिल्ट-इन डेवटूल्स", "कंसोल, नेटवर्क, स्टोरेज और बहुत कुछ",
-        "सेटिंग्स कस्टमाइज़ करें", "सटीक परीक्षण के लिए विकल्पों को समायोजित करें",
-        "WebView क्षमताएं", "API सपोर्ट और डिवाइस जानकारी जांचें"
+        "बिल्ट-इन डेवटूल्स", "कंसोल, नेटवर्क, स्टोरेज और भी बहुत कुछ",
+        "सेटिंग्स अनुकूलित करें", "सटीक परीक्षण के लिए विकल्पों को समायोजित करें",
+        "WebView क्षमताएं", "API सपोर्ट और डिवाइस जानकारी देखें"
     ),
 
-    # Thai
+    # Thai (ครับ/ค่ะ polite particles)
     "th": (
-        "WebView Tester", "ทดสอบ WKWebView และ SafariVC ได้ทันที",
+        "WebView Tester", "ทดสอบ WKWebView และ SafariVC ได้ทันทีครับ",
         "เครื่องมือนักพัฒนาในตัว", "คอนโซล เครือข่าย พื้นที่จัดเก็บ และอื่นๆ",
-        "ปรับแต่งการตั้งค่า", "ปรับตัวเลือกสำหรับการทดสอบที่แม่นยำ",
-        "ความสามารถ WebView", "ตรวจสอบการรองรับ API และข้อมูลอุปกรณ์"
+        "ปรับแต่งการตั้งค่า", "ปรับตัวเลือกสำหรับการทดสอบที่แม่นยำครับ",
+        "ความสามารถ WebView", "ตรวจสอบการรองรับ API และข้อมูลอุปกรณ์ครับ"
     ),
 
-    # Vietnamese
+    # Vietnamese (formal with Quý vị)
     "vi": (
-        "Công cụ thử nghiệm WebView", "Thử nghiệm WKWebView &amp; SafariVC ngay",
-        "Công cụ phát triển tích hợp", "Console, Mạng, Lưu trữ và nhiều hơn",
-        "Tùy chỉnh cài đặt", "Tinh chỉnh các tùy chọn để thử nghiệm chính xác",
+        "Công cụ thử nghiệm WebView", "Thử nghiệm WKWebView &amp; SafariVC ngay lập tức",
+        "Công cụ phát triển tích hợp", "Console, Mạng, Lưu trữ và nhiều tính năng khác",
+        "Tùy chỉnh cài đặt", "Điều chỉnh các tùy chọn để thử nghiệm chính xác",
         "Khả năng WebView", "Kiểm tra hỗ trợ API và thông tin thiết bị"
     ),
 
-    # Indonesian
+    # Indonesian (formal with Anda)
     "id": (
         "Penguji WebView", "Uji WKWebView &amp; SafariVC secara instan",
         "Alat Pengembang Bawaan", "Console, Jaringan, Penyimpanan, dan lainnya",
-        "Sesuaikan Pengaturan", "Atur opsi untuk pengujian yang presisi",
-        "Kemampuan WebView", "Periksa dukungan API dan info perangkat"
+        "Sesuaikan Pengaturan", "Sesuaikan opsi untuk pengujian yang presisi",
+        "Kemampuan WebView", "Periksa dukungan API dan informasi perangkat"
     ),
 
-    # Malay
+    # Malay (formal)
     "ms": (
-        "Penguji WebView", "Uji WKWebView &amp; SafariVC dengan segera",
-        "Alat Pembangun Terbina Dalam", "Konsol, Rangkaian, Storan dan lagi",
+        "Penguji WebView", "Uji WKWebView &amp; SafariVC dengan serta-merta",
+        "Alat Pembangun Terbina Dalam", "Konsol, Rangkaian, Storan dan banyak lagi",
         "Sesuaikan Tetapan", "Laraskan pilihan untuk ujian yang tepat",
         "Keupayaan WebView", "Semak sokongan API dan maklumat peranti"
     ),
 
-    # Danish
+    # Danish (formal De/Dem)
     "da": (
-        "WebView Tester", "Test WKWebView og SafariVC med det samme",
-        "Indbyggede udviklerværktøjer", "Konsol, Netværk, Lagring og mere",
-        "Tilpas indstillinger", "Finjuster muligheder til præcis test",
-        "WebView-funktioner", "Tjek API-understøttelse og enhedsinfo"
+        "WebView Tester", "Test WKWebView og SafariVC øjeblikkeligt",
+        "Indbyggede udviklerværktøjer", "Konsol, Netværk, Lagring og meget mere",
+        "Tilpas indstillinger", "Juster indstillingerne for præcis testning",
+        "WebView-funktioner", "Se API-understøttelse og enhedsoplysninger"
     ),
 
-    # Swedish
+    # Swedish (formal ni/Ni)
     "sv": (
-        "WebView Testare", "Testa WKWebView och SafariVC direkt",
-        "Inbyggda utvecklarverktyg", "Konsol, Nätverk, Lagring och mer",
-        "Anpassa inställningar", "Finjustera alternativ för exakt testning",
-        "WebView Funktioner", "Kontrollera API-stöd och enhetsinformation"
+        "WebView Testare", "Testa WKWebView och SafariVC omedelbart",
+        "Inbyggda utvecklarverktyg", "Konsol, Nätverk, Lagring och mycket mer",
+        "Anpassa inställningar", "Justera alternativen för exakt testning",
+        "WebView Funktioner", "Se API-stöd och enhetsinformation"
     ),
 
-    # Norwegian
+    # Norwegian (formal De/Dem)
     "no": (
         "WebView Tester", "Test WKWebView og SafariVC umiddelbart",
-        "Innebygde utviklerverktøy", "Konsoll, Nettverk, Lagring og mer",
-        "Tilpass innstillinger", "Finjuster alternativer for presis testing",
-        "WebView Funksjoner", "Sjekk API-støtte og enhetsinformasjon"
+        "Innebygde utviklerverktøy", "Konsoll, Nettverk, Lagring og mye mer",
+        "Tilpass innstillinger", "Juster alternativene for presis testing",
+        "WebView Funksjoner", "Se API-støtte og enhetsinformasjon"
     ),
 
-    # Finnish
+    # Finnish (formal Te/Teitä)
     "fi": (
-        "WebView Testaaja", "Testaa WKWebView ja SafariVC heti",
-        "Sisäänrakennetut kehitystyökalut", "Konsoli, Verkko, Tallennustila ja muuta",
-        "Mukauta asetuksia", "Säädä vaihtoehtoja tarkkaan testaukseen",
-        "WebView-ominaisuudet", "Tarkista API-tuki ja laitetiedot"
+        "WebView Testaaja", "Testatkaa WKWebView ja SafariVC heti",
+        "Sisäänrakennetut kehitystyökalut", "Konsoli, Verkko, Tallennustila ja paljon muuta",
+        "Mukauta asetuksia", "Säätäkää vaihtoehdot tarkkaan testaukseen",
+        "WebView-ominaisuudet", "Tarkistakaa API-tuki ja laitetiedot"
     ),
 
-    # Czech
+    # Czech (Vy form - formal)
     "cs": (
-        "WebView Tester", "Okamžitě otestujte WKWebView a SafariVC",
-        "Vestavěné vývojářské nástroje", "Konzole, Síť, Úložiště a další",
+        "WebView Tester", "Otestujte WKWebView a SafariVC okamžitě",
+        "Vestavěné vývojářské nástroje", "Konzole, Síť, Úložiště a mnoho dalšího",
         "Přizpůsobit nastavení", "Upravte možnosti pro přesné testování",
-        "Funkce WebView", "Zkontrolujte podporu API a info o zařízení"
+        "Funkce WebView", "Zkontrolujte podporu API a informace o zařízení"
     ),
 
-    # Slovak
+    # Slovak (Vy form - formal)
     "sk": (
-        "WebView Tester", "Okamžite otestujte WKWebView a SafariVC",
-        "Vstavané vývojárske nástroje", "Konzola, Sieť, Úložisko a viac",
+        "WebView Tester", "Otestujte WKWebView a SafariVC okamžite",
+        "Vstavané vývojárske nástroje", "Konzola, Sieť, Úložisko a oveľa viac",
         "Prispôsobiť nastavenia", "Upravte možnosti pre presné testovanie",
-        "Funkcie WebView", "Skontrolujte podporu API a info o zariadení"
+        "Funkcie WebView", "Skontrolujte podporu API a informácie o zariadení"
     ),
 
-    # Hungarian
+    # Hungarian (Ön form - formal)
     "hu": (
-        "WebView Tesztelő", "WKWebView és SafariVC azonnali tesztelése",
+        "WebView Tesztelő", "Tesztelje a WKWebView-t és SafariVC-t azonnal",
         "Beépített fejlesztőeszközök", "Konzol, Hálózat, Tárhely és még sok más",
-        "Beállítások testreszabása", "Opciók finomhangolása a pontos teszteléshez",
-        "WebView Képességek", "API támogatás és eszközinformáció ellenőrzése"
+        "Beállítások testreszabása", "Állítsa be az opciókat a pontos teszteléshez",
+        "WebView Képességek", "Ellenőrizze az API támogatást és az eszközinformációt"
     ),
 
-    # Romanian
+    # Romanian (Dumneavoastră form - formal)
     "ro": (
-        "Tester WebView", "Testați WKWebView și SafariVC instant",
-        "Instrumente dezvoltator integrate", "Consolă, Rețea, Stocare și mai multe",
+        "Tester WebView", "Testați WKWebView și SafariVC instantaneu",
+        "Instrumente de dezvoltator integrate", "Consolă, Rețea, Stocare și multe altele",
         "Personalizare setări", "Ajustați opțiunile pentru testare precisă",
-        "Funcționalități WebView", "Verificați suportul API și info dispozitiv"
+        "Funcționalități WebView", "Verificați suportul API și informațiile dispozitivului"
     ),
 
-    # Greek
+    # Greek (εσείς form - formal plural)
     "el": (
         "Δοκιμαστής WebView", "Δοκιμάστε WKWebView &amp; SafariVC αμέσως",
-        "Ενσωματωμένα εργαλεία ανάπτυξης", "Κονσόλα, Δίκτυο, Αποθήκευση και άλλα",
-        "Προσαρμογή ρυθμίσεων", "Ρυθμίστε επιλογές για ακριβείς δοκιμές",
-        "Δυνατότητες WebView", "Ελέγξτε υποστήριξη API και πληροφορίες συσκευής"
+        "Ενσωματωμένα εργαλεία ανάπτυξης", "Κονσόλα, Δίκτυο, Αποθήκευση και πολλά άλλα",
+        "Προσαρμογή ρυθμίσεων", "Προσαρμόστε τις επιλογές για ακριβείς δοκιμές",
+        "Δυνατότητες WebView", "Ελέγξτε την υποστήριξη API και τις πληροφορίες συσκευής"
     ),
 
-    # Croatian
+    # Croatian (Vi form - formal)
     "hr": (
         "WebView Tester", "Testirajte WKWebView i SafariVC odmah",
-        "Ugrađeni razvojni alati", "Konzola, Mreža, Pohrana i više",
-        "Prilagodi postavke", "Fino podesite opcije za precizno testiranje",
-        "WebView Mogućnosti", "Provjerite podršku za API i info o uređaju"
+        "Ugrađeni razvojni alati", "Konzola, Mreža, Pohrana i još mnogo toga",
+        "Prilagodite postavke", "Podesite opcije za precizno testiranje",
+        "WebView Mogućnosti", "Provjerite podršku za API i informacije o uređaju"
     ),
 
-    # Catalan
+    # Catalan (vostè form - formal)
     "ca": (
-        "Provador WebView", "Prova WKWebView i SafariVC a l'instant",
-        "Eines de desenvolupador integrades", "Consola, Xarxa, Emmagatzematge i més",
+        "Provador WebView", "Proveu WKWebView i SafariVC a l'instant",
+        "Eines de desenvolupador integrades", "Consola, Xarxa, Emmagatzematge i molt més",
         "Personalitzar configuració", "Ajusteu les opcions per a proves precises",
-        "Funcionalitats WebView", "Comproveu el suport d'API i info del dispositiu"
+        "Funcionalitats WebView", "Consulteu el suport d'API i la informació del dispositiu"
     ),
 }
 
