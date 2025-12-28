@@ -232,8 +232,7 @@ final class SnippetsManagerTests: XCTestCase {
             "log_images",
             "log_links",
             "log_event_listeners",
-            "highlight_headings",
-            "clear_storage"
+            "highlight_headings"
         ]
 
         let actualIds = Set(SnippetsManager.defaultSnippets.map(\.id))
@@ -379,15 +378,6 @@ final class SnippetScriptSyntaxTests: XCTestCase {
         let undoScript = editSnippet!.undoScript!
         XCTAssertTrue(undoScript.contains("contentEditable = 'false'"))
         XCTAssertTrue(undoScript.contains("designMode = 'off'"))
-    }
-
-    func testClearStorageScriptClearsBothStorages() {
-        let clearSnippet = SnippetsManager.defaultSnippets.first { $0.id == "clear_storage" }
-        XCTAssertNotNil(clearSnippet)
-
-        let script = clearSnippet!.script
-        XCTAssertTrue(script.contains("localStorage.clear()"))
-        XCTAssertTrue(script.contains("sessionStorage.clear()"))
     }
 
     func testDisableCssScriptStoresStylesForRestoration() {
@@ -750,24 +740,6 @@ final class SnippetDOMIntegrationTests: XCTestCase {
         }
     }
 
-    // MARK: - Clear Storage Tests
-
-    func testClearStorageClearsBothStorages() async {
-        // Note: localStorage may not work with baseURL: nil in WKWebView
-        // This test verifies the script executes and returns a valid message
-        let testHTML = "<html><body></body></html>"
-        await loadTestHTML(testHTML)
-
-        let clearSnippet = SnippetsManager.defaultSnippets.first { $0.id == "clear_storage" }!
-        let result = await executeScript(clearSnippet.script) as? String
-
-        // Verify script returns expected format: "Cleared X localStorage + Y sessionStorage items"
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result?.contains("Cleared") ?? false)
-        XCTAssertTrue(result?.contains("localStorage") ?? false)
-        XCTAssertTrue(result?.contains("sessionStorage") ?? false)
-    }
-
     // MARK: - DOM Stats Tests
 
     func testDomStatsReturnsCorrectElementCount() async {
@@ -968,12 +940,6 @@ final class SnippetReturnValueTests: XCTestCase {
         let result = try? await webView.evaluateJavaScript(snippet.script) as? String
         XCTAssertEqual(result, "0 interactive elements found")
     }
-
-    func testClearStorageReturnsClearedMessage() async {
-        let snippet = SnippetsManager.defaultSnippets.first { $0.id == "clear_storage" }!
-        let result = try? await webView.evaluateJavaScript(snippet.script) as? String
-        XCTAssertTrue(result?.contains("Cleared") ?? false)
-    }
 }
 
 // MARK: - Edge Cases and Error Handling Tests
@@ -1032,17 +998,6 @@ final class SnippetEdgeCaseTests: XCTestCase {
         let result = try? await webView.evaluateJavaScript(snippet.undoScript!) as? String
 
         XCTAssertEqual(result, "No styles to restore")
-    }
-
-    func testClearStorageOnEmptyStorage() async {
-        await loadTestHTML("<html><body></body></html>")
-
-        let snippet = SnippetsManager.defaultSnippets.first { $0.id == "clear_storage" }!
-        let result = try? await webView.evaluateJavaScript(snippet.script) as? String
-
-        // Should work and return valid format (note: storage may be empty or disabled with nil baseURL)
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result?.contains("Cleared") ?? false)
     }
 
     func testLogImagesOnPageWithNoImages() async {

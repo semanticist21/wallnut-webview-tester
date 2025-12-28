@@ -16,7 +16,6 @@ enum SnippetCategory: String, CaseIterable, Identifiable {
     case content = "Content"
     case debug = "Debug"
     case style = "Style"
-    case storage = "Storage"
 
     var id: String { rawValue }
 
@@ -27,7 +26,6 @@ enum SnippetCategory: String, CaseIterable, Identifiable {
         case .content: "doc.text"
         case .debug: "ant"
         case .style: "paintbrush"
-        case .storage: "externaldrive"
         }
     }
 }
@@ -357,23 +355,6 @@ class SnippetsManager {
                     return 'Heading highlights removed';
                 })();
                 """
-        ),
-        DebugSnippet(
-            id: "clear_storage",
-            name: "Clear Storage",
-            description: "Clear localStorage and sessionStorage",
-            icon: "trash",
-            iconColor: .red,
-            category: .storage,
-            script: """
-                (function() {
-                    const lsCount = localStorage.length;
-                    const ssCount = sessionStorage.length;
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    return 'Cleared ' + lsCount + ' localStorage + ' + ssCount + ' sessionStorage items';
-                })();
-                """
         )
     ]
 
@@ -415,6 +396,12 @@ struct SnippetsView: View {
     private var snippetsManager: SnippetsManager {
         navigator.snippetsManager
     }
+
+    private let styleDependentIds: Set<String> = [
+        "show_elements",
+        "highlight_headings",
+        "border_all"
+    ]
 
     private var filteredSnippets: [DebugSnippet] {
         var result = SnippetsManager.defaultSnippets
@@ -569,7 +556,9 @@ struct SnippetsView: View {
                         ForEach(filteredSnippets) { snippet in
                             SnippetRow(
                                 snippet: snippet,
-                                isActive: snippetsManager.isActive(snippet.id)
+                                isActive: snippetsManager.isActive(snippet.id),
+                                isDisabled: snippetsManager.isActive("disable_css")
+                                    && styleDependentIds.contains(snippet.id)
                             ) {
                                 executeSnippet(snippet)
                             }
@@ -653,6 +642,43 @@ struct SnippetsView: View {
     private func executeSnippet(_ snippet: DebugSnippet) {
         let isCurrentlyActive = snippetsManager.isActive(snippet.id)
         let script: String
+        var preScripts: [String] = []
+        var extraResultNote: String?
+
+        if styleDependentIds.contains(snippet.id),
+           snippetsManager.isActive("disable_css"),
+           !isCurrentlyActive {
+            executionResult = "This snippet is unavailable while Disable CSS is active"
+            showResult = true
+            Task {
+                try? await Task.sleep(for: .seconds(2))
+                await MainActor.run {
+                    showResult = false
+                }
+            }
+            return
+        }
+
+        if snippet.id == "disable_css",
+           !isCurrentlyActive {
+            let activeStyleIds = styleDependentIds.filter { snippetsManager.isActive($0) }
+            if !activeStyleIds.isEmpty {
+                for styleId in activeStyleIds {
+                    if let styleSnippet = SnippetsManager.defaultSnippets.first(where: { $0.id == styleId }),
+                       let undoScript = styleSnippet.undoScript {
+                        snippetsManager.deactivate(styleId)
+                        preScripts.append(undoScript)
+                    }
+                }
+
+                let activeNames = activeStyleIds.compactMap { styleId in
+                    SnippetsManager.defaultSnippets.first(where: { $0.id == styleId })?.name
+                }
+                if !activeNames.isEmpty {
+                    extraResultNote = "Disabled: \(activeNames.joined(separator: ", "))"
+                }
+            }
+        }
 
         if snippet.isToggleable {
             snippetsManager.toggle(snippet.id)
@@ -662,10 +688,17 @@ struct SnippetsView: View {
         }
 
         Task {
+            for preScript in preScripts {
+                _ = await navigator.evaluateJavaScript(preScript)
+            }
             let result = await navigator.evaluateJavaScript(script)
             await MainActor.run {
                 if let resultStr = result as? String {
-                    executionResult = resultStr
+                    if let extraResultNote {
+                        executionResult = "\(resultStr) (\(extraResultNote))"
+                    } else {
+                        executionResult = resultStr
+                    }
                 } else {
                     executionResult = snippet.isToggleable
                         ? (isCurrentlyActive ? "\(snippet.name) disabled" : "\(snippet.name) enabled")
@@ -750,6 +783,7 @@ private struct SnippetFilterTab: View {
 private struct SnippetRow: View {
     let snippet: DebugSnippet
     let isActive: Bool
+    let isDisabled: Bool
     let onTap: () -> Void
 
     var body: some View {
@@ -775,6 +809,12 @@ private struct SnippetRow: View {
                         .font(.system(size: 12))
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
+
+                    if isDisabled {
+                        Text("Disable CSS is active")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                    }
                 }
 
                 Spacer()
@@ -795,6 +835,8 @@ private struct SnippetRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.4 : 1)
 
         Divider()
             .padding(.leading, 64)
