@@ -83,7 +83,7 @@ wina/
 │   ├── SearchText/      # SearchTextOverlay (in-page text search, Cmd+F style)
 │   ├── Settings/        # SettingsView, ConfigurationSettingsView, SafariVCSettingsView, EmulationSettingsView
 │   ├── Snippets/        # SnippetsView (JavaScript snippet execution)
-│   ├── Sources/         # DOM Tree, Stylesheets, Scripts, CSS specificity override tracking
+│   ├── Sources/         # DOM Tree, Stylesheets, Scripts, CSS parsing/specificity, search
 │   ├── Storage/         # StorageManager + UI (localStorage/sessionStorage/cookies, SWR 패턴)
 │   ├── UserAgent/       # UA 커스터마이징
 │   └── WebView/         # WebViewContainer, WebViewNavigator, WebViewScripts
@@ -252,10 +252,11 @@ enum BarConstants {
 | Circular icon button | `GlassIconButton` (.regular 44×44, .small 28×28) |
 | Action button | `GlassActionButton` (.default, .destructive, .primary) |
 | Copy button | `CopyButton` (text + feedback toast) |
+| Type indicator | `TypeBadge` (colored label: JSON/Number/Bool/Text) |
 | Chip/tag | `ChipButton`, `ToggleChipButton` |
 | Info button | `InfoPopoverButton` |
-| DevTools header | `DevToolsHeader` (2-row: title center, buttons split) |
-| Scroll buttons | `ScrollNavigationButtons` (up/down with auto-hide) |
+| DevTools header | `DevToolsHeader` (title + button groups, String/LocalizedStringKey) |
+| Scroll buttons | `ScrollNavigationButtons` + `.scrollNavigationOverlay()` |
 | Share sheet | `ShareSheet` (UIActivityViewController wrapper) |
 | JSON editor | `JsonEditor/` (syntax-highlighted editing) |
 
