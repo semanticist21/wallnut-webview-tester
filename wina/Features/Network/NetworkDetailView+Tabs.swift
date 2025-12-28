@@ -216,7 +216,12 @@ extension NetworkDetailView {
                     )
                 }
                 .padding()
+            } else if request.requestType == .fetch || request.requestType == .xhr {
+                // fetch/XHR requests can capture response but this one has empty body
+                emptyState(message: "No response body")
+                    .padding()
             } else {
+                // Document/other types: browser-initiated, cannot intercept
                 SecurityRestrictionBanner(type: .staticResourceBody)
                     .padding()
             }

@@ -379,7 +379,14 @@
       }
     },
     "Active Settings" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 설정"
+          }
+        }
+      }
     },
     "Activity Customization" : {
       "localizations" : {
@@ -925,7 +932,6 @@
       }
     },
     "Back" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -1059,7 +1065,14 @@
       }
     },
     "Benchmark" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "벤치마크"
+          }
+        }
+      }
     },
     "Bits per pixel for color.\n24-bit = 16.7M colors\n30-bit = 1B colors (HDR)" : {
       "localizations" : {
@@ -1134,7 +1147,14 @@
       }
     },
     "Browser" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "브라우저"
+          }
+        }
+      }
     },
     "Build" : {
       "extractionState" : "stale",
@@ -1409,7 +1429,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "즉시 적용됩니다."
+            "value" : "Webview에 즉시 적용됩니다."
           }
         }
       }
@@ -1425,6 +1445,7 @@
       }
     },
     "Changes will apply to app bar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -1434,7 +1455,18 @@
         }
       }
     },
+    "Changes will apply to menus" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴에 즉시 반영됩니다."
+          }
+        }
+      }
+    },
     "Changes will apply to toolbar" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -1768,7 +1800,6 @@
       }
     },
     "Console" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -2334,6 +2365,7 @@
       }
     },
     "Customize DevTools buttons" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -2344,6 +2376,7 @@
       }
     },
     "Customize navigation buttons" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -2353,8 +2386,17 @@
         }
       }
     },
+    "Customize toolbar & app bar" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "툴바 및 앱 바 사용자화"
+          }
+        }
+      }
+    },
     "Dark" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -2614,7 +2656,14 @@
       }
     },
     "Device" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기기"
+          }
+        }
+      }
     },
     "Device Information" : {
       "localizations" : {
@@ -2622,6 +2671,37 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "기기 정보"
+          }
+        }
+      }
+    },
+    "DevTools menu items" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DevTools 메뉴 항목"
+          }
+        }
+      }
+    },
+    "DevTools menu items. Long press to reorder." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DevTools 메뉴 항목입니다. 길게 눌러 순서를 변경합니다."
+          }
+        }
+      }
+    },
+    "Disable CSS is active" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CSS 비활성화 중"
           }
         }
       }
@@ -2659,7 +2739,14 @@
       }
     },
     "Display" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "디스플레이"
+          }
+        }
+      }
     },
     "Distraction-free article view with customizable appearance." : {
       "localizations" : {
@@ -2765,6 +2852,7 @@
       }
     },
     "Drag to reorder. Toggle to show/hide." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -3436,7 +3524,6 @@
       }
     },
     "Forward" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -3562,12 +3649,11 @@
       }
     },
     "Go to first loaded URL" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "처음 URL로 이동"
+            "value" : "처음 로드한 URL로 이동합니다"
           }
         }
       }
@@ -3820,7 +3906,6 @@
       }
     },
     "Home" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -3967,11 +4052,22 @@
       }
     },
     "Info and Settings buttons are always visible." : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "정보 및 설정 버튼은 항상 표시됩니다."
+          }
+        }
+      }
+    },
+    "Initial URL" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "최초 URL"
           }
         }
       }
@@ -4404,7 +4500,6 @@
       }
     },
     "Light" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -4711,7 +4806,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%@에서 측정됨"
+            "value" : "측정 시간: %@"
           }
         }
       }
@@ -4776,6 +4871,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "메모리 & 전력"
+          }
+        }
+      }
+    },
+    "Menu" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "메뉴"
           }
         }
       }
@@ -5020,23 +5125,21 @@
       }
     },
     "Navigate to next page" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다음 페이지로 이동"
+            "value" : "다음 페이지로 이동합니다"
           }
         }
       }
     },
     "Navigate to previous page" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "이전 페이지로 이동"
+            "value" : "이전 페이지로 이동합니다"
           }
         }
       }
@@ -5093,11 +5196,22 @@
       }
     },
     "Navigation Buttons" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "내비게이션 버튼"
+          }
+        }
+      }
+    },
+    "Navigation buttons. Info and Settings are always visible." : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "내비게이션 버튼입니다. 정보 및 설정 버튼은 항상 표시됩니다."
           }
         }
       }
@@ -5300,6 +5414,16 @@
         }
       }
     },
+    "No headers available" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "헤더 없음"
+          }
+        }
+      }
+    },
     "No history saved.\nCookies cleared on exit.\nLike incognito mode." : {
       "localizations" : {
         "ko" : {
@@ -5408,6 +5532,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "성능 데이터 없음"
+          }
+        }
+      }
+    },
+    "No request body" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "요청 본문 없음"
+          }
+        }
+      }
+    },
+    "No response body" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "응답 본문 없음"
           }
         }
       }
@@ -6373,7 +6517,6 @@
       }
     },
     "Refresh" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -6425,7 +6568,6 @@
       }
     },
     "Reload current page" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -6733,7 +6875,6 @@
       }
     },
     "Return to home screen" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -7045,7 +7186,6 @@
       }
     },
     "Screenshot" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -7130,6 +7270,16 @@
       }
     },
     "Search in page" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이지 내 검색"
+          }
+        }
+      }
+    },
+    "Search in Page" : {
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -7461,7 +7611,6 @@
       }
     },
     "Snippets" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -7482,7 +7631,6 @@
       }
     },
     "Sources" : {
-      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
@@ -7793,6 +7941,16 @@
         }
       }
     },
+    "System Default" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 기본값"
+          }
+        }
+      }
+    },
     "System default (view Info to detect)" : {
       "localizations" : {
         "ko" : {
@@ -8071,6 +8229,7 @@
       }
     },
     "Toolbar Items" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {

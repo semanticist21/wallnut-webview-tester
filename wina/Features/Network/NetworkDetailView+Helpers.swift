@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - Helper Methods
 
 extension NetworkDetailView {
-    func emptyState(message: String, subtitle: String? = nil) -> some View {
+    func emptyState(message: LocalizedStringKey, subtitle: LocalizedStringKey? = nil) -> some View {
         VStack(spacing: 6) {
             Image(systemName: "eye.slash")
                 .font(.system(size: 24))
