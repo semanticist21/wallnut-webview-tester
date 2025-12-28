@@ -406,6 +406,7 @@ final class SnippetScriptSyntaxTests: XCTestCase {
 final class SnippetDOMIntegrationTests: XCTestCase {
 
     var webView: WKWebView!
+    // swiftlint:disable:next weak_delegate - Test must hold strong ref; WKWebView.navigationDelegate is already weak
     private var navigationDelegate: TestNavigationDelegate?
 
     override func setUp() async throws {
@@ -836,6 +837,7 @@ final class SnippetDOMIntegrationTests: XCTestCase {
 final class SnippetReturnValueTests: XCTestCase {
 
     var webView: WKWebView!
+    // swiftlint:disable:next weak_delegate - Test must hold strong ref; WKWebView.navigationDelegate is already weak
     private var navigationDelegate: TestNavigationDelegate?
 
     override func setUp() async throws {
@@ -948,6 +950,7 @@ final class SnippetReturnValueTests: XCTestCase {
 final class SnippetEdgeCaseTests: XCTestCase {
 
     var webView: WKWebView!
+    // swiftlint:disable:next weak_delegate - Test must hold strong ref; WKWebView.navigationDelegate is already weak
     private var navigationDelegate: TestNavigationDelegate?
 
     override func setUp() async throws {
