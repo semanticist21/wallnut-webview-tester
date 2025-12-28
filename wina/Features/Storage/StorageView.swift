@@ -456,6 +456,12 @@ struct StorageShareContent: Identifiable {
     let content: String
 }
 
+private struct StorageScrollMetrics: Equatable {
+    let offset: CGFloat
+    let contentHeight: CGFloat
+    let viewportHeight: CGFloat
+}
+
 struct StorageView: View {
     let storageManager: StorageManager
     let navigator: WebViewNavigator?
@@ -848,27 +854,11 @@ struct StorageView: View {
 
     private var itemList: some View {
         ScrollViewReader { proxy in
-            GeometryReader { outerGeo in
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        if selectedType == .cookies && !showsAllStorage {
-                            ForEach(cookieGroups, id: \.domain) { group in
-                                cookieGroupHeader(domain: group.domain, count: group.items.count)
-                                ForEach(group.items) { item in
-                                    StorageItemRow(
-                                        item: item,
-                                        keyColumnWidth: keyColumnWidth,
-                                        searchText: searchText,
-                                        onEdit: { selectedItem = $0 },
-                                        onDelete: { deleteItem($0) },
-                                        onCopy: { copyToClipboard($0) },
-                                        onCopyKeyValue: { copyKeyValue($0) }
-                                    )
-                                    .id("item-\(item.id)")
-                                }
-                            }
-                        } else {
-                            ForEach(filteredItems) { item in
+            List {
+                if selectedType == .cookies && !showsAllStorage {
+                    ForEach(cookieGroups, id: \.domain) { group in
+                        Section {
+                            ForEach(group.items) { item in
                                 StorageItemRow(
                                     item: item,
                                     keyColumnWidth: keyColumnWidth,
@@ -879,43 +869,57 @@ struct StorageView: View {
                                     onCopyKeyValue: { copyKeyValue($0) }
                                 )
                                 .id("item-\(item.id)")
+                                .listRowInsets(EdgeInsets())
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color(uiColor: .systemBackground))
                             }
+                        } header: {
+                            cookieGroupHeader(domain: group.domain, count: group.items.count)
+                                .listRowInsets(EdgeInsets())
                         }
+                        .listSectionSeparator(.hidden, edges: .all)
                     }
-                    .frame(maxWidth: .infinity)
-                    .background(
-                        GeometryReader { innerGeo in
-                            Color.clear
-                                .onAppear {
-                                    contentHeight = innerGeo.size.height
-                                }
-                                .onChange(of: innerGeo.size.height) { _, newHeight in
-                                    contentHeight = newHeight
-                                }
-                        }
-                    )
+                } else {
+                    ForEach(filteredItems) { item in
+                        StorageItemRow(
+                            item: item,
+                            keyColumnWidth: keyColumnWidth,
+                            searchText: searchText,
+                            onEdit: { selectedItem = $0 },
+                            onDelete: { deleteItem($0) },
+                            onCopy: { copyToClipboard($0) },
+                            onCopyKeyValue: { copyKeyValue($0) }
+                        )
+                        .id("item-\(item.id)")
+                        .listRowInsets(EdgeInsets())
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color(uiColor: .systemBackground))
+                    }
                 }
-                .background(Color(uiColor: .systemBackground))
-                .scrollContentBackground(.hidden)
-                .onScrollGeometryChange(for: Double.self) { geometry in
-                    geometry.contentOffset.y
-                } action: { _, newValue in
-                    scrollOffset = newValue
-                }
-                .onAppear {
-                    scrollViewHeight = outerGeo.size.height
-                }
-                .onChange(of: outerGeo.size.height) { _, newHeight in
-                    scrollViewHeight = newHeight
-                }
-                .scrollNavigationOverlay(
-                    scrollOffset: scrollOffset,
-                    contentHeight: contentHeight,
-                    viewportHeight: scrollViewHeight,
-                    onScrollUp: { scrollUp(proxy: scrollProxy) },
-                    onScrollDown: { scrollDown(proxy: scrollProxy) }
-                )
             }
+            .background(Color(uiColor: .systemBackground))
+            .scrollContentBackground(.hidden)
+            .listStyle(.plain)
+            .onScrollGeometryChange(for: StorageScrollMetrics.self) { geometry in
+                StorageScrollMetrics(
+                    offset: geometry.contentOffset.y,
+                    contentHeight: geometry.contentSize.height,
+                    viewportHeight: geometry.visibleRect.height
+                )
+            } action: { oldValue, newValue in
+                if oldValue != newValue {
+                    scrollOffset = newValue.offset
+                    contentHeight = newValue.contentHeight
+                    scrollViewHeight = newValue.viewportHeight
+                }
+            }
+            .scrollNavigationOverlay(
+                scrollOffset: scrollOffset,
+                contentHeight: contentHeight,
+                viewportHeight: scrollViewHeight,
+                onScrollUp: { scrollUp(proxy: scrollProxy) },
+                onScrollDown: { scrollDown(proxy: scrollProxy) }
+            )
             .onAppear {
                 scrollProxy = proxy
             }
@@ -986,6 +990,7 @@ private struct StorageItemRow: View {
     let onDelete: (StorageItem) -> Void
     let onCopy: (String) -> Void
     let onCopyKeyValue: (StorageItem) -> Void
+    var showsDivider: Bool = true
 
     // MARK: - Value Analysis
 
@@ -1103,8 +1108,10 @@ private struct StorageItemRow: View {
         .padding(.vertical, 12)
         .contentShape(Rectangle())
         .overlay(alignment: .bottom) {
-            Divider()
-                .padding(.leading, 16)
+            if showsDivider {
+                Divider()
+                    .padding(.leading, 16)
+            }
         }
     }
 
