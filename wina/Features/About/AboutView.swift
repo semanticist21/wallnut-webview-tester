@@ -24,6 +24,12 @@ struct AboutView: View {
         return String(localized: "Remove Ads")
     }
 
+#if DEBUG
+    private var isDebugBuild: Bool { true }
+#else
+    private var isDebugBuild: Bool { false }
+#endif
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 32) {
@@ -65,7 +71,13 @@ struct AboutView: View {
                     } else {
                         GlassActionButton(removeAdsButtonTitle, icon: "sparkles", style: .primary) {
                             Task {
-                                await store.purchaseAdRemoval()
+                                if isDebugBuild {
+#if DEBUG
+                                    store.enableAdRemovalForDebug()
+#endif
+                                } else {
+                                    await store.purchaseAdRemoval()
+                                }
                             }
                         }
                         .disabled(store.isLoading)
@@ -87,6 +99,22 @@ struct AboutView: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(store.isLoading)
+
+                        if isDebugBuild {
+                            Button {
+                                Task {
+#if DEBUG
+                                    await store.resetAdRemovalForDebug()
+#endif
+                                }
+                            } label: {
+                                Text("Reset Purchase State (Debug)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(store.isLoading)
+                        }
                     }
 
                     if let error = store.errorMessage {

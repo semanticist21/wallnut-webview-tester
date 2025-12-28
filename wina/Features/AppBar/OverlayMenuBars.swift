@@ -19,6 +19,8 @@ struct OverlayMenuBars: View {
     let onURLChange: (String) -> Void
     let navigator: WebViewNavigator?
     let urlStorage: URLStorageManager
+    @Binding var showURLInput: Bool
+    @Binding var urlInputText: String
     @Binding var showSettings: Bool
     @Binding var showBookmarks: Bool
     @Binding var showInfo: Bool
@@ -33,8 +35,6 @@ struct OverlayMenuBars: View {
 
     @State private var isExpanded: Bool = false
     @State private var dragOffset: CGFloat = 0
-    @State private var showURLInput: Bool = false
-    @State private var urlInputText: String = ""
     // WKWebView 내부 input 필드의 키보드 표시 상태를 추적한다
     @State private var isKeyboardVisible: Bool = false
     @State private var showPhotoPermissionAlert: Bool = false
@@ -446,6 +446,8 @@ private struct BottomBarIconButton: View {
             onURLChange: { _ in },
             navigator: nil,
             urlStorage: .shared,
+            showURLInput: .constant(false),
+            urlInputText: .constant(""),
             showSettings: .constant(false),
             showBookmarks: .constant(false),
             showInfo: .constant(false),
@@ -476,6 +478,8 @@ private struct BottomBarIconButton: View {
             onURLChange: { _ in },
             navigator: nil,
             urlStorage: .shared,
+            showURLInput: .constant(false),
+            urlInputText: .constant(""),
             showSettings: .constant(false),
             showBookmarks: .constant(false),
             showInfo: .constant(false),

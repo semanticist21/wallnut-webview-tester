@@ -6623,6 +6623,9 @@
         }
       }
     },
+    "Reset Purchase State (Debug)" : {
+
+    },
     "Reset to Defaults" : {
       "extractionState" : "stale",
       "localizations" : {

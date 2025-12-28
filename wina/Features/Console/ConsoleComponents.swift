@@ -76,11 +76,10 @@ struct LogRow: View {
     }
 
     // Check if message needs expansion
-    // - 80+ chars (likely wraps to 2+ lines on screen)
-    // - 2+ newline chars (explicit multiline)
+    // - 4+ lines (explicit multiline)
     private var needsExpansion: Bool {
         guard log.type != .table else { return false }
-        return log.message.count > 80 || log.message.filter { $0 == "\n" }.count >= 2
+        return log.message.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline).count >= 4
     }
 
     // Parse table data from message JSON
@@ -100,21 +99,11 @@ struct LogRow: View {
         HStack(alignment: .top, spacing: 8) {
             // Group toggle or expand indicator
             if isGroupHeader {
-                Button {
-                    if let groupId = log.groupId {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            consoleManager.toggleGroup(groupId)
-                        }
-                    }
-                } label: {
-                    Image(systemName: isGroupCollapsed ? "chevron.right" : "chevron.down")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 10)
-                        .padding(.top, 4)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
+                Image(systemName: isGroupCollapsed ? "chevron.right" : "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 10)
+                    .padding(.top, 4)
             } else if needsExpansion {
                 Image(systemName: isExpanded ? "chevron.down" : "chevron.right")
                     .font(.system(size: 8, weight: .bold))
@@ -131,10 +120,17 @@ struct LogRow: View {
                 } else {
                     VStack(alignment: .leading, spacing: 6) {
                         if let segments = log.styledSegments, !segments.isEmpty {
-                            // Styled segments rendering (console.log "%c" formatting)
-                            styledSegmentsView(segments: segments)
+                            styledSegmentsText(segments: segments)
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .lineLimit(isExpanded || !needsExpansion ? nil : 3)
+                                .truncationMode(.tail)
                         } else if let inlineSegments = log.inlineSegments, !inlineSegments.isEmpty, !isGroupHeader {
-                            inlineSegmentsView(segments: inlineSegments)
+                            inlineSegmentsText(segments: inlineSegments)
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .lineLimit(isExpanded || !needsExpansion ? nil : 3)
+                                .truncationMode(.tail)
                         } else if !log.message.isEmpty || isGroupHeader {
                             // Regular message
                             HStack(alignment: .top, spacing: 4) {
@@ -145,12 +141,14 @@ struct LogRow: View {
                                         .foregroundStyle(.secondary)
                                 }
 
-                                Text(isExpanded || !needsExpansion ? log.message : String(log.message.prefix(120)) + "...")
+                                Text(log.message)
                                     .font(.system(size: 12, design: .monospaced))
                                     .foregroundStyle(log.type == .error ? .red : (isGroupHeader ? .secondary : .primary))
                                     .fontWeight(isGroupHeader ? .semibold : .regular)
                                     .textSelection(.enabled)
                                     .frame(maxWidth: .infinity, alignment: .leading)
+                                    .lineLimit(isExpanded || !needsExpansion ? nil : 3)
+                                    .truncationMode(.tail)
 
                                 // JSON copy button (only if JSON detected)
                                 if let json = extractedJSON {
@@ -193,26 +191,25 @@ struct LogRow: View {
                     }
 
                     // Source location (if available)
-                if let source = log.source {
-                    Text(source)
-                        .font(.system(size: 10, design: .monospaced))
-                        .foregroundStyle(.tertiary)
+                    if let source = log.source {
+                        Text(source)
+                            .font(.system(size: 10, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                    }
+
                 }
+
+                HStack {
+                    Spacer()
+                    Text(Self.timeFormatter.string(from: log.timestamp))
+                        .font(.system(size: 9, design: .monospaced))
+                        .foregroundStyle(.tertiary)
                 }
             }
 
             // Right side: Copy button + Type badge + repeat count (single line) + timestamp
-            VStack(alignment: .trailing, spacing: 4) {
+            VStack(alignment: .trailing, spacing: 6) {
                 HStack(spacing: 6) {
-                    // Copy button
-                    CopyIconButton(text: log.message, size: .small) {
-                        copyFeedbackMessage = "Copied"
-                        showCopyFeedback = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                            showCopyFeedback = false
-                        }
-                    }
-
                     if log.repeatCount > 1 {
                         Text("×\(log.repeatCount)")
                             .font(.system(size: 10, weight: .semibold, design: .monospaced))
@@ -226,9 +223,14 @@ struct LogRow: View {
                     ConsoleTypeBadge(type: log.type)
                 }
 
-                Text(Self.timeFormatter.string(from: log.timestamp))
-                    .font(.system(size: 9, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+                // Copy button
+                CopyIconButton(text: log.message, size: .small) {
+                    copyFeedbackMessage = "Copied"
+                    showCopyFeedback = true
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                        showCopyFeedback = false
+                    }
+                }
             }
         }
         .padding(.leading, 12 + indentation)
@@ -270,38 +272,33 @@ struct LogRow: View {
         }
     }
 
-    // MARK: - Styled Segments View (console.log "%c" with CSS)
+    private func styledSegmentsText(segments: [[String: Any]]) -> Text {
+        var result = AttributedString()
+        for segment in segments {
+            let text = segment["text"] as? String ?? ""
+            let colorStr = segment["color"] as? String
+            let bgColorStr = segment["backgroundColor"] as? String
+            let isBold = segment["isBold"] as? Bool ?? false
+            let fontSize = segment["fontSize"] as? Int
 
-    @ViewBuilder
-    private func styledSegmentsView(segments: [[String: Any]]) -> some View {
-        HStack(alignment: .top, spacing: 2) {
-            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                let text = segment["text"] as? String ?? ""
-                let colorStr = segment["color"] as? String
-                let bgColorStr = segment["backgroundColor"] as? String
-                let isBold = segment["isBold"] as? Bool ?? false
-                let fontSize = segment["fontSize"] as? Int
-
-                Text(text)
-                    .font(.system(size: CGFloat(fontSize ?? 12), weight: isBold ? .semibold : .regular, design: .monospaced))
-                    .foregroundStyle(colorFromString(colorStr) ?? .primary)
-                    .background(colorFromString(bgColorStr) ?? Color.clear)
-                    .textSelection(.enabled)
-            }
-            Spacer()
+            var part = AttributedString(text)
+            part.foregroundColor = colorFromString(colorStr) ?? .primary
+            part.backgroundColor = colorFromString(bgColorStr) ?? .clear
+            part.font = .system(size: CGFloat(fontSize ?? 12), weight: isBold ? .semibold : .regular, design: .monospaced)
+            result.append(part)
         }
+        return Text(result)
     }
 
-    private func inlineSegmentsView(segments: [ConsoleInlineSegment]) -> some View {
-        HStack(alignment: .top, spacing: 0) {
-            ForEach(Array(segments.enumerated()), id: \.offset) { _, segment in
-                Text(segment.text)
-                    .foregroundStyle(inlineSegmentColor(segment.kind))
-                    .textSelection(.enabled)
-            }
-            Spacer()
+    private func inlineSegmentsText(segments: [ConsoleInlineSegment]) -> Text {
+        var result = AttributedString()
+        for segment in segments {
+            var part = AttributedString(segment.text)
+            part.foregroundColor = inlineSegmentColor(segment.kind)
+            part.font = .system(size: 12, design: .monospaced)
+            result.append(part)
         }
-        .font(.system(size: 12, design: .monospaced))
+        return Text(result)
     }
 
     private func inlineSegmentColor(_ kind: ConsoleInlineKind?) -> Color {

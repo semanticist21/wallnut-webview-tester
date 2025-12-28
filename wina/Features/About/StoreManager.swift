@@ -17,6 +17,9 @@ final class StoreManager {
     private var updateListenerTask: Task<Void, Error>?
 
     private let productID = "removeAds"
+#if DEBUG
+    private let debugAdRemovalOverrideKey = "debugAdRemovalOverride"
+#endif
 
     private init() {
         // Start listening for transaction updates (refunds, background purchases, etc.)
@@ -115,6 +118,12 @@ final class StoreManager {
         }
 
         isAdRemoved = hasActiveEntitlement
+
+#if DEBUG
+        if debugAdRemovalOverride {
+            isAdRemoved = true
+        }
+#endif
     }
 
     // MARK: - Purchase
@@ -201,8 +210,38 @@ final class StoreManager {
             // IMPORTANT: Always finish the transaction
             await transaction.finish()
 
+#if DEBUG
+            if debugAdRemovalOverride {
+                isAdRemoved = true
+            }
+#endif
         case .unverified:
             errorMessage = "Purchase could not be verified"
         }
     }
+
+#if DEBUG
+    var debugAdRemovalOverride: Bool {
+        get {
+            UserDefaults.standard.bool(forKey: debugAdRemovalOverrideKey)
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: debugAdRemovalOverrideKey)
+        }
+    }
+
+    @MainActor
+    func enableAdRemovalForDebug() {
+        debugAdRemovalOverride = true
+        errorMessage = nil
+        isAdRemoved = true
+    }
+
+    @MainActor
+    func resetAdRemovalForDebug() async {
+        debugAdRemovalOverride = false
+        errorMessage = nil
+        await checkEntitlements()
+    }
+#endif
 }

@@ -72,6 +72,11 @@ struct BookmarksSheet: View {
                     .autocorrectionDisabled()
                     .keyboardType(.URL)
                     .focused($isInputFocused)
+                    .onSubmit {
+                        guard !newURL.isEmpty else { return }
+                        onAdd(newURL)
+                        newURL = ""
+                    }
 
                 if !newURL.isEmpty {
                     Button {
@@ -122,7 +127,10 @@ struct BookmarksSheet: View {
                         Text(url)
                             .foregroundStyle(.primary)
                             .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
                     .onLongPressGesture {
                         UIPasteboard.general.string = url
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()

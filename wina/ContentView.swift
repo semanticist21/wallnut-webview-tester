@@ -25,6 +25,8 @@ struct ContentView: View {
     @State private var showAccessibility: Bool = false
     @State private var showSnippets: Bool = false
     @State private var showSearchText: Bool = false
+    @State private var showURLInput: Bool = false
+    @State private var urlInputText: String = ""
     @State var showAbout: Bool = false
     @State var urlValidationState: URLValidationState = .empty
     @State var useSafariWebView: Bool = false
@@ -114,6 +116,8 @@ struct ContentView: View {
                         showSettings = false
                         showBookmarks = false
                         showInfo = false
+                        showURLInput = false
+                        urlInputText = ""
 
                         // Clear initial URL tracking
                         webViewNavigator.clearInitialURL()
@@ -138,6 +142,8 @@ struct ContentView: View {
                     },
                     navigator: useSafariWebView ? nil : webViewNavigator,
                     urlStorage: urlStorage,
+                    showURLInput: $showURLInput,
+                    urlInputText: $urlInputText,
                     showSettings: $showSettings,
                     showBookmarks: $showBookmarks,
                     showInfo: $showInfo,
@@ -171,7 +177,13 @@ struct ContentView: View {
             BookmarksSheet(
                 bookmarkedURLs: urlStorage.bookmarks,
                 onSelect: { url in
-                    urlText = url
+                    if showWebView {
+                        urlInputText = url
+                        showURLInput = true
+                    } else {
+                        urlText = url
+                        textFieldFocused = true
+                    }
                 },
                 onDelete: { url in
                     urlStorage.removeBookmark(url)
@@ -179,7 +191,15 @@ struct ContentView: View {
                 onAdd: { url in
                     urlStorage.addBookmark(url)
                 },
-                currentURL: urlText
+                currentURL: {
+                    if showWebView {
+                        if useSafariWebView {
+                            return loadedURL
+                        }
+                        return webViewNavigator.currentURL?.absoluteString ?? ""
+                    }
+                    return urlText
+                }()
             )
         }
         .sheet(isPresented: $showInfo) {

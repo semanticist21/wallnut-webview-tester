@@ -13,6 +13,7 @@ import SwiftUI
 struct winaApp: App {
     /// nil = system, "light" = light mode, "dark" = dark mode
     @AppStorage("colorSchemeOverride") private var colorSchemeOverride: String?
+    @AppStorage("appLanguage") private var appLanguage: String = ""
 
     private var preferredScheme: ColorScheme? {
         switch colorSchemeOverride {
@@ -20,6 +21,10 @@ struct winaApp: App {
         case "dark": .dark
         default: nil  // System
         }
+    }
+
+    private var resolvedLocale: Locale {
+        appLanguage.isEmpty ? .current : Locale(identifier: appLanguage)
     }
 
     init() {
@@ -75,6 +80,7 @@ struct winaApp: App {
         WindowGroup {
             ContentView()
                 .preferredColorScheme(preferredScheme)
+                .environment(\.locale, resolvedLocale)
                 .onAppear {
                     // Initialize WebView size after Scene is ready
                     Self.initializeWebViewSizeIfNeeded()

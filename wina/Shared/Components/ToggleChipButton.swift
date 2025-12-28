@@ -18,6 +18,9 @@ struct ToggleChipButton: View {
                 Text(label)
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(isOn ? .primary : .secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+                    .allowsTightening(true)
 
                 Spacer()
             }
@@ -25,6 +28,7 @@ struct ToggleChipButton: View {
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
+            .animation(.easeOut(duration: 0.08), value: isOn)
         }
         .buttonStyle(.plain)
         .backport.glassEffect(in: .rect(cornerRadius: 12))
