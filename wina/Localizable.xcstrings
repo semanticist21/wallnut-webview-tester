@@ -348,14 +348,7 @@
 
     },
     "Accessibility Audit" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Accessibility Audit"
-          }
-        }
-      }
+
     },
     "Accessibility audit (axe-core)" : {
       "localizations" : {
@@ -379,14 +372,7 @@
       }
     },
     "Active Settings" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 설정"
-          }
-        }
-      }
+
     },
     "Activity Customization" : {
       "localizations" : {
@@ -675,24 +661,10 @@
       }
     },
     "App Bar" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App Bar"
-          }
-        }
-      }
+
     },
     "App Settings" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "App Settings"
-          }
-        }
-      }
+
     },
     "Appearance" : {
       "localizations" : {
@@ -1065,14 +1037,7 @@
       }
     },
     "Benchmark" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "벤치마크"
-          }
-        }
-      }
+
     },
     "Bits per pixel for color.\n24-bit = 16.7M colors\n30-bit = 1B colors (HDR)" : {
       "localizations" : {
@@ -1147,14 +1112,7 @@
       }
     },
     "Browser" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "브라우저"
-          }
-        }
-      }
+
     },
     "Build" : {
       "extractionState" : "stale",
@@ -1738,24 +1696,10 @@
       }
     },
     "Computed" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Computed"
-          }
-        }
-      }
+
     },
     "Configuration" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configuration"
-          }
-        }
-      }
+
     },
     "Confirm" : {
       "extractionState" : "stale",
@@ -1800,14 +1744,7 @@
       }
     },
     "Console" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Console"
-          }
-        }
-      }
+
     },
     "Console logs will appear here" : {
       "extractionState" : "stale",
@@ -1850,17 +1787,6 @@
         }
       }
     },
-    "Content Blocker" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Content Blocker"
-          }
-        }
-      }
-    },
     "Content JavaScript" : {
       "localizations" : {
         "ko" : {
@@ -1872,14 +1798,7 @@
       }
     },
     "Content Mode" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Content Mode"
-          }
-        }
-      }
+
     },
     "Content unavailable due to CORS policy." : {
       "localizations" : {
@@ -1948,17 +1867,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "쿠키, 저장소 격리"
-          }
-        }
-      }
-    },
-    "Cookies" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cookies"
           }
         }
       }
@@ -2066,14 +1974,7 @@
       }
     },
     "Core" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Core"
-          }
-        }
-      }
+
     },
     "Core API" : {
       "localizations" : {
@@ -2333,14 +2234,7 @@
       }
     },
     "Customization" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Customization"
-          }
-        }
-      }
+
     },
     "Customize DevTools buttons" : {
       "extractionState" : "stale",
@@ -2451,17 +2345,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "7일 미사용 시 데이터가 삭제될 수 있습니다."
-          }
-        }
-      }
-    },
-    "Debug" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Debug"
           }
         }
       }
@@ -2634,14 +2517,7 @@
       }
     },
     "Device" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "기기"
-          }
-        }
-      }
+
     },
     "Device Information" : {
       "localizations" : {
@@ -2717,14 +2593,7 @@
       }
     },
     "Display" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "디스플레이"
-          }
-        }
-      }
+
     },
     "Distraction-free article view with customizable appearance." : {
       "localizations" : {
@@ -2732,17 +2601,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "방해 없이 기사를 볼 수 있습니다."
-          }
-        }
-      }
-    },
-    "Document" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Document"
           }
         }
       }
@@ -2774,17 +2632,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "DOM 변경을 감지합니다.\nMutation Events를 대체합니다."
-          }
-        }
-      }
-    },
-    "DOM Tree" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "DOM Tree"
           }
         }
       }
@@ -2923,17 +2770,6 @@
         }
       }
     },
-    "Element" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Element"
-          }
-        }
-      }
-    },
     "Element Fullscreen" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -2987,24 +2823,10 @@
       }
     },
     "Emulation" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emulation"
-          }
-        }
-      }
+
     },
     "Emulation Active" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Emulation Active"
-          }
-        }
-      }
+
     },
     "Enable" : {
       "localizations" : {
@@ -3181,14 +3003,7 @@
       }
     },
     "Eruda Console" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eruda Console"
-          }
-        }
-      }
+
     },
     "Eruda is a third-party in-page console that will be injected into web pages.\n\n• This is open-source software (MIT License)\n• Use at your own risk\n• The built-in DevTools menu will be disabled while Eruda mode is active\n\nYou can disable Eruda mode anytime from Settings." : {
       "localizations" : {
@@ -3799,17 +3614,6 @@
         }
       }
     },
-    "Headers" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Headers"
-          }
-        }
-      }
-    },
     "HEIC" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -3937,14 +3741,7 @@
       }
     },
     "Identity" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Identity"
-          }
-        }
-      }
+
     },
     "Ignore Viewport Scale Limits" : {
       "localizations" : {
@@ -4050,26 +3847,8 @@
         }
       }
     },
-    "Initiator" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Initiator"
-          }
-        }
-      }
-    },
     "Initiator Stack Trace" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Initiator Stack Trace"
-          }
-        }
-      }
+
     },
     "Inline Playback" : {
       "localizations" : {
@@ -4361,14 +4140,7 @@
       }
     },
     "JSON Explorer" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "JSON Explorer"
-          }
-        }
-      }
+
     },
     "Keep logs when the page is reloaded." : {
       "localizations" : {
@@ -4542,14 +4314,7 @@
 
     },
     "Live Settings" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Live Settings"
-          }
-        }
-      }
+
     },
     "Loading" : {
       "extractionState" : "stale",
@@ -4854,14 +4619,7 @@
       }
     },
     "Menu" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "메뉴"
-          }
-        }
-      }
+
     },
     "Method" : {
       "extractionState" : "stale",
@@ -5225,14 +4983,7 @@
       }
     },
     "Network" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Network"
-          }
-        }
-      }
+
     },
     "Network requests monitoring" : {
       "localizations" : {
@@ -5977,14 +5728,7 @@
       }
     },
     "Performance" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Performance"
-          }
-        }
-      }
+
     },
     "Performance metrics.\nLCP, FID, CLS measurement.\nReal user monitoring." : {
       "localizations" : {
@@ -6597,28 +6341,6 @@
         }
       }
     },
-    "Request" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request"
-          }
-        }
-      }
-    },
-    "Request Body" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Body"
-          }
-        }
-      }
-    },
     "Request Details" : {
       "extractionState" : "stale",
       "localizations" : {
@@ -6626,17 +6348,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "요청 상세"
-          }
-        }
-      }
-    },
-    "Request Headers" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Request Headers"
           }
         }
       }
@@ -6768,36 +6479,7 @@
       }
     },
     "Resources" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Resources"
-          }
-        }
-      }
-    },
-    "Response" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Response"
-          }
-        }
-      }
-    },
-    "Response Body" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Response Body"
-          }
-        }
-      }
+
     },
     "Response body unavailable for static resources" : {
       "localizations" : {
@@ -6805,17 +6487,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "정적 리소스의 응답 본문은 사용할 수 없습니다."
-          }
-        }
-      }
-    },
-    "Response Headers" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Response Headers"
           }
         }
       }
@@ -7195,17 +6866,6 @@
         }
       }
     },
-    "Scripts" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scripts"
-          }
-        }
-      }
-    },
     "Scripts from web pages.\nOff = Block page scripts only.\nApp features still work." : {
       "localizations" : {
         "ko" : {
@@ -7341,14 +7001,7 @@
       }
     },
     "Selector" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selector"
-          }
-        }
-      }
+
     },
     "Send data on page unload.\nGuaranteed delivery attempt.\nGood for analytics." : {
       "localizations" : {
@@ -7589,14 +7242,7 @@
       }
     },
     "Snippets" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Snippets"
-          }
-        }
-      }
+
     },
     "Source URL:" : {
       "localizations" : {
@@ -7609,14 +7255,7 @@
       }
     },
     "Sources" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sources"
-          }
-        }
-      }
+
     },
     "Speech Recognition" : {
       "extractionState" : "stale",
@@ -7713,14 +7352,7 @@
       }
     },
     "Storage" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Storage"
-          }
-        }
-      }
+
     },
     "Storage data will appear here" : {
       "extractionState" : "stale",
@@ -7773,17 +7405,6 @@
         }
       }
     },
-    "Styles" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Styles"
-          }
-        }
-      }
-    },
     "Styles from CDN (Tailwind, Bootstrap, etc.) cannot be inspected due to browser security" : {
       "localizations" : {
         "ko" : {
@@ -7811,17 +7432,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Stylesheet"
-          }
-        }
-      }
-    },
-    "Stylesheets" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stylesheets"
           }
         }
       }
@@ -8127,14 +7737,7 @@
       }
     },
     "Timing" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Timing"
-          }
-        }
-      }
+
     },
     "Timing Breakdown" : {
       "localizations" : {
@@ -8197,14 +7800,7 @@
       }
     },
     "Toolbar" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toolbar"
-          }
-        }
-      }
+
     },
     "Toolbar Items" : {
       "extractionState" : "stale",
@@ -8466,14 +8062,7 @@
       }
     },
     "User Agent" : {
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "User Agent"
-          }
-        }
-      }
+
     },
     "User Agent String" : {
       "localizations" : {
@@ -8637,17 +8226,6 @@
         }
       }
     },
-    "Viewport" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Viewport"
-          }
-        }
-      }
-    },
     "Wait for full page load.\nCleaner appearance.\nFeels slower to load." : {
       "localizations" : {
         "ko" : {
@@ -8729,17 +8307,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Web Cryptography API입니다.\n해싱, 암호화, 서명을 지원합니다.\n전체 API에 HTTPS가 필요합니다."
-          }
-        }
-      }
-    },
-    "Web Vitals" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Web Vitals"
           }
         }
       }
