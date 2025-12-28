@@ -198,10 +198,10 @@ extension ContentView {
             }
             .padding(.horizontal, 18)
             .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
-        .contentShape(Rectangle())
         .onLongPressGesture {
             UIPasteboard.general.string = url
             UIImpactFeedbackGenerator(style: .light).impactOccurred()

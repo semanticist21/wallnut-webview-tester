@@ -317,17 +317,20 @@ See `.swiftlint.yml` for full rules. Key settings:
 // ❌ Only touches icon/text pixels
 Button { } label: {
     HStack { ... }
-        .contentShape(Rectangle())  // WRONG: inside label
+        .padding()
 }
 .buttonStyle(.plain)
+.frame(maxWidth: .infinity)
+.contentShape(Rectangle())  // WRONG: outside label
 
-// ✅ Fix - contentShape OUTSIDE Button, after buttonStyle
+// ✅ Fix - frame + contentShape INSIDE label, after padding
 Button { } label: {
     HStack { ... }
-        .frame(maxWidth: .infinity)  // expand hit area
+        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())  // CORRECT: inside label
 }
 .buttonStyle(.plain)
-.contentShape(Rectangle())  // CORRECT: on Button itself
 ```
 
 ### 2. Compiler Type-Check Failure
