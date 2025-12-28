@@ -147,6 +147,7 @@ protocol StorageNavigator: AnyObject {
     func getAllCookies() async -> [HTTPCookie]
     func setCookie(_ cookie: HTTPCookie) async
     func deleteCookie(name: String, domain: String?, path: String?) async
+    func deleteCookies(forDomain domain: String) async
     func deleteAllCookies() async
 }
 
@@ -266,9 +267,20 @@ class StorageManager {
     ) async -> [StorageItem]? {
         // Use native WKHTTPCookieStore for full cookie metadata (global cookie list)
         let cookies = await navigator.getAllCookies()
-        _ = pageURL
+        guard let host = pageURL?.host?.lowercased() else {
+            return []
+        }
 
-        return cookies.map { cookie in
+        let filtered = cookies.filter { cookie in
+            let domain = cookie.domain.lowercased()
+            if domain.hasPrefix(".") {
+                let trimmed = String(domain.dropFirst())
+                return host == trimmed || host.hasSuffix(".\(trimmed)")
+            }
+            return host == domain
+        }
+
+        return filtered.map { cookie in
             StorageItem(
                 key: cookie.name,
                 value: cookie.value,
@@ -393,6 +405,13 @@ class StorageManager {
         return result as? Bool == true
     }
 
+    @MainActor
+    func clearCookies(forDomain domain: String) async -> Bool {
+        guard let navigator else { return false }
+        await navigator.deleteCookies(forDomain: domain)
+        return true
+    }
+
     func clear() {
         items.removeAll()
         lastRefreshTime = nil
@@ -454,6 +473,25 @@ struct StorageView: View {
     @State private var contentHeight: CGFloat = 0
     @State private var scrollProxy: ScrollViewProxy?
     @State private var copiedFeedback: String?
+
+    private var currentHost: String? {
+        navigator?.currentURL?.host()
+    }
+
+    private var hasCurrentDomainCookies: Bool {
+        guard let host = currentHost?.lowercased() else { return false }
+        return storageManager.items.contains { item in
+            guard item.storageType == .cookies,
+                  let domain = item.cookieMetadata?.domain.lowercased() else {
+                return false
+            }
+            if domain.hasPrefix(".") {
+                let trimmed = String(domain.dropFirst())
+                return host == trimmed || host.hasSuffix(".\(trimmed)")
+            }
+            return host == domain
+        }
+    }
 
     private var filteredItems: [StorageItem] {
         var result: [StorageItem]
@@ -558,7 +596,7 @@ struct StorageView: View {
         }
         .onAppear {
             // Start timer to detect URL changes even during swipe navigation
-            urlCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { _ in
+            urlCheckTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
                 if navigator?.currentURL != lastObservedURL {
                     lastObservedURL = navigator?.currentURL
                     Task { await storageManager.refresh(pageURL: navigator?.currentURL) }
@@ -581,30 +619,64 @@ struct StorageView: View {
 
     // MARK: - Storage Header
 
-    private var storageHeader: some View {
-        DevToolsHeader(
-            title: "Storage",
-            leftButtons: [
-                .init(icon: "xmark.circle.fill", color: .secondary) {
-                    dismiss()
-                },
-                .init(
-                    icon: "trash",
-                    isDisabled: filteredItems.isEmpty || showsAllStorage
-                ) {
-                    Task {
+    private var storageHeaderLeftButtons: [DevToolsHeader.HeaderButton] {
+        var buttons: [DevToolsHeader.HeaderButton] = [
+            .init(icon: "xmark.circle.fill", color: .secondary) {
+                dismiss()
+            },
+            .init(
+                icon: "trash",
+                isDisabled: filteredItems.isEmpty || showsAllStorage
+            ) {
+                Task {
+                    if selectedType == .cookies {
+                        // For cookies: clear current domain only
+                        guard let host = currentHost else { return }
+                        if await storageManager.clearCookies(forDomain: host) {
+                            await storageManager.refresh(pageURL: navigator?.currentURL)
+                        }
+                    } else {
+                        // For localStorage/sessionStorage: clear all
                         if await storageManager.clearStorage(type: selectedType) {
                             await storageManager.refresh(pageURL: navigator?.currentURL)
                         }
                     }
-                },
-                .init(
-                    icon: "square.and.arrow.up",
-                    isDisabled: filteredItems.isEmpty
-                ) {
-                    shareItem = StorageShareContent(content: exportAsText())
                 }
-            ],
+            }
+        ]
+
+        // Delete all cookies button - only visible on cookie tab
+        if selectedType == .cookies && !showsAllStorage {
+            buttons.append(
+                .init(
+                    icon: "trash.slash",
+                    color: .red
+                ) {
+                    Task {
+                        if await storageManager.clearStorage(type: .cookies) {
+                            await storageManager.refresh(pageURL: navigator?.currentURL)
+                        }
+                    }
+                }
+            )
+        }
+
+        buttons.append(
+            .init(
+                icon: "square.and.arrow.up",
+                isDisabled: filteredItems.isEmpty
+            ) {
+                shareItem = StorageShareContent(content: exportAsText())
+            }
+        )
+
+        return buttons
+    }
+
+    private var storageHeader: some View {
+        DevToolsHeader(
+            title: "Storage",
+            leftButtons: storageHeaderLeftButtons,
             rightButtons: [
                 .init(
                     icon: "square.stack.3d.up",
