@@ -1984,12 +1984,6 @@
         }
       }
     },
-    "Copied" : {
-      "extractionState" : "stale"
-    },
-    "Copied!" : {
-      "extractionState" : "stale"
-    },
     "Copy" : {
       "localizations" : {
         "ko" : {
