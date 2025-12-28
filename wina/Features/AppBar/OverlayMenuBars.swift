@@ -101,6 +101,9 @@ struct OverlayMenuBars: View {
             if showBottomBar {
                 bottomBar
                     .frame(maxHeight: .infinity, alignment: .bottom)
+            } else {
+                Color.clear
+                    .preference(key: BottomBarFramePreferenceKey.self, value: .zero)
             }
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isExpanded)
@@ -246,6 +249,14 @@ struct OverlayMenuBars: View {
             .padding(.bottom, -(geometry.safeAreaInsets.bottom * BarConstants.bottomBarSafeAreaRatio))
             .offset(y: bottomOffset)
             .frame(maxHeight: .infinity, alignment: .bottom)
+            .background(
+                GeometryReader { proxy in
+                    Color.clear.preference(
+                        key: BottomBarFramePreferenceKey.self,
+                        value: proxy.frame(in: .named(BarConstants.overlayCoordinateSpace))
+                    )
+                }
+            )
         }
     }
 
@@ -428,6 +439,16 @@ private struct BottomBarIconButton: View {
         }
         .buttonStyle(.plain)
         .backport.glassEffect(in: .circle)
+    }
+}
+
+// MARK: - Preference Keys
+
+struct BottomBarFramePreferenceKey: PreferenceKey {
+    static var defaultValue: CGRect = .zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        value = nextValue()
     }
 }
 

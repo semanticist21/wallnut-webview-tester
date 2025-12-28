@@ -140,6 +140,10 @@ class WKWebViewCoordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScri
         navigator?.resourceManager.clear()
     }
 
+    private func resetActiveSnippets() {
+        navigator?.snippetsManager.resetActiveSnippets()
+    }
+
     // Track pending document request (only one at a time for main frame)
     private var pendingDocumentRequestId: String?
 
@@ -154,12 +158,14 @@ class WKWebViewCoordinator: NSObject, WKNavigationDelegate, WKUIDelegate, WKScri
             navigator?.consoleManager.clearIfNotPreserved()
             navigator?.networkManager.clearIfNotPreserved()
             navigator?.resourceManager.clearIfNotPreserved()
+            resetActiveSnippets()
         } else if navigationAction.targetFrame?.isMainFrame == true {
             // Handle navigation: use clearStrategy
             applyClearStrategy(
                 currentURL: webView.url,
                 newURL: navigationAction.request.url
             )
+            resetActiveSnippets()
         }
 
         // Track document navigation for main frame only

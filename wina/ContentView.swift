@@ -38,6 +38,7 @@ struct ContentView: View {
     @State private var storageManager = StorageManager()
     @State private var showSafariUnsupportedAlert = false
     @State private var safariUnsupportedURL = ""
+    @State private var bottomBarFrame: CGRect = .zero
     @FocusState var textFieldFocused: Bool
 
     // Shared URL storage
@@ -160,6 +161,7 @@ struct ContentView: View {
                 topBar
             }
         }
+        .coordinateSpace(name: BarConstants.overlayCoordinateSpace)
         .sheet(isPresented: $showSettings) {
             if useSafariWebView {
                 SafariVCSettingsView(webViewID: $webViewID)
@@ -259,11 +261,17 @@ struct ContentView: View {
         }
         .overlay {
             if showSearchText {
-                SearchTextOverlay(
-                    navigator: webViewNavigator,
-                    isPresented: $showSearchText
-                )
+                GeometryReader { proxy in
+                    SearchTextOverlay(
+                        navigator: webViewNavigator,
+                        isPresented: $showSearchText,
+                        bottomPadding: searchOverlayBottomPadding(containerHeight: proxy.size.height)
+                    )
+                }
             }
+        }
+        .onPreferenceChange(BottomBarFramePreferenceKey.self) { frame in
+            bottomBarFrame = frame
         }
         .sheet(isPresented: $showAbout) {
             AboutView()
@@ -304,6 +312,16 @@ struct ContentView: View {
                 await webViewNavigator.injectEruda()
             }
         }
+    }
+
+    // MARK: - Search Overlay Position
+
+    private func searchOverlayBottomPadding(containerHeight: CGFloat) -> CGFloat {
+        let defaultPadding: CGFloat = 12
+        let gapAboveBar: CGFloat = 8
+        guard bottomBarFrame != .zero else { return defaultPadding }
+        let distanceToBarTop = max(0, containerHeight - bottomBarFrame.minY)
+        return distanceToBarTop + gapAboveBar
     }
 
     // MARK: - URL Actions (internal for extension access)

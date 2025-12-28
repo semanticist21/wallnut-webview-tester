@@ -16,6 +16,9 @@ enum BarConstants {
     /// Horizontal padding around bars
     static let horizontalPadding: CGFloat = 8
 
+    /// Coordinate space name shared by overlay bars and dependent overlays
+    static let overlayCoordinateSpace: String = "OverlayMenuSpace"
+
     // MARK: - Safe Area Handling
 
     /// How much of safe area bottom the bottom bar extends into (0 = none, 1 = full)

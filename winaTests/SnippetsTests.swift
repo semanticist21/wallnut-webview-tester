@@ -167,6 +167,15 @@ final class SnippetsManagerTests: XCTestCase {
         XCTAssertTrue(manager.isActive("edit_page"))
     }
 
+    func testResetActiveSnippetsClearsAll() {
+        manager.toggle("border_all")
+        manager.toggle("edit_page")
+
+        manager.resetActiveSnippets()
+
+        XCTAssertTrue(manager.activeSnippets.isEmpty)
+    }
+
     // MARK: - Default Snippets Validation Tests
 
     func testDefaultSnippetsNotEmpty() {
@@ -621,6 +630,37 @@ final class SnippetDOMIntegrationTests: XCTestCase {
         XCTAssertEqual(storedCount, 1)
     }
 
+    func testDisableCssKeepsWinaStyles() async {
+        let testHTML = """
+        <html>
+        <head>
+            <style id="inline-style">body { color: red; }</style>
+            <style id="__wina_keep_style__">.hidden { display: none; }</style>
+        </head>
+        <body><p>Test</p></body>
+        </html>
+        """
+        await loadTestHTML(testHTML)
+
+        let cssSnippet = SnippetsManager.defaultSnippets.first { $0.id == "disable_css" }!
+        _ = await executeScript(cssSnippet.script)
+
+        let keptExists = await executeScript(
+            "document.getElementById('__wina_keep_style__') !== null"
+        ) as? Bool
+        XCTAssertEqual(keptExists, true)
+
+        let removedExists = await executeScript(
+            "document.getElementById('inline-style') !== null"
+        ) as? Bool
+        XCTAssertEqual(removedExists, false)
+
+        let storedCount = await executeScript(
+            "window.__wina_disabled_styles__.length"
+        ) as? Int
+        XCTAssertEqual(storedCount, 1)
+    }
+
     func testDisableCssUndoRestoresStylesheets() async {
         let testHTML = """
         <html>
@@ -646,6 +686,39 @@ final class SnippetDOMIntegrationTests: XCTestCase {
     }
 
     // MARK: - Highlight Headings Tests
+
+    func testDisableCssUndoRestoresWhenHeadRecreated() async {
+        let testHTML = """
+        <html>
+        <head>
+            <style id="test-style">body { background: blue; }</style>
+        </head>
+        <body><p>Test</p></body>
+        </html>
+        """
+        await loadTestHTML(testHTML)
+
+        let cssSnippet = SnippetsManager.defaultSnippets.first { $0.id == "disable_css" }!
+        _ = await executeScript(cssSnippet.script)
+
+        _ = await executeScript("""
+            (function() {
+                const oldHead = document.head;
+                if (oldHead) oldHead.remove();
+                const newHead = document.createElement('head');
+                document.documentElement.insertBefore(newHead, document.body);
+            })();
+        """)
+
+        let result = await executeScript(cssSnippet.undoScript!) as? String
+        XCTAssertNotNil(result)
+        XCTAssertTrue(result?.contains("CSS restored") ?? false)
+
+        let restoredExists = await executeScript(
+            "document.getElementById('test-style') !== null"
+        ) as? Bool
+        XCTAssertEqual(restoredExists, true)
+    }
 
     func testHighlightHeadingsAddsStyleForAllHeadingLevels() async {
         let testHTML = """

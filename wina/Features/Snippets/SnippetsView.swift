@@ -179,6 +179,7 @@ class SnippetsManager {
                 (function() {
                     window.__wina_disabled_styles__ = [];
                     document.querySelectorAll('link[rel="stylesheet"], style').forEach(el => {
+                        if (el.id && el.id.startsWith('__wina_')) return;
                         window.__wina_disabled_styles__.push({el, parent: el.parentNode, next: el.nextSibling});
                         el.remove();
                     });
@@ -189,8 +190,14 @@ class SnippetsManager {
                 (function() {
                     if (!window.__wina_disabled_styles__) return 'No styles to restore';
                     window.__wina_disabled_styles__.forEach(({el, parent, next}) => {
-                        if (next) parent.insertBefore(el, next);
-                        else parent.appendChild(el);
+                        const targetParent = parent && parent.isConnected
+                            ? parent
+                            : (document.head || document.documentElement);
+                        if (next && next.parentNode === targetParent) {
+                            targetParent.insertBefore(el, next);
+                        } else {
+                            targetParent.appendChild(el);
+                        }
                     });
                     const count = window.__wina_disabled_styles__.length;
                     window.__wina_disabled_styles__ = null;
@@ -385,12 +392,16 @@ class SnippetsManager {
     func deactivate(_ snippetId: String) {
         activeSnippets.remove(snippetId)
     }
+
+    func resetActiveSnippets() {
+        activeSnippets.removeAll()
+    }
 }
 
 // MARK: - Snippets View (DevTools Sheet)
 
 struct SnippetsView: View {
-    let navigator: WebViewNavigator
+    @Bindable var navigator: WebViewNavigator
     @Environment(\.dismiss) private var dismiss
     @State private var selectedCategory: SnippetCategory = .all
     @State private var searchText: String = ""
@@ -769,9 +780,15 @@ private struct SnippetRow: View {
                 Spacer()
 
                 // Action indicator - 활성화 상태에 따라 색상 변경
-                Image(systemName: isActive && snippet.isToggleable ? "stop.circle.fill" : "play.circle")
-                    .font(.system(size: 20))
-                    .foregroundStyle(isActive && snippet.isToggleable ? Color.green : Color.gray)
+                if snippet.isToggleable {
+                    Image(systemName: isActive ? "stop.circle.fill" : "play.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(isActive ? Color.green : Color.gray)
+                } else {
+                    Image(systemName: "bolt.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Color.gray)
+                }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)

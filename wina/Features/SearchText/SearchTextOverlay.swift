@@ -14,6 +14,7 @@ import SwiftUIBackports
 struct SearchTextOverlay: View {
     let navigator: WebViewNavigator
     @Binding var isPresented: Bool
+    let bottomPadding: CGFloat
 
     @State private var searchText: String = ""
     @State private var matchCount: Int = 0
@@ -106,7 +107,7 @@ struct SearchTextOverlay: View {
             .padding(.vertical, 12)
             .backport.glassEffect(in: .rect(cornerRadius: 20))
             .padding(.horizontal, 12)
-            .padding(.bottom, 12)
+            .padding(.bottom, bottomPadding)
         }
         .onAppear {
             isTextFieldFocused = true
@@ -328,7 +329,8 @@ struct SearchTextOverlay: View {
 
         SearchTextOverlay(
             navigator: WebViewNavigator(),
-            isPresented: .constant(true)
+            isPresented: .constant(true),
+            bottomPadding: 12
         )
     }
 }
