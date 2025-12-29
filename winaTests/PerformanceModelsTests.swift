@@ -137,6 +137,158 @@ final class MetricThresholdsTests: XCTestCase {
     }
 }
 
+// MARK: - Metric Thresholds Boundary Tests
+
+final class MetricThresholdsBoundaryTests: XCTestCase {
+
+    // MARK: - LCP Boundaries (good: 2500, poor: 4000)
+
+    func testLCPJustBelowGoodThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(2499, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .good
+        )
+    }
+
+    func testLCPExactlyAtGoodThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(2500, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .good
+        )
+    }
+
+    func testLCPJustAboveGoodThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(2501, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .needsImprovement
+        )
+    }
+
+    func testLCPJustBelowPoorThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(3999, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .needsImprovement
+        )
+    }
+
+    func testLCPExactlyAtPoorThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(4000, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .poor
+        )
+    }
+
+    func testLCPJustAbovePoorThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(4001, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .poor
+        )
+    }
+
+    // MARK: - CLS Boundaries (good: 0.1, poor: 0.25)
+
+    func testCLSJustBelowGoodThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0.09, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .good
+        )
+    }
+
+    func testCLSExactlyAtGoodThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0.1, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .good
+        )
+    }
+
+    func testCLSJustAboveGoodThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0.11, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .needsImprovement
+        )
+    }
+
+    func testCLSJustBelowPoorThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0.24, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .needsImprovement
+        )
+    }
+
+    func testCLSExactlyAtPoorThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0.25, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .poor
+        )
+    }
+
+    func testCLSJustAbovePoorThreshold() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0.26, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .poor
+        )
+    }
+
+    // MARK: - Score Boundaries
+
+    func testScoreAtExactGoodThreshold() {
+        // Exactly at good threshold = 100
+        XCTAssertEqual(
+            MetricThresholds.score(2500, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            100
+        )
+    }
+
+    func testScoreJustAboveGoodThreshold() {
+        // Just above good threshold = less than 100
+        let score = MetricThresholds.score(2501, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor)
+        XCTAssertLessThan(score, 100)
+        XCTAssertGreaterThan(score, 0)
+    }
+
+    func testScoreAtExactPoorThreshold() {
+        // Exactly at poor threshold = 0
+        XCTAssertEqual(
+            MetricThresholds.score(4000, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            0
+        )
+    }
+
+    func testScoreJustBelowPoorThreshold() {
+        // Just below poor threshold = more than 0
+        let score = MetricThresholds.score(3999, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor)
+        XCTAssertGreaterThan(score, 0)
+        XCTAssertLessThan(score, 100)
+    }
+
+    // MARK: - Edge Cases
+
+    func testZeroValue() {
+        XCTAssertEqual(
+            MetricThresholds.rate(0, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .good
+        )
+        XCTAssertEqual(
+            MetricThresholds.score(0, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            100
+        )
+    }
+
+    func testVerySmallNegative() {
+        XCTAssertEqual(
+            MetricThresholds.rate(-0.001, good: MetricThresholds.clsGood, poor: MetricThresholds.clsPoor),
+            .unknown
+        )
+    }
+
+    func testVeryLargeValue() {
+        XCTAssertEqual(
+            MetricThresholds.rate(Double.greatestFiniteMagnitude, good: MetricThresholds.lcpGood, poor: MetricThresholds.lcpPoor),
+            .poor
+        )
+    }
+}
+
 // MARK: - Resource Type Tests
 
 final class ResourceTypeTests: XCTestCase {

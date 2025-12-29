@@ -301,4 +301,157 @@ final class CSSParserTests: XCTestCase {
         XCTAssertEqual(styles.color, Color.blue)
         XCTAssertTrue(styles.isItalic)
     }
+
+    // MARK: - Opacity Boundary Tests
+
+    func testOpacityAtZero() {
+        let styles = CSSParser.parse("opacity: 0;")
+        XCTAssertEqual(styles.opacity, 0.0)
+    }
+
+    func testOpacityAtOne() {
+        let styles = CSSParser.parse("opacity: 1;")
+        XCTAssertEqual(styles.opacity, 1.0)
+    }
+
+    func testOpacityAboveOne() {
+        // CSS allows values > 1, parser doesn't clamp
+        let styles = CSSParser.parse("opacity: 1.5;")
+        XCTAssertEqual(styles.opacity, 1.5)
+    }
+
+    func testOpacityNegative() {
+        // Negative opacity is technically parsed (no clamping)
+        let styles = CSSParser.parse("opacity: -0.5;")
+        XCTAssertEqual(styles.opacity, -0.5)
+    }
+
+    func testOpacityPercentZero() {
+        let styles = CSSParser.parse("opacity: 0%;")
+        XCTAssertEqual(styles.opacity, 0.0)
+    }
+
+    func testOpacityPercentHundred() {
+        let styles = CSSParser.parse("opacity: 100%;")
+        XCTAssertEqual(styles.opacity, 1.0)
+    }
+
+    func testOpacityPercentAboveHundred() {
+        let styles = CSSParser.parse("opacity: 150%;")
+        XCTAssertEqual(styles.opacity, 1.5)
+    }
+
+    func testOpacityVerySmall() {
+        let styles = CSSParser.parse("opacity: 0.001;")
+        XCTAssertEqual(styles.opacity, 0.001, accuracy: 0.0001)
+    }
+
+    // MARK: - Font Size Boundary Tests
+
+    func testFontSizeZero() {
+        let styles = CSSParser.parse("font-size: 0px;")
+        XCTAssertEqual(styles.fontSize, 0)
+    }
+
+    func testFontSizeNegative() {
+        // Negative font-size is technically parsed
+        let styles = CSSParser.parse("font-size: -10px;")
+        XCTAssertEqual(styles.fontSize, -10)
+    }
+
+    func testFontSizeVeryLarge() {
+        let styles = CSSParser.parse("font-size: 9999px;")
+        XCTAssertEqual(styles.fontSize, 9999)
+    }
+
+    func testFontSizeVerySmall() {
+        let styles = CSSParser.parse("font-size: 0.5px;")
+        XCTAssertEqual(styles.fontSize, 0.5)
+    }
+
+    func testFontSizeEmVerySmall() {
+        let styles = CSSParser.parse("font-size: 0.1em;")
+        XCTAssertEqual(Double(styles.fontSize ?? 0), 0.1, accuracy: 0.001)
+    }
+
+    func testFontSizeEmLarge() {
+        let styles = CSSParser.parse("font-size: 10em;")
+        XCTAssertEqual(styles.fontSize, 10)
+    }
+
+    // MARK: - Padding Boundary Tests
+
+    func testPaddingZero() {
+        let styles = CSSParser.parse("padding: 0px;")
+        XCTAssertNotNil(styles.padding)
+        XCTAssertEqual(styles.padding?.top, 0)
+        XCTAssertEqual(styles.padding?.leading, 0)
+    }
+
+    func testPaddingNegative() {
+        // Negative padding is technically parsed
+        let styles = CSSParser.parse("padding: -10px;")
+        XCTAssertNotNil(styles.padding)
+        XCTAssertEqual(styles.padding?.top, -10)
+    }
+
+    func testPaddingVeryLarge() {
+        let styles = CSSParser.parse("padding: 1000px;")
+        XCTAssertNotNil(styles.padding)
+        XCTAssertEqual(styles.padding?.top, 1000)
+    }
+
+    // MARK: - RGB Color Boundary Tests
+
+    func testRgbColorZeroValues() {
+        let styles = CSSParser.parse("color: rgb(0, 0, 0);")
+        XCTAssertNotNil(styles.color)
+        // Should be black
+    }
+
+    func testRgbColorMaxValues() {
+        let styles = CSSParser.parse("color: rgb(255, 255, 255);")
+        XCTAssertNotNil(styles.color)
+        // Should be white
+    }
+
+    func testRgbaColorZeroAlpha() {
+        let styles = CSSParser.parse("color: rgba(255, 0, 0, 0);")
+        XCTAssertNotNil(styles.color)
+        // Should be fully transparent red
+    }
+
+    func testRgbaColorFullAlpha() {
+        let styles = CSSParser.parse("color: rgba(255, 0, 0, 1);")
+        XCTAssertNotNil(styles.color)
+        // Should be fully opaque red
+    }
+
+    // MARK: - Hex Color Boundary Tests
+
+    func testHexColorBlack() {
+        let styles = CSSParser.parse("color: #000000;")
+        XCTAssertNotNil(styles.color)
+    }
+
+    func testHexColorWhite() {
+        let styles = CSSParser.parse("color: #FFFFFF;")
+        XCTAssertNotNil(styles.color)
+    }
+
+    func testHexColor3DigitBlack() {
+        let styles = CSSParser.parse("color: #000;")
+        XCTAssertNotNil(styles.color)
+    }
+
+    func testHexColor3DigitWhite() {
+        let styles = CSSParser.parse("color: #FFF;")
+        XCTAssertNotNil(styles.color)
+    }
+
+    func testHexColorInvalidLength() {
+        // 4 or 5 digit hex should fail
+        let styles = CSSParser.parse("color: #1234;")
+        XCTAssertNil(styles.color)
+    }
 }

@@ -310,3 +310,333 @@ struct DOMNodeHashableTests {
         #expect(set.count == 2)
     }
 }
+
+// MARK: - DOMNode Path Boundary Tests
+
+@Suite("DOMNode Path Boundaries")
+struct DOMNodePathBoundaryTests {
+
+    // MARK: - Empty Path
+
+    @Test("Empty path produces empty ID")
+    func testEmptyPath() {
+        let node = DOMNode(
+            path: [],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.id.isEmpty)
+    }
+
+    // MARK: - Large Index Values
+
+    @Test("Path with Int.max index")
+    func testPathWithIntMax() {
+        let node = DOMNode(
+            path: [0, Int.max],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.id == "0.\(Int.max)")
+    }
+
+    @Test("Path with zero index")
+    func testPathWithZeroIndex() {
+        let node = DOMNode(
+            path: [0, 0, 0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.id == "0.0.0")
+    }
+
+    // MARK: - Deep Paths
+
+    @Test("Very deep path (100 levels)")
+    func testVeryDeepPath() {
+        let deepPath = Array(0..<100)
+        let node = DOMNode(
+            path: deepPath,
+            nodeType: 1,
+            nodeName: "SPAN",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        let expectedId = deepPath.map(String.init).joined(separator: ".")
+        #expect(node.id == expectedId)
+        #expect(node.id.contains("99"))
+    }
+
+    @Test("Single element path boundary")
+    func testSingleElementPath() {
+        let node = DOMNode(
+            path: [999],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.id == "999")
+    }
+}
+
+// MARK: - DOMNode nodeType Boundary Tests
+
+@Suite("DOMNode nodeType Boundaries")
+struct DOMNodeTypeBoundaryTests {
+
+    @Test("nodeType 0 is neither element nor text")
+    func testNodeTypeZero() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 0,
+            nodeName: "UNKNOWN",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.isElement == false)
+        #expect(node.isText == false)
+    }
+
+    @Test("nodeType 2 (attribute) is neither element nor text")
+    func testNodeTypeAttribute() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 2,
+            nodeName: "ATTR",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.isElement == false)
+        #expect(node.isText == false)
+    }
+
+    @Test("nodeType 8 (comment) is neither element nor text")
+    func testNodeTypeComment() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 8,
+            nodeName: "#comment",
+            attributes: [:],
+            textContent: "This is a comment",
+            children: []
+        )
+
+        #expect(node.isElement == false)
+        #expect(node.isText == false)
+    }
+
+    @Test("nodeType 9 (document) is neither element nor text")
+    func testNodeTypeDocument() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 9,
+            nodeName: "#document",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.isElement == false)
+        #expect(node.isText == false)
+    }
+
+    @Test("Negative nodeType is neither element nor text")
+    func testNegativeNodeType() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: -1,
+            nodeName: "INVALID",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.isElement == false)
+        #expect(node.isText == false)
+    }
+}
+
+// MARK: - DOMNode displayName Boundary Tests
+
+@Suite("DOMNode displayName Boundaries")
+struct DOMNodeDisplayNameBoundaryTests {
+
+    @Test("Empty nodeName for element")
+    func testEmptyNodeName() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName.isEmpty)
+    }
+
+    @Test("Text node with nil textContent")
+    func testTextNodeNilContent() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 3,
+            nodeName: "#text",
+            attributes: [:],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName.isEmpty)
+    }
+
+    @Test("Text node with empty textContent")
+    func testTextNodeEmptyContent() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 3,
+            nodeName: "#text",
+            attributes: [:],
+            textContent: "",
+            children: []
+        )
+
+        #expect(node.displayName.isEmpty)
+    }
+
+    @Test("Class with only whitespace")
+    func testWhitespaceOnlyClass() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["class": "   "],
+            textContent: nil,
+            children: []
+        )
+
+        // Whitespace splits to empty, prefix(2) gets empty strings
+        #expect(node.displayName == "div.")
+    }
+
+    @Test("Empty class attribute")
+    func testEmptyClassAttribute() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["class": ""],
+            textContent: nil,
+            children: []
+        )
+
+        // Empty class should not add dot
+        #expect(node.displayName == "div")
+    }
+
+    @Test("Exactly 2 classes")
+    func testExactlyTwoClasses() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["class": "first second"],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName == "div.first.second")
+    }
+
+    @Test("Single class")
+    func testSingleClass() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["class": "only"],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName == "div.only")
+    }
+
+    @Test("ID with special characters")
+    func testIdWithSpecialCharacters() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["id": "my-id_123"],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName == "div#my-id_123")
+    }
+
+    @Test("Empty ID attribute")
+    func testEmptyIdAttribute() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["id": ""],
+            textContent: nil,
+            children: []
+        )
+
+        // Empty ID should still add #
+        #expect(node.displayName == "div#")
+    }
+
+    @Test("Very long class name")
+    func testVeryLongClassName() {
+        let longClass = String(repeating: "a", count: 1000)
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["class": longClass],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName == "div.\(longClass)")
+    }
+
+    @Test("Unicode in class name")
+    func testUnicodeClassName() {
+        let node = DOMNode(
+            path: [0],
+            nodeType: 1,
+            nodeName: "DIV",
+            attributes: ["class": "한글클래스 emoji🎉"],
+            textContent: nil,
+            children: []
+        )
+
+        #expect(node.displayName == "div.한글클래스.emoji🎉")
+    }
+}

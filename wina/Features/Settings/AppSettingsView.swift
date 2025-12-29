@@ -175,10 +175,10 @@ struct AppSettingsView: View {
             loadFromStorage()
             didLoadFromStorage = true
         }
-        .onChange(of: appLanguage) { newValue in
+        .onChange(of: appLanguage) { _, newValue in
             storedAppLanguage = newValue
         }
-        .onChange(of: colorScheme) { newValue in
+        .onChange(of: colorScheme) { _, newValue in
             storedColorScheme = newValue.isEmpty ? nil : newValue
         }
         .onChange(of: presentationMode.wrappedValue.isPresented) { _, isPresented in

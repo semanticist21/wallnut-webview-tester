@@ -85,6 +85,132 @@ struct NetworkRequestStatusTests {
     }
 }
 
+// MARK: - NetworkRequest Status Boundary Tests
+
+@Suite("NetworkRequest Status Boundaries")
+struct NetworkRequestStatusBoundaryTests {
+
+    private func makeRequest(status: Int?) -> NetworkRequest {
+        NetworkRequest(
+            id: UUID(),
+            method: "GET",
+            url: "https://example.com",
+            requestHeaders: nil,
+            requestBodyPreview: nil,
+            startTime: Date(),
+            pageIsSecure: true,
+            status: status,
+            statusText: nil,
+            responseHeaders: nil,
+            responseBodyPreview: nil,
+            endTime: Date(),
+            error: nil,
+            requestType: .fetch
+        )
+    }
+
+    // MARK: - Below Valid HTTP Status Range
+
+    @Test("Status 0 falls to default (secondary)")
+    func testStatus0() {
+        let request = makeRequest(status: 0)
+        #expect(request.statusColor == .secondary)
+    }
+
+    @Test("Status 99 falls to default (secondary)")
+    func testStatus99() {
+        let request = makeRequest(status: 99)
+        #expect(request.statusColor == .secondary)
+    }
+
+    @Test("Status 100 (informational) falls to default (secondary)")
+    func testStatus100() {
+        let request = makeRequest(status: 100)
+        #expect(request.statusColor == .secondary)
+    }
+
+    @Test("Negative status -1 falls to default (secondary)")
+    func testStatusNegative1() {
+        let request = makeRequest(status: -1)
+        #expect(request.statusColor == .secondary)
+    }
+
+    // MARK: - 2xx Boundaries
+
+    @Test("Status 199 (below 2xx) falls to default (secondary)")
+    func testStatus199() {
+        let request = makeRequest(status: 199)
+        #expect(request.statusColor == .secondary)
+    }
+
+    @Test("Status 200 (start of 2xx) is secondary")
+    func testStatus200Boundary() {
+        let request = makeRequest(status: 200)
+        #expect(request.statusColor == .secondary)
+    }
+
+    @Test("Status 299 (end of 2xx) is secondary")
+    func testStatus299Boundary() {
+        let request = makeRequest(status: 299)
+        #expect(request.statusColor == .secondary)
+    }
+
+    // MARK: - 3xx Boundaries
+
+    @Test("Status 300 (start of 3xx) is secondary")
+    func testStatus300Boundary() {
+        let request = makeRequest(status: 300)
+        #expect(request.statusColor == .secondary)
+    }
+
+    @Test("Status 399 (end of 3xx) is secondary")
+    func testStatus399Boundary() {
+        let request = makeRequest(status: 399)
+        #expect(request.statusColor == .secondary)
+    }
+
+    // MARK: - 4xx Boundaries
+
+    @Test("Status 400 (start of 4xx) is orange")
+    func testStatus400Boundary() {
+        let request = makeRequest(status: 400)
+        #expect(request.statusColor == .orange.opacity(0.8))
+    }
+
+    @Test("Status 499 (end of 4xx) is orange")
+    func testStatus499Boundary() {
+        let request = makeRequest(status: 499)
+        #expect(request.statusColor == .orange.opacity(0.8))
+    }
+
+    // MARK: - 5xx Boundaries
+
+    @Test("Status 500 (start of 5xx) is red")
+    func testStatus500Boundary() {
+        let request = makeRequest(status: 500)
+        #expect(request.statusColor == .red.opacity(0.8))
+    }
+
+    @Test("Status 599 (within 5xx) is red")
+    func testStatus599Boundary() {
+        let request = makeRequest(status: 599)
+        #expect(request.statusColor == .red.opacity(0.8))
+    }
+
+    @Test("Status 600 (above 5xx, but matches 500... pattern) is red")
+    func testStatus600Boundary() {
+        // 500... is open-ended range, so 600+ still matches
+        let request = makeRequest(status: 600)
+        #expect(request.statusColor == .red.opacity(0.8))
+    }
+
+    @Test("Status Int.max (extreme upper bound) is red")
+    func testStatusIntMax() {
+        let request = makeRequest(status: Int.max)
+        #expect(request.statusColor == .red.opacity(0.8))
+    }
+}
+
 // MARK: - NetworkRequest Duration Tests
 
 @Suite("NetworkRequest Duration")
@@ -160,6 +286,108 @@ struct NetworkRequestDurationTests {
         )
 
         #expect(request.durationText == "...")
+    }
+}
+
+// MARK: - NetworkRequest Duration Boundary Tests
+
+@Suite("NetworkRequest Duration Boundaries")
+struct NetworkRequestDurationBoundaryTests {
+
+    private func makeRequest(duration: TimeInterval) -> NetworkRequest {
+        let start = Date()
+        let end = start.addingTimeInterval(duration)
+        return NetworkRequest(
+            id: UUID(),
+            method: "GET",
+            url: "https://example.com",
+            requestHeaders: nil,
+            requestBodyPreview: nil,
+            startTime: start,
+            pageIsSecure: true,
+            status: 200,
+            statusText: nil,
+            responseHeaders: nil,
+            responseBodyPreview: nil,
+            endTime: end,
+            error: nil,
+            requestType: .fetch
+        )
+    }
+
+    // MARK: - Zero and Near-Zero
+
+    @Test("Duration 0 shows 0ms")
+    func testDuration0() {
+        let request = makeRequest(duration: 0)
+        #expect(request.durationText == "0ms")
+    }
+
+    @Test("Very small duration rounds to 0ms")
+    func testDurationVerySmall() {
+        let request = makeRequest(duration: 0.0001)  // 0.1ms
+        #expect(request.durationText == "0ms")
+    }
+
+    @Test("Duration 0.001 (1ms) shows 1ms")
+    func testDuration1ms() {
+        let request = makeRequest(duration: 0.001)
+        #expect(request.durationText == "1ms")
+    }
+
+    // MARK: - 1 Second Boundary (Critical Threshold)
+
+    @Test("Duration 0.999 (just below 1s) shows 999ms")
+    func testDurationJustBelow1Second() {
+        let request = makeRequest(duration: 0.999)
+        #expect(request.durationText == "999ms")
+    }
+
+    @Test("Duration exactly 1.0 shows 1.00s")
+    func testDurationExactly1Second() {
+        let request = makeRequest(duration: 1.0)
+        #expect(request.durationText == "1.00s")
+    }
+
+    @Test("Duration 1.001 (just above 1s) shows 1.00s")
+    func testDurationJustAbove1Second() {
+        let request = makeRequest(duration: 1.001)
+        #expect(request.durationText == "1.00s")
+    }
+
+    @Test("Duration 0.9999 rounds to 1000ms (still under 1s threshold)")
+    func testDurationAlmostExactly1Second() {
+        // 0.9999 * 1000 = 999.9, rounds to 1000
+        let request = makeRequest(duration: 0.9999)
+        #expect(request.durationText == "1000ms")
+    }
+
+    // MARK: - Large Values
+
+    @Test("Duration 10 seconds shows 10.00s")
+    func testDuration10Seconds() {
+        let request = makeRequest(duration: 10.0)
+        #expect(request.durationText == "10.00s")
+    }
+
+    @Test("Duration 100 seconds shows 100.00s")
+    func testDuration100Seconds() {
+        let request = makeRequest(duration: 100.0)
+        #expect(request.durationText == "100.00s")
+    }
+
+    // MARK: - Decimal Precision
+
+    @Test("Duration 1.234 rounds to 1.23s")
+    func testDurationDecimalPrecision() {
+        let request = makeRequest(duration: 1.234)
+        #expect(request.durationText == "1.23s")
+    }
+
+    @Test("Duration 1.999 rounds to 2.00s")
+    func testDurationRoundsUp() {
+        let request = makeRequest(duration: 1.999)
+        #expect(request.durationText == "2.00s")
     }
 }
 
@@ -364,7 +592,7 @@ struct NetworkRequestSecurityTests {
 struct NetworkRequestContentTypeTests {
 
     private func makeRequest(contentTypeHeader: String?, bodyPreview: String?) -> NetworkRequest {
-        var headers: [String: String]? = nil
+        var headers: [String: String]?
         if let contentType = contentTypeHeader {
             headers = ["Content-Type": contentType]
         }
