@@ -2,220 +2,314 @@
 //  StoreManagerTests.swift
 //  winaTests
 //
-//  Tests for StoreManager IAP functionality using StoreKitTest.
+//  Tests for StoreManager IAP functionality using Mock-based approach.
 //
 
 import StoreKit
-import StoreKitTest
-import XCTest
+import Testing
 @testable import wina
 
-@MainActor
-final class StoreManagerTests: XCTestCase {
+/// Mock implementation of StoreServiceProtocol for fast testing
+final class MockStoreService: StoreServiceProtocol, @unchecked Sendable {
+    var mockProducts: [Product] = []
+    var mockPurchaseResult: Product.PurchaseResult?
+    var mockEntitlementResult = EntitlementResult(hasEntitlement: false, wasRevoked: false)
+    var mockUnfinishedResult: Bool?
+    var syncCalled = false
+    var fetchError: Error?
+    var purchaseError: Error?
+    var syncError: Error?
 
-    var session: SKTestSession!
+    private var transactionContinuation: AsyncStream<(productID: String, isRevoked: Bool)>.Continuation?
 
-    private func waitForRevocation(
-        manager: StoreManager,
-        timeout: Duration = .seconds(2)
-    ) async -> Bool {
-        let clock = ContinuousClock()
-        let deadline = clock.now.advanced(by: timeout)
+    func fetchProducts(for ids: [String]) async throws -> [Product] {
+        if let error = fetchError { throw error }
+        return mockProducts
+    }
 
-        while clock.now < deadline {
-            await manager.checkEntitlements()
-            if !manager.isAdRemoved {
-                return true
-            }
-            try? await Task.sleep(for: .milliseconds(200))
+    func purchase(_ product: Product) async throws -> Product.PurchaseResult {
+        if let error = purchaseError { throw error }
+        guard let result = mockPurchaseResult else {
+            throw StoreKitError.unknown
         }
-
-        return false
+        return result
     }
 
-    override func setUp() async throws {
-        try await super.setUp()
-
-        // Create a test session from the StoreKit configuration file
-        session = try SKTestSession(configurationFileNamed: "Configuration")
-        session.disableDialogs = true
-        session.clearTransactions()
+    func sync() async throws {
+        if let error = syncError { throw error }
+        syncCalled = true
     }
 
-    override func tearDown() async throws {
-        session?.clearTransactions()
-        session = nil
-        try await super.tearDown()
+    func checkEntitlement(for productID: String) async -> EntitlementResult {
+        mockEntitlementResult
     }
 
-    // MARK: - Initial State Tests
+    func processUnfinishedTransactions(for productID: String) async -> Bool? {
+        mockUnfinishedResult
+    }
 
-    func testSharedInstanceExists() {
+    func transactionUpdates() -> AsyncStream<(productID: String, isRevoked: Bool)> {
+        AsyncStream { continuation in
+            self.transactionContinuation = continuation
+        }
+    }
+
+    /// Simulate a transaction update (for testing transaction listener)
+    func simulateTransactionUpdate(productID: String, isRevoked: Bool) {
+        transactionContinuation?.yield((productID: productID, isRevoked: isRevoked))
+    }
+}
+
+// MARK: - Singleton Tests
+
+@Suite("StoreManager Singleton Tests")
+struct StoreManagerSingletonTests {
+
+    @Test("Shared instance exists")
+    func sharedInstanceExists() {
         let manager = StoreManager.shared
-        XCTAssertNotNil(manager)
+        #expect(manager != nil)
     }
 
-    func testSharedInstanceIsSingleton() {
+    @Test("Shared instance is singleton")
+    func sharedInstanceIsSingleton() {
         let manager1 = StoreManager.shared
         let manager2 = StoreManager.shared
-        XCTAssertTrue(manager1 === manager2)
+        #expect(manager1 === manager2)
     }
+}
 
-    func testInitialLoadingIsFalse() {
-        let manager = StoreManager.shared
-        XCTAssertFalse(manager.isLoading)
-    }
+// MARK: - Initial State Tests
 
-    func testInitialErrorMessageIsNil() {
-        let manager = StoreManager.shared
-        XCTAssertNil(manager.errorMessage)
-    }
+@Suite("StoreManager Initial State Tests")
+struct StoreManagerInitialStateTests {
 
-    // MARK: - Product Fetch Tests
+    @Test("Initial loading is false")
+    @MainActor
+    func initialLoadingIsFalse() async {
+        let mockService = MockStoreService()
+        let manager = StoreManager.createForTesting(storeService: mockService)
 
-    func testFetchProductLoadsProduct() async {
-        let manager = StoreManager.shared
-
-        await manager.fetchProduct()
-
-        // Wait a bit for async operation
-        try? await Task.sleep(for: .milliseconds(100))
-
-        XCTAssertNotNil(manager.product)
-        XCTAssertEqual(manager.product?.id, "removeAds")
-    }
-
-    func testProductDisplayPrice() async {
-        let manager = StoreManager.shared
-
-        await manager.fetchProduct()
-        try? await Task.sleep(for: .milliseconds(100))
-
-        // Product should have a display price from the storekit config
-        XCTAssertNotNil(manager.product?.displayPrice)
-    }
-
-    // MARK: - Purchase Flow Tests
-
-    func testPurchaseAdRemovalSetsLoadingState() async {
-        let manager = StoreManager.shared
-
-        // Start purchase - this will set isLoading = true
-        let purchaseTask = Task {
-            await manager.purchaseAdRemoval()
-        }
-
-        // Give it a moment to start
+        // Wait for init tasks to complete
         try? await Task.sleep(for: .milliseconds(50))
 
-        // The purchase might complete quickly in test environment
-        // So we just verify it doesn't crash and completes
-        await purchaseTask.value
-
-        // After completion, loading should be false
-        XCTAssertFalse(manager.isLoading)
+        #expect(manager.isLoading == false)
     }
 
-    func testPurchaseAdRemovalSuccess() async throws {
-        let manager = StoreManager.shared
+    @Test("Initial error message is nil")
+    @MainActor
+    func initialErrorMessageIsNil() async {
+        let mockService = MockStoreService()
+        let manager = StoreManager.createForTesting(storeService: mockService)
 
-        // Buy the product using SKTestSession
-        let product = try await Product.products(for: ["removeAds"]).first
-        XCTAssertNotNil(product, "Product should be available in test session")
+        try? await Task.sleep(for: .milliseconds(50))
 
-        guard product != nil else { return }
+        #expect(manager.errorMessage == nil)
+    }
 
-        // Simulate a purchase using the async variant
-        _ = try await session.buyProduct(identifier: "removeAds", options: [])
+    @Test("Initial isAdRemoved is false with no entitlement")
+    @MainActor
+    func initialIsAdRemovedIsFalse() async {
+        let mockService = MockStoreService()
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: false, wasRevoked: false)
 
-        // Check entitlements after purchase
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
+
+        #expect(manager.isAdRemoved == false)
+    }
+}
+
+// MARK: - Entitlement Tests
+
+@Suite("StoreManager Entitlement Tests")
+struct StoreManagerEntitlementTests {
+
+    @Test("Check entitlements with no purchase returns false")
+    @MainActor
+    func checkEntitlementsWithNoPurchase() async {
+        let mockService = MockStoreService()
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: false, wasRevoked: false)
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
+
         await manager.checkEntitlements()
 
-        XCTAssertTrue(manager.isAdRemoved)
+        #expect(manager.isAdRemoved == false)
     }
 
-    // MARK: - Restore Tests
+    @Test("Check entitlements with valid purchase returns true")
+    @MainActor
+    func checkEntitlementsWithValidPurchase() async {
+        let mockService = MockStoreService()
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: true, wasRevoked: false)
 
-    func testRestorePurchasesWithNoPurchases() async {
-        let manager = StoreManager.shared
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
 
-        // Clear any existing transactions
-        session.clearTransactions()
+        await manager.checkEntitlements()
+
+        #expect(manager.isAdRemoved == true)
+    }
+
+    @Test("Revoked entitlement removes ad removal")
+    @MainActor
+    func revokedEntitlementRemovesAdRemoval() async {
+        let mockService = MockStoreService()
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: false, wasRevoked: true)
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
+
+        await manager.checkEntitlements()
+
+        #expect(manager.isAdRemoved == false)
+    }
+}
+
+// MARK: - Purchase Flow Tests
+
+@Suite("StoreManager Purchase Flow Tests")
+struct StoreManagerPurchaseFlowTests {
+
+    @Test("Purchase with no product shows error")
+    @MainActor
+    func purchaseWithNoProductShowsError() async {
+        let mockService = MockStoreService()
+        mockService.mockProducts = []  // No products available
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
+
+        await manager.purchaseAdRemoval()
+
+        #expect(manager.errorMessage == "Product not available")
+        #expect(manager.isLoading == false)
+    }
+
+    @Test("Purchase fetch error shows error message")
+    @MainActor
+    func purchaseFetchErrorShowsErrorMessage() async {
+        let mockService = MockStoreService()
+        mockService.fetchError = StoreKitError.unknown
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
+
+        await manager.purchaseAdRemoval()
+
+        #expect(manager.errorMessage != nil)
+        #expect(manager.isLoading == false)
+    }
+
+    @Test("Loading state resets after purchase attempt")
+    @MainActor
+    func loadingStateResetsAfterPurchaseAttempt() async {
+        let mockService = MockStoreService()
+        mockService.mockProducts = []
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
+
+        await manager.purchaseAdRemoval()
+
+        #expect(manager.isLoading == false)
+    }
+}
+
+// MARK: - Restore Tests
+
+@Suite("StoreManager Restore Tests")
+struct StoreManagerRestoreTests {
+
+    @Test("Restore with no purchases shows error")
+    @MainActor
+    func restoreWithNoPurchasesShowsError() async {
+        let mockService = MockStoreService()
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: false, wasRevoked: false)
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
 
         await manager.restorePurchases()
 
-        // Should show error message when no purchases to restore
-        if !manager.isAdRemoved {
-            XCTAssertEqual(manager.errorMessage, "No purchases to restore")
-        }
-
-        XCTAssertFalse(manager.isLoading)
+        #expect(manager.errorMessage == "No purchases to restore")
+        #expect(manager.isLoading == false)
     }
 
-    func testRestorePurchasesWithExistingPurchase() async throws {
-        let manager = StoreManager.shared
+    @Test("Restore with existing purchase succeeds")
+    @MainActor
+    func restoreWithExistingPurchaseSucceeds() async {
+        let mockService = MockStoreService()
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: true, wasRevoked: false)
 
-        // First make a purchase using the async variant
-        _ = try await session.buyProduct(identifier: "removeAds", options: [])
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
 
-        // Then restore
         await manager.restorePurchases()
 
-        XCTAssertTrue(manager.isAdRemoved)
-        XCTAssertFalse(manager.isLoading)
+        #expect(manager.isAdRemoved == true)
+        #expect(manager.errorMessage == nil)
+        #expect(manager.isLoading == false)
     }
 
-    // MARK: - Entitlements Tests
+    @Test("Restore calls sync")
+    @MainActor
+    func restoreCallsSync() async {
+        let mockService = MockStoreService()
 
-    func testCheckEntitlementsWithNoPurchase() async {
-        let manager = StoreManager.shared
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
 
-        // Clear transactions
-        session.clearTransactions()
+        await manager.restorePurchases()
 
-        await manager.checkEntitlements()
-
-        // Without any purchase, isAdRemoved should be false
-        // Note: This test may be flaky if there are lingering entitlements
-        // from previous test runs
-        XCTAssertFalse(manager.isLoading)
+        #expect(mockService.syncCalled == true)
     }
 
-    func testCheckEntitlementsWithValidPurchase() async throws {
-        let manager = StoreManager.shared
+    @Test("Sync error shows error message")
+    @MainActor
+    func syncErrorShowsErrorMessage() async {
+        let mockService = MockStoreService()
+        mockService.syncError = StoreKitError.unknown
 
-        // Make a purchase
-        _ = try await session.buyProduct(identifier: "removeAds", options: [])
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(50))
 
-        await manager.checkEntitlements()
+        await manager.restorePurchases()
 
-        XCTAssertTrue(manager.isAdRemoved)
+        #expect(manager.errorMessage != nil)
+        #expect(manager.isLoading == false)
+    }
+}
+
+// MARK: - Unfinished Transaction Tests
+
+@Suite("StoreManager Unfinished Transaction Tests")
+struct StoreManagerUnfinishedTransactionTests {
+
+    @Test("Unfinished valid transaction grants entitlement")
+    @MainActor
+    func unfinishedValidTransactionGrantsEntitlement() async {
+        let mockService = MockStoreService()
+        mockService.mockUnfinishedResult = true  // Valid transaction
+        mockService.mockEntitlementResult = EntitlementResult(hasEntitlement: true, wasRevoked: false)
+
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(100))
+
+        #expect(manager.isAdRemoved == true)
     }
 
-    // MARK: - Revocation Tests
+    @Test("Unfinished revoked transaction removes entitlement")
+    @MainActor
+    func unfinishedRevokedTransactionRemovesEntitlement() async {
+        let mockService = MockStoreService()
+        mockService.mockUnfinishedResult = false  // Revoked transaction
 
-    func testRevocationRemovesEntitlement() async throws {
-        let manager = StoreManager.shared
+        let manager = StoreManager.createForTesting(storeService: mockService)
+        try? await Task.sleep(for: .milliseconds(100))
 
-        // First make a purchase using the async variant that returns a transaction
-        let transaction = try await session.buyProduct(
-            identifier: "removeAds",
-            options: []
-        )
-
-        await manager.checkEntitlements()
-        XCTAssertTrue(manager.isAdRemoved)
-
-        // Refund the transaction
-        try session.refundTransaction(identifier: UInt(transaction.id))
-
-        let revoked = await waitForRevocation(manager: manager)
-        if !revoked {
-            session.clearTransactions()
-            await manager.checkEntitlements()
-        }
-
-        // After refund, entitlement should be removed
-        XCTAssertFalse(manager.isAdRemoved)
+        #expect(manager.isAdRemoved == false)
     }
 }

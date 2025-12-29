@@ -14,14 +14,18 @@ final class StoreManager {
     private(set) var errorMessage: String?
     private(set) var product: Product?
 
-    private var updateListenerTask: Task<Void, Error>?
+    private var updateListenerTask: Task<Void, Never>?
 
     private let productID = "removeAds"
+    private let storeService: StoreServiceProtocol
+
 #if DEBUG
     private let debugAdRemovalOverrideKey = "debugAdRemovalOverride"
 #endif
 
-    private init() {
+    private init(storeService: StoreServiceProtocol = RealStoreService.shared) {
+        self.storeService = storeService
+
         // Start listening for transaction updates (refunds, background purchases, etc.)
         updateListenerTask = listenForTransactions()
 
@@ -33,13 +37,20 @@ final class StoreManager {
         }
     }
 
+#if DEBUG
+    /// Test-only initializer for dependency injection
+    static func createForTesting(storeService: StoreServiceProtocol) -> StoreManager {
+        StoreManager(storeService: storeService)
+    }
+#endif
+
     // MARK: - Fetch Product
 
     /// Fetch product info to display price
     @MainActor
     func fetchProduct() async {
         do {
-            let products = try await Product.products(for: [productID])
+            let products = try await storeService.fetchProducts(for: [productID])
             product = products.first
         } catch {
             // Silently fail - price just won't be displayed
@@ -53,11 +64,20 @@ final class StoreManager {
     // MARK: - Transaction Listener
 
     /// Listen for transaction updates (refunds, Ask to Buy approvals, etc.)
-    private func listenForTransactions() -> Task<Void, Error> {
+    private func listenForTransactions() -> Task<Void, Never> {
         Task.detached { [weak self] in
-            for await result in Transaction.updates {
-                guard let self else { return }
-                await self.handle(transactionResult: result)
+            guard let self else { return }
+            for await update in self.storeService.transactionUpdates() {
+                if update.productID == self.productID {
+                    await MainActor.run {
+                        self.isAdRemoved = !update.isRevoked
+#if DEBUG
+                        if self.debugAdRemovalOverride {
+                            self.isAdRemoved = true
+                        }
+#endif
+                    }
+                }
             }
         }
     }
@@ -67,8 +87,13 @@ final class StoreManager {
     /// Process any unfinished transactions from previous sessions
     @MainActor
     private func processUnfinishedTransactions() async {
-        for await result in Transaction.unfinished {
-            await handle(transactionResult: result)
+        if let result = await storeService.processUnfinishedTransactions(for: productID) {
+            isAdRemoved = result
+#if DEBUG
+            if debugAdRemovalOverride {
+                isAdRemoved = true
+            }
+#endif
         }
     }
 
@@ -79,45 +104,14 @@ final class StoreManager {
     func checkEntitlements() async {
         await processUnfinishedTransactions()
 
-        var latestHistoryTransaction: Transaction?
-        for await result in Transaction.all {
-            if case .verified(let transaction) = result,
-               transaction.productID == productID {
-                if let current = latestHistoryTransaction {
-                    if transaction.signedDate > current.signedDate {
-                        latestHistoryTransaction = transaction
-                    }
-                } else {
-                    latestHistoryTransaction = transaction
-                }
-            }
-        }
+        let result = await storeService.checkEntitlement(for: productID)
 
-        if let historyTransaction = latestHistoryTransaction,
-           historyTransaction.revocationDate != nil {
+        if result.wasRevoked {
             isAdRemoved = false
             return
         }
 
-        if let latestResult = await Transaction.latest(for: productID),
-           case .verified(let transaction) = latestResult,
-           transaction.revocationDate != nil {
-            isAdRemoved = false
-            return
-        }
-
-        var hasActiveEntitlement = false
-
-        for await result in Transaction.currentEntitlements {
-            if case .verified(let transaction) = result,
-               transaction.productID == productID,
-               transaction.revocationDate == nil {
-                hasActiveEntitlement = true
-                break
-            }
-        }
-
-        isAdRemoved = hasActiveEntitlement
+        isAdRemoved = result.hasEntitlement
 
 #if DEBUG
         if debugAdRemovalOverride {
@@ -139,7 +133,7 @@ final class StoreManager {
             if let cached = product {
                 purchaseProduct = cached
             } else {
-                let products = try await Product.products(for: [productID])
+                let products = try await storeService.fetchProducts(for: [productID])
                 guard let fetched = products.first else {
                     errorMessage = "Product not available"
                     isLoading = false
@@ -149,7 +143,7 @@ final class StoreManager {
                 product = fetched
             }
 
-            let result = try await purchaseProduct.purchase()
+            let result = try await storeService.purchase(purchaseProduct)
             await handle(purchaseResult: result)
         } catch {
             errorMessage = error.localizedDescription
@@ -166,7 +160,7 @@ final class StoreManager {
         errorMessage = nil
 
         do {
-            try await AppStore.sync()
+            try await storeService.sync()
             await checkEntitlements()
 
             if !isAdRemoved {
