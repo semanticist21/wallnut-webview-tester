@@ -95,25 +95,130 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 // MARK: - App Settings View
 
 struct AppSettingsView: View {
-    @AppStorage("appLanguage") private var appLanguage: String = ""
+    @Environment(\.dismiss) private var dismiss
+
+    // Storage
+    @AppStorage("appLanguage") private var storedAppLanguage: String = ""
+    @AppStorage("colorSchemeOverride") private var storedColorScheme: String?
+
+    // Local state
+    @State private var appLanguage: String = ""
+    @State private var colorScheme: String = ""  // "", "light", "dark"
+
+    private var hasChanges: Bool {
+        appLanguage != storedAppLanguage ||
+        colorScheme != (storedColorScheme ?? "")
+    }
+
+    private var selectedLanguageDisplayName: String {
+        AppLanguage(rawValue: appLanguage)?.displayName ?? "System"
+    }
 
     var body: some View {
         List {
             Section {
-                Picker(selection: $appLanguage) {
-                    ForEach(AppLanguage.allCases) { language in
-                        Text(language.displayName)
-                            .tag(language.rawValue)
-                    }
+                Picker(selection: $colorScheme) {
+                    Text("System").tag("")
+                    Text("Light").tag("light")
+                    Text("Dark").tag("dark")
                 } label: {
-                    Text("Language")
+                    Text("Theme")
+                }
+            } header: {
+                Text("Appearance")
+            }
+
+            Section {
+                NavigationLink {
+                    LanguagePickerView(selectedLanguage: $appLanguage)
+                } label: {
+                    HStack {
+                        Text("Language")
+                        Spacer()
+                        Text(selectedLanguageDisplayName)
+                            .foregroundStyle(.secondary)
+                    }
                 }
             } header: {
                 Text("Language")
             }
+
+            Section {
+                HStack {
+                    Spacer()
+                    GlassActionButton("Reset", icon: "arrow.counterclockwise", style: .destructive) {
+                        resetToDefaults()
+                    }
+                    Spacer()
+                }
+                .listRowBackground(Color.clear)
+            }
         }
         .navigationTitle(Text(verbatim: "App Settings"))
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Apply") { applyChanges() }
+                    .fontWeight(.semibold)
+                    .disabled(!hasChanges)
+            }
+        }
+        .onAppear { loadFromStorage() }
+    }
+
+    private func loadFromStorage() {
+        appLanguage = storedAppLanguage
+        colorScheme = storedColorScheme ?? ""
+    }
+
+    private func applyChanges() {
+        storedAppLanguage = appLanguage
+        storedColorScheme = colorScheme.isEmpty ? nil : colorScheme
+        dismiss()
+    }
+
+    private func resetToDefaults() {
+        appLanguage = ""
+        colorScheme = ""
+    }
+}
+
+// MARK: - Searchable Language Picker View
+
+struct LanguagePickerView: View {
+    @Binding var selectedLanguage: String
+    @State private var searchText = ""
+
+    private var filteredLanguages: [AppLanguage] {
+        if searchText.isEmpty {
+            return Array(AppLanguage.allCases)
+        }
+        return AppLanguage.allCases.filter { language in
+            language.displayName.localizedCaseInsensitiveContains(searchText) ||
+            language.rawValue.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+
+    var body: some View {
+        List {
+            ForEach(filteredLanguages) { language in
+                HStack {
+                    Text(language.displayName)
+                    Spacer()
+                    if language.rawValue == selectedLanguage {
+                        Image(systemName: "checkmark")
+                            .foregroundStyle(.tint)
+                    }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedLanguage = language.rawValue
+                }
+            }
+        }
+        .navigationTitle(Text(verbatim: "Language"))
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $searchText, prompt: "Search languages")
     }
 }
 

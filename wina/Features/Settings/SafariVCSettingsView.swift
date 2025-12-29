@@ -22,6 +22,21 @@ struct SafariVCSettingsView: View {
             List {
                 Section {
                     NavigationLink {
+                        AppSettingsView()
+                    } label: {
+                        SettingsCategoryRow(
+                            icon: "app.badge.fill",
+                            iconColor: .cyan,
+                            title: "App Settings",
+                            description: "Language, preferences"
+                        )
+                    }
+                } header: {
+                    Text("App")
+                }
+
+                Section {
+                    NavigationLink {
                         SafariVCConfigurationSettingsView(webViewID: $webViewID)
                     } label: {
                         SettingsCategoryRow(
@@ -31,6 +46,8 @@ struct SafariVCSettingsView: View {
                             description: "All changes reload SafariVC"
                         )
                     }
+                } header: {
+                    Text("SafariVC Settings")
                 }
             }
             .navigationTitle(Text(verbatim: "SafariVC Settings"))

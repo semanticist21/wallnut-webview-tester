@@ -158,7 +158,6 @@ struct OverlayMenuBars: View {
                             appBarButton(for: item)
                         }
                     } else {
-                        ThemeToggleButton()
                         BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: hasBookmarks)
                     }
 

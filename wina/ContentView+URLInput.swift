@@ -250,7 +250,6 @@ extension ContentView {
                         }
                     }
                 } else {
-                    ThemeToggleButton()
                     BookmarkButton(showBookmarks: $showBookmarks, hasBookmarks: !urlStorage.bookmarks.isEmpty)
                     AboutButton(showAbout: $showAbout)
                 }

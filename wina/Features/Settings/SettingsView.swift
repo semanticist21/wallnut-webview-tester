@@ -236,6 +236,8 @@ struct LoadedSettingsView: View {
                             description: "Language, preferences"
                         )
                     }
+                } header: {
+                    Text("App")
                 }
 
                 Section {
@@ -264,9 +266,7 @@ struct LoadedSettingsView: View {
                             description: "Changes reload WebView"
                         )
                     }
-                }
 
-                Section {
                     NavigationLink {
                         EmulationSettingsView(navigator: navigator)
                     } label: {
@@ -299,6 +299,8 @@ struct LoadedSettingsView: View {
                             description: "Customize toolbar & app bar"
                         )
                     }
+                } header: {
+                    Text("WebView Settings")
                 }
 
                 Section {
