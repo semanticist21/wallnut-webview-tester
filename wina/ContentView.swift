@@ -46,6 +46,7 @@ struct ContentView: View {
     // Quick options (synced with Settings)
     @AppStorage("cleanStart") var cleanStart = true
     @AppStorage("privateBrowsing") var privateBrowsing = false
+    @AppStorage("colorSchemeOverride") private var colorSchemeOverride: String?
 
     // Safari configuration settings (for onChange detection)
     @AppStorage("safariEntersReaderIfAvailable") private var safariEntersReaderIfAvailable = false
@@ -67,6 +68,14 @@ struct ContentView: View {
         let heightRatio = useSafariWebView ? safariHeightRatio : webViewHeightRatio
         let isFullSize = widthRatio >= 0.99 && heightRatio >= 0.99
         return !isFullSize
+    }
+
+    private var preferredScheme: ColorScheme? {
+        switch colorSchemeOverride {
+        case "light": .light
+        case "dark": .dark
+        default: nil
+        }
     }
 
     var filteredURLs: [String] {
@@ -164,6 +173,7 @@ struct ContentView: View {
             if useSafariWebView {
                 SafariVCSettingsView(webViewID: $webViewID)
                     .fullSizeSheet()
+                    .preferredColorScheme(preferredScheme)
             } else {
                 LoadedSettingsView(
                     webViewID: $webViewID,
@@ -171,6 +181,7 @@ struct ContentView: View {
                     navigator: webViewNavigator
                 )
                 .fullSizeSheet()
+                .preferredColorScheme(preferredScheme)
             }
         }
         .sheet(isPresented: $showBookmarks) {
@@ -201,11 +212,13 @@ struct ContentView: View {
                     return urlText
                 }()
             )
+            .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showInfo) {
             if useSafariWebView {
                 SafariVCInfoView(webViewID: $webViewID)
                     .fullSizeSheet()
+                    .preferredColorScheme(preferredScheme)
             } else {
                 // Pass navigator only when WebView is loaded (for live page testing)
                 InfoView(
@@ -214,11 +227,13 @@ struct ContentView: View {
                     loadedURL: showWebView ? $loadedURL : nil
                 )
                     .fullSizeSheet()
+                    .preferredColorScheme(preferredScheme)
             }
         }
         .sheet(isPresented: $showConsole) {
             ConsoleView(consoleManager: webViewNavigator.consoleManager, navigator: webViewNavigator)
                 .devToolsSheet()
+                .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showNetwork) {
             NetworkView(
@@ -226,10 +241,12 @@ struct ContentView: View {
                 resourceManager: webViewNavigator.resourceManager
             )
             .devToolsSheet()
+            .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showStorage) {
             StorageView(storageManager: storageManager, navigator: webViewNavigator)
                 .devToolsSheet()
+                .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showPerformance) {
             PerformanceView(
@@ -248,18 +265,22 @@ struct ContentView: View {
                 }
             )
             .devToolsSheet()
+            .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showEditor) {
             SourcesView(navigator: webViewNavigator)
                 .devToolsSheet()
+                .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showAccessibility) {
             AccessibilityAuditView(navigator: webViewNavigator)
                 .devToolsSheet()
+                .preferredColorScheme(preferredScheme)
         }
         .sheet(isPresented: $showSnippets) {
             SnippetsView(navigator: webViewNavigator)
                 .devToolsSheet()
+                .preferredColorScheme(preferredScheme)
         }
         .overlay {
             if showSearchText {
@@ -274,6 +295,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showAbout) {
             AboutView()
+                .preferredColorScheme(preferredScheme)
         }
         .alert("Unsupported URL", isPresented: $showSafariUnsupportedAlert) {
             Button("OK", role: .cancel) {}

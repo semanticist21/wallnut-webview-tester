@@ -15,9 +15,169 @@
           "locale" : "en_US"
         },
         {
+          "description" : "إزالة جميع الإعلانات من التطبيق بشكل دائم",
+          "displayName" : "إزالة الإعلانات",
+          "locale" : "ar"
+        },
+        {
+          "description" : "Elimina tots els anuncis de l'aplicació permanentment",
+          "displayName" : "Elimina anuncis",
+          "locale" : "ca"
+        },
+        {
+          "description" : "Trvale odstraní všechny reklamy z aplikace",
+          "displayName" : "Odstranit reklamy",
+          "locale" : "cs"
+        },
+        {
+          "description" : "Fjern alle reklamer fra appen permanent",
+          "displayName" : "Fjern reklamer",
+          "locale" : "da"
+        },
+        {
+          "description" : "Entfernt dauerhaft alle Werbung aus der App",
+          "displayName" : "Werbung entfernen",
+          "locale" : "de"
+        },
+        {
+          "description" : "Αφαιρεί μόνιμα όλες τις διαφημίσεις από την εφαρμογή",
+          "displayName" : "Αφαίρεση διαφημίσεων",
+          "locale" : "el"
+        },
+        {
+          "description" : "Elimina permanentemente todos los anuncios de la aplicación",
+          "displayName" : "Eliminar anuncios",
+          "locale" : "es"
+        },
+        {
+          "description" : "Poista kaikki mainokset sovelluksesta pysyvästi",
+          "displayName" : "Poista mainokset",
+          "locale" : "fi"
+        },
+        {
+          "description" : "Supprime définitivement toutes les publicités de l'application",
+          "displayName" : "Supprimer les pubs",
+          "locale" : "fr"
+        },
+        {
+          "description" : "הסר לצמיתות את כל הפרסומות מהאפליקציה",
+          "displayName" : "הסר פרסומות",
+          "locale" : "he"
+        },
+        {
+          "description" : "ऐप से सभी विज्ञापनों को स्थायी रूप से हटाएं",
+          "displayName" : "विज्ञापन हटाएं",
+          "locale" : "hi"
+        },
+        {
+          "description" : "Trajno ukloni sve oglase iz aplikacije",
+          "displayName" : "Ukloni oglase",
+          "locale" : "hr"
+        },
+        {
+          "description" : "Véglegesen eltávolítja az összes hirdetést az alkalmazásból",
+          "displayName" : "Hirdetések eltávolítása",
+          "locale" : "hu"
+        },
+        {
+          "description" : "Hapus semua iklan dari aplikasi secara permanen",
+          "displayName" : "Hapus iklan",
+          "locale" : "id"
+        },
+        {
+          "description" : "Rimuovi permanentemente tutta la pubblicità dall'app",
+          "displayName" : "Rimuovi pubblicità",
+          "locale" : "it"
+        },
+        {
+          "description" : "アプリからすべての広告を永久に削除します",
+          "displayName" : "広告を削除",
+          "locale" : "ja"
+        },
+        {
           "description" : "앱의 모든 광고를 영구적으로 제거합니다",
           "displayName" : "광고 제거",
           "locale" : "ko"
+        },
+        {
+          "description" : "Alih keluar semua iklan dari aplikasi secara kekal",
+          "displayName" : "Alih keluar iklan",
+          "locale" : "ms"
+        },
+        {
+          "description" : "Fjern alle annonser fra appen permanent",
+          "displayName" : "Fjern annonser",
+          "locale" : "nb"
+        },
+        {
+          "description" : "Verwijder permanent alle advertenties uit de app",
+          "displayName" : "Advertenties verwijderen",
+          "locale" : "nl"
+        },
+        {
+          "description" : "Usuń na stałe wszystkie reklamy z aplikacji",
+          "displayName" : "Usuń reklamy",
+          "locale" : "pl"
+        },
+        {
+          "description" : "Remove todos os anúncios do aplicativo permanentemente",
+          "displayName" : "Remover anúncios",
+          "locale" : "pt_BR"
+        },
+        {
+          "description" : "Remove todos os anúncios da aplicação permanentemente",
+          "displayName" : "Remover anúncios",
+          "locale" : "pt_PT"
+        },
+        {
+          "description" : "Elimină permanent toate reclamele din aplicație",
+          "displayName" : "Elimină reclamele",
+          "locale" : "ro"
+        },
+        {
+          "description" : "Навсегда удаляет всю рекламу из приложения",
+          "displayName" : "Удалить рекламу",
+          "locale" : "ru"
+        },
+        {
+          "description" : "Natrvalo odstráni všetky reklamy z aplikácie",
+          "displayName" : "Odstrániť reklamy",
+          "locale" : "sk"
+        },
+        {
+          "description" : "Ta bort alla annonser från appen permanent",
+          "displayName" : "Ta bort annonser",
+          "locale" : "sv"
+        },
+        {
+          "description" : "ลบโฆษณาทั้งหมดออกจากแอปอย่างถาวร",
+          "displayName" : "ลบโฆษณา",
+          "locale" : "th"
+        },
+        {
+          "description" : "Uygulamadaki tüm reklamları kalıcı olarak kaldırır",
+          "displayName" : "Reklamları kaldır",
+          "locale" : "tr"
+        },
+        {
+          "description" : "Назавжди видаляє всю рекламу з програми",
+          "displayName" : "Видалити рекламу",
+          "locale" : "uk"
+        },
+        {
+          "description" : "Xóa vĩnh viễn tất cả quảng cáo khỏi ứng dụng",
+          "displayName" : "Xóa quảng cáo",
+          "locale" : "vi"
+        },
+        {
+          "description" : "永久移除应用中的所有广告",
+          "displayName" : "移除广告",
+          "locale" : "zh_CN"
+        },
+        {
+          "description" : "永久移除應用程式中的所有廣告",
+          "displayName" : "移除廣告",
+          "locale" : "zh_TW"
         }
       ],
       "productID" : "removeAds",

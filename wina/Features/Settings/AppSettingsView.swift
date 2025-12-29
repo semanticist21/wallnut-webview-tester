@@ -96,6 +96,7 @@ enum AppLanguage: String, CaseIterable, Identifiable {
 
 struct AppSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.presentationMode) private var presentationMode
 
     // Storage
     @AppStorage("appLanguage") private var storedAppLanguage: String = ""
@@ -104,10 +105,14 @@ struct AppSettingsView: View {
     // Local state
     @State private var appLanguage: String = ""
     @State private var colorScheme: String = ""  // "", "light", "dark"
+    @State private var didLoadFromStorage = false
+    @State private var didApply = false
+    @State private var initialAppLanguage: String = ""
+    @State private var initialColorScheme: String = ""
 
     private var hasChanges: Bool {
-        appLanguage != storedAppLanguage ||
-        colorScheme != (storedColorScheme ?? "")
+        appLanguage != initialAppLanguage ||
+        colorScheme != initialColorScheme
     }
 
     private var selectedLanguageDisplayName: String {
@@ -130,17 +135,19 @@ struct AppSettingsView: View {
 
             Section {
                 NavigationLink {
-                    LanguagePickerView(selectedLanguage: $appLanguage)
+                    LanguagePickerView(selectedLanguage: appLanguage) { newLanguage in
+                        appLanguage = newLanguage
+                    }
                 } label: {
                     HStack {
-                        Text("Language")
+                        Text(verbatim: "Language")
                         Spacer()
                         Text(selectedLanguageDisplayName)
                             .foregroundStyle(.secondary)
                     }
                 }
             } header: {
-                Text("Language")
+                Text(verbatim: "Language")
             }
 
             Section {
@@ -163,17 +170,33 @@ struct AppSettingsView: View {
                     .disabled(!hasChanges)
             }
         }
-        .onAppear { loadFromStorage() }
+        .onAppear {
+            guard !didLoadFromStorage else { return }
+            loadFromStorage()
+            didLoadFromStorage = true
+        }
+        .onChange(of: appLanguage) { newValue in
+            storedAppLanguage = newValue
+        }
+        .onChange(of: colorScheme) { newValue in
+            storedColorScheme = newValue.isEmpty ? nil : newValue
+        }
+        .onChange(of: presentationMode.wrappedValue.isPresented) { _, isPresented in
+            guard !isPresented, !didApply else { return }
+            storedAppLanguage = initialAppLanguage
+            storedColorScheme = initialColorScheme.isEmpty ? nil : initialColorScheme
+        }
     }
 
     private func loadFromStorage() {
         appLanguage = storedAppLanguage
         colorScheme = storedColorScheme ?? ""
+        initialAppLanguage = appLanguage
+        initialColorScheme = colorScheme
     }
 
     private func applyChanges() {
-        storedAppLanguage = appLanguage
-        storedColorScheme = colorScheme.isEmpty ? nil : colorScheme
+        didApply = true
         dismiss()
     }
 
@@ -186,7 +209,9 @@ struct AppSettingsView: View {
 // MARK: - Searchable Language Picker View
 
 struct LanguagePickerView: View {
-    @Binding var selectedLanguage: String
+    let selectedLanguage: String
+    let onSelect: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
 
     private var filteredLanguages: [AppLanguage] {
@@ -212,13 +237,14 @@ struct LanguagePickerView: View {
                 }
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    selectedLanguage = language.rawValue
+                    onSelect(language.rawValue)
+                    dismiss()
                 }
             }
         }
-        .navigationTitle(Text(verbatim: "Language"))
+        .navigationTitle(Text(verbatim: "Languages"))
         .navigationBarTitleDisplayMode(.inline)
-        .searchable(text: $searchText, prompt: "Search languages")
+        .searchable(text: $searchText, prompt: Text(verbatim: "Search languages"))
     }
 }
 

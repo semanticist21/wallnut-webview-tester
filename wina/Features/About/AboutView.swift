@@ -99,22 +99,22 @@ struct AboutView: View {
                         }
                         .buttonStyle(.plain)
                         .disabled(store.isLoading)
+                    }
 
-                        if isDebugBuild {
-                            Button {
-                                Task {
+                    if isDebugBuild {
+                        Button {
+                            Task {
 #if DEBUG
-                                    await store.resetAdRemovalForDebug()
+                                await store.resetAdRemovalForDebug()
 #endif
-                                }
-                            } label: {
-                                Text(verbatim: "Reset Purchase State (Debug)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
                             }
-                            .buttonStyle(.plain)
-                            .disabled(store.isLoading)
+                        } label: {
+                            Text(verbatim: "Reset Purchase State (Debug)")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
+                        .buttonStyle(.plain)
+                        .disabled(store.isLoading)
                     }
 
                     if let error = store.errorMessage {
