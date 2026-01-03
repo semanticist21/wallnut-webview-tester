@@ -66,6 +66,29 @@ store/
 | Subtitle | 30 chars |
 | Keywords | 100 chars |
 | Description | 4000 chars |
+| Promotional Text | 170 chars |
+
+## App Store Metadata Rules
+
+- **No "iOS" keyword in promotional text**: Apple rejects promotional text containing "iOS". Use feature-focused descriptions instead.
+- **API submission permission**: `appStoreVersionSubmissions` may reject `CREATE` with 403 unless the API key has sufficient App Store Connect role (e.g., Admin/App Manager). If blocked, submit via UI or use a higher-privilege key.
+
+### Promotional Text Reference (170 chars max)
+
+All locales use this canonical text pattern. Update upload-metadata.py when changing.
+
+| Locale | Promotional Text |
+|--------|------------------|
+| en-US | Test WebView configurations in real-time. Built-in DevTools: Console, Network, Storage, Performance, Sources. |
+| ko | 실시간 WebView 구성 테스트. 내장 DevTools: Console, Network, Storage, Performance, Sources. |
+| ja | WebView設定をリアルタイムでテスト。内蔵DevTools: Console, Network, Storage, Performance, Sources。 |
+| zh-Hans | 实时测试WebView配置。内置DevTools: Console, Network, Storage, Performance, Sources。 |
+| zh-Hant | 即時測試WebView配置。內建DevTools: Console, Network, Storage, Performance, Sources。 |
+| de-DE | Testen Sie WebView-Konfigurationen in Echtzeit. Integrierte DevTools: Console, Network, Storage, Performance, Sources. |
+| fr-FR | Testez les configurations WebView en temps réel. DevTools intégrés : Console, Network, Storage, Performance, Sources. |
+| es-ES | Pruebe configuraciones WebView en tiempo real. DevTools integradas: Console, Network, Storage, Performance, Sources. |
+
+See `upload-metadata.py` METADATA dict for all 39 translations.
 
 ## Screenshot Specs
 
