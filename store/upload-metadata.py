@@ -69,11 +69,129 @@ Additional Features
 • Dark mode support
 
 Perfect for iOS developers who need to test web content rendering, debug JavaScript, analyze network requests, and ensure accessibility compliance.
-
-Note: Some features require iOS 18.4 or later.""",
         "keywords": "webview,developer,debug,console,network,safari,wkwebview,devtools,test,inspect,ios,javascript,html",
         "whatsNew": "Bug fixes and performance improvements.",
-        "promotionalText": "The essential WebView testing toolkit for iOS developers."
+        "promotionalText": "Change WebView settings and test instantly. Supports DevTools including Console, Network, Storage, and more."
+    },
+    "en-AU": {
+        "name": "Walnut: Webview Tester & Debug",
+        "subtitle": "Test WKWebView & SafariVC",
+        "description": """The ultimate developer tool for testing WKWebView and SFSafariViewController configurations in real-time.
+
+KEY FEATURES
+
+WKWebView Testing
+• Real-time configuration testing with 20+ options
+• Built-in DevTools: Console, Network, Storage, Performance, Sources, Accessibility
+• JavaScript injection and snippet execution
+• Custom User-Agent emulation
+• Viewport and device emulation
+
+SFSafariViewController Testing
+• Safari cookie/session sharing
+• Content Blocker support
+• Reader Mode configuration
+• Safari extension compatibility
+
+Developer Tools
+• Console: Capture console.log with %c CSS styling support
+• Network: Monitor fetch/XHR requests with timing data
+• Storage: View/edit localStorage, sessionStorage, cookies
+• Performance: Web Vitals (LCP, FID, CLS) and Navigation Timing
+• Sources: DOM tree inspection, stylesheets, scripts
+• Accessibility: axe-core based accessibility auditing
+
+Additional Features
+• Bookmark management for quick URL access
+• Responsive viewport resizing (iPhone, iPad, Desktop presets)
+• Screenshot capture
+• API capability detection
+• Dark mode support
+
+Perfect for iOS developers who need to test web content rendering, debug JavaScript, analyze network requests, and ensure accessibility compliance.
+        "keywords": "webview,developer,debug,console,network,safari,wkwebview,devtools,test,inspect,ios,javascript,html",
+        "whatsNew": "Bug fixes and performance improvements.",
+        "promotionalText": "Change WebView settings and test instantly. Supports DevTools including Console, Network, Storage, and more."
+    },
+    "en-CA": {
+        "name": "Walnut: Webview Tester & Debug",
+        "subtitle": "Test WKWebView & SafariVC",
+        "description": """The ultimate developer tool for testing WKWebView and SFSafariViewController configurations in real-time.
+
+KEY FEATURES
+
+WKWebView Testing
+• Real-time configuration testing with 20+ options
+• Built-in DevTools: Console, Network, Storage, Performance, Sources, Accessibility
+• JavaScript injection and snippet execution
+• Custom User-Agent emulation
+• Viewport and device emulation
+
+SFSafariViewController Testing
+• Safari cookie/session sharing
+• Content Blocker support
+• Reader Mode configuration
+• Safari extension compatibility
+
+Developer Tools
+• Console: Capture console.log with %c CSS styling support
+• Network: Monitor fetch/XHR requests with timing data
+• Storage: View/edit localStorage, sessionStorage, cookies
+• Performance: Web Vitals (LCP, FID, CLS) and Navigation Timing
+• Sources: DOM tree inspection, stylesheets, scripts
+• Accessibility: axe-core based accessibility auditing
+
+Additional Features
+• Bookmark management for quick URL access
+• Responsive viewport resizing (iPhone, iPad, Desktop presets)
+• Screenshot capture
+• API capability detection
+• Dark mode support
+
+Perfect for iOS developers who need to test web content rendering, debug JavaScript, analyze network requests, and ensure accessibility compliance.
+        "keywords": "webview,developer,debug,console,network,safari,wkwebview,devtools,test,inspect,ios,javascript,html",
+        "whatsNew": "Bug fixes and performance improvements.",
+        "promotionalText": "Change WebView settings and test instantly. Supports DevTools including Console, Network, Storage, and more."
+    },
+    "en-GB": {
+        "name": "Walnut: Webview Tester & Debug",
+        "subtitle": "Test WKWebView & SafariVC",
+        "description": """The ultimate developer tool for testing WKWebView and SFSafariViewController configurations in real-time.
+
+KEY FEATURES
+
+WKWebView Testing
+• Real-time configuration testing with 20+ options
+• Built-in DevTools: Console, Network, Storage, Performance, Sources, Accessibility
+• JavaScript injection and snippet execution
+• Custom User-Agent emulation
+• Viewport and device emulation
+
+SFSafariViewController Testing
+• Safari cookie/session sharing
+• Content Blocker support
+• Reader Mode configuration
+• Safari extension compatibility
+
+Developer Tools
+• Console: Capture console.log with %c CSS styling support
+• Network: Monitor fetch/XHR requests with timing data
+• Storage: View/edit localStorage, sessionStorage, cookies
+• Performance: Web Vitals (LCP, FID, CLS) and Navigation Timing
+• Sources: DOM tree inspection, stylesheets, scripts
+• Accessibility: axe-core based accessibility auditing
+
+Additional Features
+• Bookmark management for quick URL access
+• Responsive viewport resizing (iPhone, iPad, Desktop presets)
+• Screenshot capture
+• API capability detection
+• Dark mode support
+
+Perfect for iOS developers who need to test web content rendering, debug JavaScript, analyze network requests, and ensure accessibility compliance.
+        "keywords": "webview,developer,debug,console,network,safari,wkwebview,devtools,test,inspect,ios,javascript,html",
+        "whatsNew": "Bug fixes and performance improvements.",
+        "promotionalText": "Change WebView settings and test instantly. Supports DevTools including Console, Network, Storage, and more."
     },
     "ko": {
         "name": "Walnut: 웹뷰 테스터 & 디버그",
@@ -111,11 +229,9 @@ SFSafariViewController 테스트
 • 다크 모드 지원
 
 웹 콘텐츠 렌더링 테스트, JavaScript 디버깅, 네트워크 요청 분석, 접근성 준수 확인이 필요한 iOS 개발자에게 적합합니다.
-
-참고: 일부 기능은 iOS 18.4 이상이 필요합니다.""",
         "keywords": "웹뷰,개발자,디버그,콘솔,네트워크,사파리,devtools,테스트,검사,ios,자바스크립트,html,css,쿠키,성능,접근성,개발도구,브라우저,앱,모바일,웹킷,사파리뷰",
         "whatsNew": "버그 수정 및 성능 개선.",
-        "promotionalText": "iOS 개발자를 위한 필수 WebView 테스트 도구."
+        "promotionalText": "WebView 설정을 바꾸고 바로 테스트할 수 있습니다. Console, Network, Storage 등 DevTools를 지원합니다."
     },
     "ja": {
         "name": "Walnut: Webviewテスター&デバッグ",
@@ -153,11 +269,9 @@ SFSafariViewControllerテスト
 • ダークモードサポート
 
 Webコンテンツのレンダリングテスト、JavaScriptデバッグ、ネットワークリクエスト分析、アクセシビリティ準拠の確認が必要なiOS開発者に最適です。
-
-注意：一部の機能にはiOS 18.4以降が必要です。""",
         "keywords": "webview,開発者,デバッグ,コンソール,ネットワーク,safari,devtools,テスト,検査,ios,javascript,html,css,開発ツール,ブラウザ,アプリ",
         "whatsNew": "バグ修正とパフォーマンス改善。",
-        "promotionalText": "iOS開発者のための必須WebViewテストツール。"
+        "promotionalText": "WebView設定を変更してすぐにテストできます。Console、Network、StorageなどDevToolsをサポートしています。"
     },
     "zh-Hans": {
         "name": "Walnut: Webview测试和调试",
@@ -195,11 +309,9 @@ SFSafariViewController测试
 • 深色模式支持
 
 非常适合需要测试网页内容渲染、调试JavaScript、分析网络请求和确保可访问性合规的iOS开发者。
-
-注意：部分功能需要iOS 18.4或更高版本。""",
         "keywords": "webview,开发者,调试,控制台,网络,safari,devtools,测试,检查,ios,javascript,html,css,cookie,性能,开发工具,浏览器,应用,工具",
         "whatsNew": "错误修复和性能改进。",
-        "promotionalText": "iOS开发者必备的WebView测试工具。"
+        "promotionalText": "更改WebView设置后可立即测试。支持Console、Network、Storage等DevTools。"
     },
     "zh-Hant": {
         "name": "Walnut: Webview測試和除錯",
@@ -237,11 +349,9 @@ SFSafariViewController測試
 • 深色模式支援
 
 非常適合需要測試網頁內容呈現、除錯JavaScript、分析網路請求和確保無障礙合規的iOS開發者。
-
-注意：部分功能需要iOS 18.4或更高版本。""",
         "keywords": "webview,開發者,除錯,控制台,網路,safari,devtools,測試,檢查,ios,javascript,html,css,cookie,效能,開發工具,瀏覽器,應用,工具",
         "whatsNew": "錯誤修復和效能改善。",
-        "promotionalText": "iOS開發者必備的WebView測試工具。"
+        "promotionalText": "更改WebView設定後可立即測試。支援Console、Network、Storage等DevTools。"
     },
     "de-DE": {
         "name": "Walnut: Webview Tester & Debug",
@@ -279,11 +389,9 @@ Zusätzliche Funktionen
 • Dunkelmodus-Unterstützung
 
 Perfekt für iOS-Entwickler, die Web-Content-Rendering testen, JavaScript debuggen, Netzwerkanfragen analysieren und Barrierefreiheit sicherstellen müssen.
-
-Hinweis: Einige Funktionen erfordern iOS 18.4 oder höher.""",
         "keywords": "webview,entwickler,debug,konsole,netzwerk,safari,devtools,test,inspektor,ios,javascript,html,browser",
         "whatsNew": "Fehlerbehebungen und Leistungsverbesserungen.",
-        "promotionalText": "Das unverzichtbare WebView-Test-Toolkit für iOS-Entwickler."
+        "promotionalText": "Ändern Sie WebView-Einstellungen und testen Sie sofort. Unterstützt DevTools wie Console, Network, Storage und mehr."
     },
     "fr-FR": {
         "name": "Walnut: Webview Test & Débogage",
@@ -321,11 +429,49 @@ Fonctionnalités supplémentaires
 • Support du mode sombre
 
 Parfait pour les développeurs iOS qui doivent tester le rendu de contenu web, déboguer JavaScript, analyser les requêtes réseau et assurer la conformité d'accessibilité.
-
-Note : Certaines fonctionnalités nécessitent iOS 18.4 ou ultérieur.""",
         "keywords": "webview,développeur,debug,console,réseau,safari,devtools,test,inspecteur,ios,javascript,html,cookie",
         "whatsNew": "Corrections de bugs et améliorations de performances.",
-        "promotionalText": "La boîte à outils WebView essentielle pour les développeurs iOS."
+        "promotionalText": "Modifiez les paramètres WebView et testez instantanément. Prend en charge DevTools avec Console, Network, Storage et plus."
+    },
+    "fr-CA": {
+        "name": "Walnut: Webview Test & Débogage",
+        "subtitle": "Tester WKWebView & SafariVC",
+        "description": """L'outil ultime pour les développeurs pour tester les configurations WKWebView et SFSafariViewController en temps réel.
+
+FONCTIONNALITÉS PRINCIPALES
+
+Tests WKWebView
+• Tests de configuration en temps réel avec plus de 20 options
+• DevTools intégrés : Console, Network, Storage, Performance, Sources, Accessibility
+• Injection JavaScript et exécution de snippets
+• Émulation User-Agent personnalisée
+• Émulation de viewport et d'appareil
+
+Tests SFSafariViewController
+• Partage de cookies/sessions Safari
+• Support Content Blocker
+• Configuration Reader Mode
+• Compatibilité extensions Safari
+
+Outils de développement
+• Console : Capture console.log avec support du style CSS %c
+• Network : Surveillance des requêtes fetch/XHR avec données de timing
+• Storage : Afficher/modifier localStorage, sessionStorage, cookies
+• Performance : Web Vitals (LCP, FID, CLS) et Navigation Timing
+• Sources : Inspection de l'arbre DOM, feuilles de style, scripts
+• Accessibility : Audit d'accessibilité basé sur axe-core
+
+Fonctionnalités supplémentaires
+• Gestion des favoris pour un accès URL rapide
+• Redimensionnement de viewport réactif (préréglages iPhone, iPad, Desktop)
+• Capture d'écran
+• Détection des capacités API
+• Support du mode sombre
+
+Parfait pour les développeurs iOS qui doivent tester le rendu de contenu web, déboguer JavaScript, analyser les requêtes réseau et assurer la conformité d'accessibilité.
+        "keywords": "webview,développeur,debug,console,réseau,safari,devtools,test,inspecteur,ios,javascript,html,cookie",
+        "whatsNew": "Corrections de bugs et améliorations de performances.",
+        "promotionalText": "Modifiez les paramètres WebView et testez instantanément. Prend en charge DevTools avec Console, Network, Storage et plus."
     },
     "es-ES": {
         "name": "Walnut: Webview Test & Debug",
@@ -363,11 +509,49 @@ Características adicionales
 • Soporte de modo oscuro
 
 Perfecto para desarrolladores iOS que necesitan probar el renderizado de contenido web, depurar JavaScript, analizar solicitudes de red y asegurar el cumplimiento de accesibilidad.
-
-Nota: Algunas características requieren iOS 18.4 o posterior.""",
         "keywords": "webview,desarrollador,debug,consola,red,safari,devtools,prueba,inspector,ios,javascript,html,cookie",
         "whatsNew": "Correcciones de errores y mejoras de rendimiento.",
-        "promotionalText": "El kit de herramientas WebView esencial para desarrolladores iOS."
+        "promotionalText": "Cambie la configuración de WebView y pruebe al instante. Compatible con DevTools: Console, Network, Storage y más."
+    },
+    "es-MX": {
+        "name": "Walnut: Webview Test & Debug",
+        "subtitle": "Probar WKWebView y SafariVC",
+        "description": """La herramienta definitiva para desarrolladores para probar configuraciones de WKWebView y SFSafariViewController en tiempo real.
+
+CARACTERÍSTICAS PRINCIPALES
+
+Pruebas de WKWebView
+• Pruebas de configuración en tiempo real con más de 20 opciones
+• DevTools integradas: Console, Network, Storage, Performance, Sources, Accessibility
+• Inyección de JavaScript y ejecución de snippets
+• Emulación de User-Agent personalizado
+• Emulación de viewport y dispositivo
+
+Pruebas de SFSafariViewController
+• Compartir cookies/sesiones de Safari
+• Soporte de Content Blocker
+• Configuración de Reader Mode
+• Compatibilidad con extensiones de Safari
+
+Herramientas de desarrollo
+• Console: Captura de console.log con soporte de estilo CSS %c
+• Network: Monitoreo de solicitudes fetch/XHR con datos de tiempo
+• Storage: Ver/editar localStorage, sessionStorage, cookies
+• Performance: Web Vitals (LCP, FID, CLS) y Navigation Timing
+• Sources: Inspección del árbol DOM, hojas de estilo, scripts
+• Accessibility: Auditoría de accesibilidad basada en axe-core
+
+Características adicionales
+• Gestión de marcadores para acceso rápido a URLs
+• Redimensionamiento de viewport responsivo (presets iPhone, iPad, Desktop)
+• Captura de pantalla
+• Detección de capacidades de API
+• Soporte de modo oscuro
+
+Perfecto para desarrolladores iOS que necesitan probar el renderizado de contenido web, depurar JavaScript, analizar solicitudes de red y asegurar el cumplimiento de accesibilidad.
+        "keywords": "webview,desarrollador,debug,consola,red,safari,devtools,prueba,inspector,ios,javascript,html,cookie",
+        "whatsNew": "Correcciones de errores y mejoras de rendimiento.",
+        "promotionalText": "Cambie la configuración de WebView y pruebe al instante. Compatible con DevTools: Console, Network, Storage y más."
     },
     "it": {
         "name": "Walnut: Webview Test & Debug",
@@ -405,11 +589,9 @@ Funzionalità aggiuntive
 • Supporto modalità scura
 
 Perfetto per sviluppatori iOS che devono testare il rendering di contenuti web, debuggare JavaScript, analizzare richieste di rete e garantire la conformità all'accessibilità.
-
-Nota: Alcune funzionalità richiedono iOS 18.4 o successivo.""",
         "keywords": "webview,sviluppatore,debug,console,rete,safari,devtools,test,ispettore,ios,javascript,html,css",
         "whatsNew": "Correzioni di bug e miglioramenti delle prestazioni.",
-        "promotionalText": "Il toolkit WebView essenziale per sviluppatori iOS."
+        "promotionalText": "Modifica le impostazioni WebView e testa immediatamente. Supporta DevTools come Console, Network, Storage e altro."
     },
     "pt-BR": {
         "name": "Walnut: Webview Teste & Debug",
@@ -447,11 +629,49 @@ Recursos adicionais
 • Suporte ao modo escuro
 
 Perfeito para desenvolvedores iOS que precisam testar renderização de conteúdo web, depurar JavaScript, analisar requisições de rede e garantir conformidade de acessibilidade.
-
-Nota: Alguns recursos requerem iOS 18.4 ou posterior.""",
         "keywords": "webview,desenvolvedor,debug,console,rede,safari,devtools,teste,inspetor,ios,javascript,html,cookie",
         "whatsNew": "Correções de bugs e melhorias de desempenho.",
-        "promotionalText": "O kit de ferramentas WebView essencial para desenvolvedores iOS."
+        "promotionalText": "Altere as configurações do WebView e teste instantaneamente. Suporta DevTools com Console, Network, Storage e mais."
+    },
+    "pt-PT": {
+        "name": "Walnut: Webview Teste & Debug",
+        "subtitle": "Testar WKWebView e SafariVC",
+        "description": """A ferramenta definitiva para desenvolvedores testarem configurações de WKWebView e SFSafariViewController em tempo real.
+
+RECURSOS PRINCIPAIS
+
+Testes de WKWebView
+• Testes de configuração em tempo real com mais de 20 opções
+• DevTools integradas: Console, Network, Storage, Performance, Sources, Accessibility
+• Injeção de JavaScript e execução de snippets
+• Emulação de User-Agent personalizado
+• Emulação de viewport e dispositivo
+
+Testes de SFSafariViewController
+• Compartilhamento de cookies/sessões do Safari
+• Suporte a Content Blocker
+• Configuração do Reader Mode
+• Compatibilidade com extensões do Safari
+
+Ferramentas de desenvolvedor
+• Console: Captura de console.log com suporte a estilo CSS %c
+• Network: Monitoramento de requisições fetch/XHR com dados de tempo
+• Storage: Visualizar/editar localStorage, sessionStorage, cookies
+• Performance: Web Vitals (LCP, FID, CLS) e Navigation Timing
+• Sources: Inspeção da árvore DOM, folhas de estilo, scripts
+• Accessibility: Auditoria de acessibilidade baseada em axe-core
+
+Recursos adicionais
+• Gerenciamento de favoritos para acesso rápido a URLs
+• Redimensionamento de viewport responsivo (presets iPhone, iPad, Desktop)
+• Captura de tela
+• Detecção de capacidades de API
+• Suporte ao modo escuro
+
+Perfeito para desenvolvedores iOS que precisam testar renderização de conteúdo web, depurar JavaScript, analisar requisições de rede e garantir conformidade de acessibilidade.
+        "keywords": "webview,desenvolvedor,debug,console,rede,safari,devtools,teste,inspetor,ios,javascript,html,cookie",
+        "whatsNew": "Correções de bugs e melhorias de desempenho.",
+        "promotionalText": "Altere as configurações do WebView e teste instantaneamente. Suporta DevTools com Console, Network, Storage e mais."
     },
     "ru": {
         "name": "Walnut: Webview Тест и Отладка",
@@ -489,11 +709,9 @@ Nota: Alguns recursos requerem iOS 18.4 ou posterior.""",
 • Поддержка тёмного режима
 
 Идеально подходит для iOS-разработчиков, которым нужно тестировать рендеринг веб-контента, отлаживать JavaScript, анализировать сетевые запросы и обеспечивать соответствие требованиям доступности.
-
-Примечание: Некоторые функции требуют iOS 18.4 или новее.""",
         "keywords": "webview,разработчик,отладка,консоль,сеть,safari,devtools,тест,инспектор,ios,javascript,html,css",
         "whatsNew": "Исправления ошибок и улучшения производительности.",
-        "promotionalText": "Незаменимый набор инструментов для тестирования WebView для iOS-разработчиков."
+        "promotionalText": "Измените настройки WebView и тестируйте мгновенно. Поддерживает DevTools: Console, Network, Storage и другие."
     },
     "ar-SA": {
         "name": "Walnut: Webview اختبار وتصحيح",
@@ -531,11 +749,9 @@ Nota: Alguns recursos requerem iOS 18.4 ou posterior.""",
 • دعم الوضع الداكن
 
 مثالية لمطوري iOS الذين يحتاجون إلى اختبار عرض محتوى الويب وتصحيح أخطاء JavaScript وتحليل طلبات الشبكة وضمان الامتثال لإمكانية الوصول.
-
-ملاحظة: بعض الميزات تتطلب iOS 18.4 أو أحدث.""",
         "keywords": "webview,مطور,تصحيح,وحدة التحكم,شبكة,safari,devtools,اختبار,فحص,ios,javascript,html,css,متصفح,أداة",
         "whatsNew": "إصلاحات الأخطاء وتحسينات الأداء.",
-        "promotionalText": "مجموعة أدوات WebView الأساسية لمطوري iOS."
+        "promotionalText": "غيّر إعدادات WebView واختبرها فوراً. يدعم DevTools: Console وNetwork وStorage والمزيد."
     },
     "hi": {
         "name": "Walnut: Webview टेस्ट और डीबग",
@@ -573,11 +789,9 @@ SFSafariViewController टेस्टिंग
 • डार्क मोड सपोर्ट
 
 iOS डेवलपर्स के लिए परफेक्ट जिन्हें वेब कंटेंट रेंडरिंग टेस्ट करना है, JavaScript डीबग करना है, नेटवर्क रिक्वेस्ट एनालाइज़ करना है और एक्सेसिबिलिटी कंप्लायंस सुनिश्चित करना है।
-
-नोट: कुछ फीचर्स के लिए iOS 18.4 या बाद का वर्जन आवश्यक है।""",
         "keywords": "webview,डेवलपर,डीबग,कंसोल,नेटवर्क,safari,devtools,टेस्ट,इंस्पेक्ट,ios,javascript,html,css,ब्राउज़र",
         "whatsNew": "बग फिक्स और प्रदर्शन सुधार।",
-        "promotionalText": "iOS डेवलपर्स के लिए आवश्यक WebView टेस्टिंग टूलकिट।"
+        "promotionalText": "WebView सेटिंग्स बदलें और तुरंत टेस्ट करें। Console, Network, Storage आदि DevTools का समर्थन करता है।"
     },
     "th": {
         "name": "Walnut: Webview ทดสอบและดีบัก",
@@ -615,11 +829,9 @@ iOS डेवलपर्स के लिए परफेक्ट जिन्
 • รองรับโหมดมืด
 
 เหมาะสำหรับนักพัฒนา iOS ที่ต้องการทดสอบการแสดงผลเนื้อหาเว็บ ดีบัก JavaScript วิเคราะห์คำขอเครือข่าย และรับรองการปฏิบัติตามการเข้าถึง
-
-หมายเหตุ: บางคุณสมบัติต้องใช้ iOS 18.4 ขึ้นไป""",
         "keywords": "webview,นักพัฒนา,ดีบัก,คอนโซล,เครือข่าย,safari,devtools,ทดสอบ,ตรวจสอบ,ios,javascript,html,css",
         "whatsNew": "แก้ไขข้อบกพร่องและปรับปรุงประสิทธิภาพ",
-        "promotionalText": "ชุดเครื่องมือทดสอบ WebView ที่จำเป็นสำหรับนักพัฒนา iOS"
+        "promotionalText": "เปลี่ยนการตั้งค่า WebView และทดสอบได้ทันที รองรับ DevTools เช่น Console, Network, Storage และอื่นๆ"
     },
     "vi": {
         "name": "Walnut: Webview Test & Debug",
@@ -657,11 +869,9 @@ Tính năng bổ sung
 • Hỗ trợ chế độ tối
 
 Hoàn hảo cho các nhà phát triển iOS cần kiểm thử hiển thị nội dung web, gỡ lỗi JavaScript, phân tích yêu cầu mạng và đảm bảo tuân thủ khả năng truy cập.
-
-Lưu ý: Một số tính năng yêu cầu iOS 18.4 trở lên.""",
         "keywords": "webview,lập trình,debug,console,mạng,safari,devtools,kiểm thử,kiểm tra,ios,javascript,html,css",
         "whatsNew": "Sửa lỗi và cải thiện hiệu suất.",
-        "promotionalText": "Bộ công cụ kiểm thử WebView thiết yếu cho nhà phát triển iOS."
+        "promotionalText": "Thay đổi cài đặt WebView và kiểm tra ngay. Hỗ trợ DevTools: Console, Network, Storage và nhiều hơn nữa."
     },
     "id": {
         "name": "Walnut: Webview Tester & Debug",
@@ -699,11 +909,9 @@ Fitur Tambahan
 • Dukungan mode gelap
 
 Sempurna untuk pengembang iOS yang perlu menguji rendering konten web, debug JavaScript, menganalisis permintaan jaringan, dan memastikan kepatuhan aksesibilitas.
-
-Catatan: Beberapa fitur memerlukan iOS 18.4 atau lebih baru.""",
         "keywords": "webview,developer,debug,console,jaringan,safari,devtools,tes,inspeksi,ios,javascript,html,css",
         "whatsNew": "Perbaikan bug dan peningkatan kinerja.",
-        "promotionalText": "Toolkit pengujian WebView penting untuk pengembang iOS."
+        "promotionalText": "Ubah pengaturan WebView dan uji secara instan. Mendukung DevTools: Console, Network, Storage, dan lainnya."
     },
     "ms": {
         "name": "Walnut: Webview Tester & Debug",
@@ -741,11 +949,9 @@ Ciri-ciri Tambahan
 • Sokongan mod gelap
 
 Sempurna untuk pembangun iOS yang perlu menguji pemaparan kandungan web, nyahpepijat JavaScript, menganalisis permintaan rangkaian, dan memastikan pematuhan kebolehcapaian.
-
-Nota: Sesetengah ciri memerlukan iOS 18.4 atau lebih baharu.""",
         "keywords": "webview,pembangun,debug,konsol,rangkaian,safari,devtools,uji,periksa,ios,javascript,html,css,pelayar",
         "whatsNew": "Pembetulan pepijat dan penambahbaikan prestasi.",
-        "promotionalText": "Kit alat pengujian WebView penting untuk pembangun iOS."
+        "promotionalText": "Tukar tetapan WebView dan uji serta-merta. Menyokong DevTools: Console, Network, Storage dan banyak lagi."
     },
     "nl-NL": {
         "name": "Walnut: Webview Tester & Debug",
@@ -783,11 +989,9 @@ Extra functies
 • Ondersteuning voor donkere modus
 
 Perfect voor iOS-ontwikkelaars die webcontent-rendering moeten testen, JavaScript moeten debuggen, netwerkverzoeken moeten analyseren en toegankelijkheidsconformiteit moeten waarborgen.
-
-Opmerking: Sommige functies vereisen iOS 18.4 of hoger.""",
         "keywords": "webview,ontwikkelaar,debug,console,netwerk,safari,devtools,test,inspecteer,ios,javascript,html,css",
         "whatsNew": "Bugfixes en prestatieverbeteringen.",
-        "promotionalText": "De essentiële WebView-testtoolkit voor iOS-ontwikkelaars."
+        "promotionalText": "Wijzig WebView-instellingen en test direct. Ondersteunt DevTools zoals Console, Network, Storage en meer."
     },
     "pl": {
         "name": "Walnut: Webview Tester & Debug",
@@ -825,11 +1029,9 @@ Dodatkowe funkcje
 • Obsługa trybu ciemnego
 
 Idealne dla programistów iOS, którzy muszą testować renderowanie treści webowych, debugować JavaScript, analizować żądania sieciowe i zapewniać zgodność z dostępnością.
-
-Uwaga: Niektóre funkcje wymagają iOS 18.4 lub nowszego.""",
         "keywords": "webview,programista,debug,konsola,sieć,safari,devtools,test,inspektor,ios,javascript,html,css",
         "whatsNew": "Poprawki błędów i ulepszenia wydajności.",
-        "promotionalText": "Niezbędny zestaw narzędzi do testowania WebView dla programistów iOS."
+        "promotionalText": "Zmień ustawienia WebView i testuj natychmiast. Obsługuje DevTools: Console, Network, Storage i więcej."
     },
     "tr": {
         "name": "Walnut: Webview Test & Debug",
@@ -867,11 +1069,9 @@ Ek Özellikler
 • Karanlık mod desteği
 
 Web içerik görüntülemeyi test etmesi, JavaScript hata ayıklaması, ağ isteklerini analiz etmesi ve erişilebilirlik uyumluluğunu sağlaması gereken iOS geliştiricileri için mükemmel.
-
-Not: Bazı özellikler iOS 18.4 veya sonrasını gerektirir.""",
         "keywords": "webview,geliştirici,debug,konsol,ağ,safari,devtools,test,denetim,ios,javascript,html,css,tarayıcı",
         "whatsNew": "Hata düzeltmeleri ve performans iyileştirmeleri.",
-        "promotionalText": "iOS geliştiricileri için temel WebView test araç seti."
+        "promotionalText": "WebView ayarlarını değiştirin ve anında test edin. Console, Network, Storage ve daha fazlasıyla DevTools'u destekler."
     },
     "uk": {
         "name": "Walnut: Webview Тест і Дебаг",
@@ -909,11 +1109,9 @@ Not: Bazı özellikler iOS 18.4 veya sonrasını gerektirir.""",
 • Підтримка темного режиму
 
 Ідеально підходить для iOS-розробників, яким потрібно тестувати рендеринг веб-контенту, налагоджувати JavaScript, аналізувати мережеві запити та забезпечувати відповідність вимогам доступності.
-
-Примітка: Деякі функції потребують iOS 18.4 або новішої версії.""",
         "keywords": "webview,розробник,налагодження,консоль,мережа,safari,devtools,тест,інспектор,ios,javascript,html",
         "whatsNew": "Виправлення помилок та покращення продуктивності.",
-        "promotionalText": "Необхідний набір інструментів для тестування WebView для iOS-розробників."
+        "promotionalText": "Змініть налаштування WebView і тестуйте миттєво. Підтримує DevTools: Console, Network, Storage та інші."
     },
     "sv": {
         "name": "Walnut: Webview Tester & Debug",
@@ -951,11 +1149,9 @@ Ytterligare funktioner
 • Stöd för mörkt läge
 
 Perfekt för iOS-utvecklare som behöver testa webbinnehållsrendering, felsöka JavaScript, analysera nätverksförfrågningar och säkerställa tillgänglighetsefterlevnad.
-
-Obs: Vissa funktioner kräver iOS 18.4 eller senare.""",
         "keywords": "webview,utvecklare,debug,konsol,nätverk,safari,devtools,test,inspektera,ios,javascript,html,css",
         "whatsNew": "Buggfixar och prestandaförbättringar.",
-        "promotionalText": "Det viktiga WebView-testverktyget för iOS-utvecklare."
+        "promotionalText": "Ändra WebView-inställningar och testa direkt. Stöder DevTools som Console, Network, Storage och mer."
     },
     "no": {
         "name": "Walnut: Webview Tester & Debug",
@@ -993,11 +1189,9 @@ Ytterligere funksjoner
 • Støtte for mørk modus
 
 Perfekt for iOS-utviklere som trenger å teste webinnholdsrendering, feilsøke JavaScript, analysere nettverksforespørsler og sikre tilgjengelighetsoverholdelse.
-
-Merk: Noen funksjoner krever iOS 18.4 eller nyere.""",
         "keywords": "webview,utvikler,debug,konsoll,nettverk,safari,devtools,test,inspiser,ios,javascript,html,css",
         "whatsNew": "Feilrettinger og ytelsesforbedringer.",
-        "promotionalText": "Det essensielle WebView-testverktøyet for iOS-utviklere."
+        "promotionalText": "Endre WebView-innstillinger og test umiddelbart. Støtter DevTools: Console, Network, Storage og mer."
     },
     "da": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1035,11 +1229,9 @@ Yderligere funktioner
 • Understøttelse af mørk tilstand
 
 Perfekt til iOS-udviklere, der skal teste webindholdsgengivelse, debugge JavaScript, analysere netværksanmodninger og sikre tilgængelighedsoverholdelse.
-
-Bemærk: Nogle funktioner kræver iOS 18.4 eller nyere.""",
         "keywords": "webview,udvikler,debug,konsol,netværk,safari,devtools,test,inspicér,ios,javascript,html,css,browser",
         "whatsNew": "Fejlrettelser og ydelsesforbedringer.",
-        "promotionalText": "Det essentielle WebView-testværktøj til iOS-udviklere."
+        "promotionalText": "Skift WebView-indstillinger og test øjeblikkeligt. Understøtter DevTools: Console, Network, Storage og mere."
     },
     "fi": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1077,11 +1269,9 @@ Lisäominaisuudet
 • Tumman tilan tuki
 
 Täydellinen iOS-kehittäjille, jotka tarvitsevat web-sisällön renderöinnin testausta, JavaScript-virheenkorjausta, verkkopyyntöjen analysointia ja saavutettavuusvaatimusten varmistamista.
-
-Huomautus: Jotkin ominaisuudet vaativat iOS 18.4 tai uudemman.""",
         "keywords": "webview,kehittäjä,debug,konsoli,verkko,safari,devtools,testi,tarkasta,ios,javascript,html,css,selain",
         "whatsNew": "Virheenkorjauksia ja suorituskyvyn parannuksia.",
-        "promotionalText": "Tärkeä WebView-testaustyökalupaketti iOS-kehittäjille."
+        "promotionalText": "Muuta WebView-asetuksia ja testaa heti. Tukee DevToolsia: Console, Network, Storage ja muuta."
     },
     "cs": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1119,11 +1309,9 @@ Další funkce
 • Podpora tmavého režimu
 
 Ideální pro iOS vývojáře, kteří potřebují testovat vykreslování webového obsahu, debugovat JavaScript, analyzovat síťové požadavky a zajistit soulad s přístupností.
-
-Poznámka: Některé funkce vyžadují iOS 18.4 nebo novější.""",
         "keywords": "webview,vývojář,debug,konzole,síť,safari,devtools,test,inspektor,ios,javascript,html,css,prohlížeč",
         "whatsNew": "Opravy chyb a vylepšení výkonu.",
-        "promotionalText": "Nezbytná sada nástrojů pro testování WebView pro iOS vývojáře."
+        "promotionalText": "Změňte nastavení WebView a testujte okamžitě. Podporuje DevTools: Console, Network, Storage a další."
     },
     "sk": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1161,11 +1349,9 @@ Vývojárske nástroje
 • Podpora tmavého režimu
 
 Ideálne pre iOS vývojárov, ktorí potrebujú testovať vykresľovanie webového obsahu, debugovať JavaScript, analyzovať sieťové požiadavky a zabezpečiť súlad s prístupnosťou.
-
-Poznámka: Niektoré funkcie vyžadujú iOS 18.4 alebo novší.""",
         "keywords": "webview,vývojár,debug,konzola,sieť,safari,devtools,test,inšpektor,ios,javascript,html,css,prehliadač",
         "whatsNew": "Opravy chýb a vylepšenia výkonu.",
-        "promotionalText": "Nevyhnutná sada nástrojov pre testovanie WebView pre iOS vývojárov."
+        "promotionalText": "Zmeňte nastavenia WebView a testujte okamžite. Podporuje DevTools: Console, Network, Storage a ďalšie."
     },
     "hu": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1203,11 +1389,9 @@ További funkciók
 • Sötét mód támogatás
 
 Tökéletes iOS fejlesztőknek, akiknek webtartalom renderelést kell tesztelniük, JavaScript-et debugolniuk, hálózati kéréseket elemezniük és akadálymentességi megfelelőséget biztosítaniuk.
-
-Megjegyzés: Egyes funkciók iOS 18.4 vagy újabb verziót igényelnek.""",
         "keywords": "webview,fejlesztő,debug,konzol,hálózat,safari,devtools,teszt,vizsgálat,ios,javascript,html,css",
         "whatsNew": "Hibajavítások és teljesítménybeli fejlesztések.",
-        "promotionalText": "Az alapvető WebView tesztelő eszközkészlet iOS fejlesztőknek."
+        "promotionalText": "Módosítsa a WebView beállításokat és teszteljen azonnal. Támogatja a DevTools-t: Console, Network, Storage és más."
     },
     "ro": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1245,11 +1429,9 @@ Caracteristici suplimentare
 • Suport mod întunecat
 
 Perfect pentru dezvoltatorii iOS care trebuie să testeze redarea conținutului web, să depaneze JavaScript, să analizeze cererile de rețea și să asigure conformitatea cu accesibilitatea.
-
-Notă: Unele caracteristici necesită iOS 18.4 sau o versiune ulterioară.""",
         "keywords": "webview,dezvoltator,debug,consolă,rețea,safari,devtools,test,inspector,ios,javascript,html,css",
         "whatsNew": "Remedieri de erori și îmbunătățiri de performanță.",
-        "promotionalText": "Setul esențial de instrumente pentru testarea WebView pentru dezvoltatorii iOS."
+        "promotionalText": "Testați configurațiile WebView în timp real. DevTools încorporate: Console, Network, Storage, Performance, Sources."
     },
     "hr": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1287,11 +1469,9 @@ Dodatne značajke
 • Podrška za tamni način
 
 Savršeno za iOS programere koji trebaju testirati prikazivanje web sadržaja, debugirati JavaScript, analizirati mrežne zahtjeve i osigurati usklađenost s pristupačnošću.
-
-Napomena: Neke značajke zahtijevaju iOS 18.4 ili noviji.""",
         "keywords": "webview,programer,debug,konzola,mreža,safari,devtools,test,inspektor,ios,javascript,html,css",
         "whatsNew": "Ispravci grešaka i poboljšanja performansi.",
-        "promotionalText": "Osnovni alat za testiranje WebViewa za iOS programere."
+        "promotionalText": "Testirajte WebView konfiguracije u stvarnom vremenu. Ugrađeni DevTools: Console, Network, Storage, Performance, Sources."
     },
     "el": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1329,11 +1509,9 @@ Napomena: Neke značajke zahtijevaju iOS 18.4 ili noviji.""",
 • Υποστήριξη σκοτεινής λειτουργίας
 
 Ιδανικό για iOS προγραμματιστές που χρειάζεται να δοκιμάσουν απόδοση περιεχομένου web, να κάνουν debug σε JavaScript, να αναλύσουν αιτήματα δικτύου και να εξασφαλίσουν συμμόρφωση προσβασιμότητας.
-
-Σημείωση: Ορισμένες λειτουργίες απαιτούν iOS 18.4 ή μεταγενέστερη έκδοση.""",
         "keywords": "webview,προγραμματιστής,debug,κονσόλα,δίκτυο,safari,devtools,δοκιμή,ios,javascript,html,css",
         "whatsNew": "Διορθώσεις σφαλμάτων και βελτιώσεις απόδοσης.",
-        "promotionalText": "Η απαραίτητη εργαλειοθήκη δοκιμών WebView για iOS προγραμματιστές."
+        "promotionalText": "Δοκιμάστε τις διαμορφώσεις WebView σε πραγματικό χρόνο. Ενσωματωμένα DevTools: Console, Network, Storage, Performance, Sources."
     },
     "he": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1371,11 +1549,9 @@ Napomena: Neke značajke zahtijevaju iOS 18.4 ili noviji.""",
 • תמיכה במצב כהה
 
 מושלם למפתחי iOS שצריכים לבדוק רינדור תוכן אינטרנט, לדבג JavaScript, לנתח בקשות רשת ולהבטיח עמידה בדרישות נגישות.
-
-הערה: חלק מהתכונות דורשות iOS 18.4 ומעלה.""",
         "keywords": "webview,מפתח,דיבאג,קונסול,רשת,safari,devtools,בדיקה,בדיקת,ios,javascript,html,css,דפדפן,כלי,פיתוח",
         "whatsNew": "תיקוני באגים ושיפורי ביצועים.",
-        "promotionalText": "ערכת הכלים החיונית לבדיקת WebView למפתחי iOS."
+        "promotionalText": "בדוק הגדרות WebView בזמן אמת. DevTools מובנים: Console, Network, Storage, Performance, Sources."
     },
     "ca": {
         "name": "Walnut: Webview Tester & Debug",
@@ -1413,11 +1589,9 @@ Característiques addicionals
 • Suport de mode fosc
 
 Perfecte per a desenvolupadors iOS que necessiten provar el renderitzat de contingut web, depurar JavaScript, analitzar peticions de xarxa i assegurar el compliment d'accessibilitat.
-
-Nota: Algunes característiques requereixen iOS 18.4 o posterior.""",
         "keywords": "webview,desenvolupador,debug,consola,xarxa,safari,devtools,prova,inspector,ios,javascript,html,css",
         "whatsNew": "Correccions d'errors i millores de rendiment.",
-        "promotionalText": "El kit d'eines WebView essencial per a desenvolupadors iOS."
+        "promotionalText": "Prova configuracions WebView en temps real. DevTools integrades: Console, Network, Storage, Performance, Sources."
     }
 }
 
