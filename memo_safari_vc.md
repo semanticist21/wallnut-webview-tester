@@ -47,10 +47,10 @@ URL Scheme 또는 `ASWebAuthenticationSession`을 활용하면 개발 도구로�
 <array>
     <dict>
         <key>CFBundleURLName</key>
-        <string>com.wallnut.oauth</string>
+        <string>com.walnut.oauth</string>
         <key>CFBundleURLSchemes</key>
         <array>
-            <string>wallnut</string>
+            <string>walnut</string>
         </array>
     </dict>
 </array>
@@ -67,7 +67,7 @@ class OAuthInspector: NSObject, ASWebAuthenticationPresentationContextProviding 
     func startOAuthFlow(url: URL, callbackScheme: String, completion: @escaping (OAuthResult) -> Void) {
         session = ASWebAuthenticationSession(
             url: url,
-            callbackURLScheme: callbackScheme  // "wallnut" (://는 제외)
+            callbackURLScheme: callbackScheme  // "walnut" (://는 제외)
         ) { callbackURL, error in
             if let error = error {
                 completion(.failure(error))
@@ -222,8 +222,8 @@ func application(_ app: UIApplication,
                  open url: URL,
                  options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
 
-    // wallnut://callback?code=abc123 형태로 들어옴
-    if url.scheme == "wallnut" {
+    // walnut://callback?code=abc123 형태로 들어옴
+    if url.scheme == "walnut" {
         NotificationCenter.default.post(
             name: .oauthCallback,
             object: nil,
@@ -241,7 +241,7 @@ extension Notification.Name {
 
 ---
 
-## 4. Wallnut에서 구현 가능한 기능
+## 4. Walnut에서 구현 가능한 기능
 
 ### 4.1 OAuth Callback Inspector
 
@@ -263,7 +263,7 @@ extension Notification.Name {
 │ │ https://accounts.google.com/o/oauth2/v2/auth?...  │ │
 │ └───────────────────────────────────────────────────┘ │
 │                                                       │
-│ Callback Scheme: [wallnut    ]                        │
+│ Callback Scheme: [walnut    ]                        │
 │                                                       │
 │ [Start OAuth Flow]                                    │
 │                                                       │
@@ -333,7 +333,7 @@ enum OAuthPreset: CaseIterable {
 
 ### 5.1 ASWebAuthenticationSession 제한
 
-- **iOS 12+ 필요** (Wallnut은 iOS 26 타겟이라 문제없음)
+- **iOS 12+ 필요** (Walnut은 iOS 26 타겟이라 문제없음)
 - **prefersEphemeralWebBrowserSession = true** 설정 시 Safari 쿠키 공유 안 됨
 - 사용자에게 "앱이 로그인하려 합니다" 시스템 다이얼로그 표시됨
 
@@ -345,8 +345,8 @@ enum OAuthPreset: CaseIterable {
 
 ### 5.3 URL Scheme 충돌
 
-- `wallnut://` 스킴을 다른 앱이 등록할 수 있음
-- 앱 고유 식별자 포함 권장: `com.wallnut.oauth://`
+- `walnut://` 스킴을 다른 앱이 등록할 수 있음
+- 앱 고유 식별자 포함 권장: `com.walnut.oauth://`
 
 ---
 

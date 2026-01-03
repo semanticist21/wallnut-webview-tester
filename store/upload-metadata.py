@@ -30,7 +30,7 @@ LOCALES = [
 # Format: name (30 chars max), subtitle (30 chars max), description (4000 chars max), keywords (100 chars max)
 METADATA = {
     "en-US": {
-        "name": "Wallnut: WebView Tester",
+        "name": "Walnut: WebView Tester",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """The ultimate developer tool for testing WKWebView and SFSafariViewController configurations in real-time.
 
@@ -72,7 +72,7 @@ Note: Some features require iOS 18.4 or later.""",
         "promotionalText": "The essential WebView testing toolkit for iOS developers."
     },
     "ko": {
-        "name": "Wallnut: 웹뷰 테스터",
+        "name": "Walnut: 웹뷰 테스터",
         "subtitle": "WKWebView & SafariVC 테스트",
         "description": """WKWebView와 SFSafariViewController 설정을 실시간으로 테스트하는 개발자 도구입니다.
 
@@ -114,7 +114,7 @@ SFSafariViewController 테스트
         "promotionalText": "iOS 개발자를 위한 필수 WebView 테스트 도구."
     },
     "ja": {
-        "name": "Wallnut: WebViewテスター",
+        "name": "Walnut: WebViewテスター",
         "subtitle": "WKWebView & SafariVCテスト",
         "description": """WKWebViewとSFSafariViewControllerの設定をリアルタイムでテストする開発者ツールです。
 
@@ -156,7 +156,7 @@ Webコンテンツのレンダリングテスト、JavaScriptデバッグ、ネ�
         "promotionalText": "iOS開発者のための必須WebViewテストツール。"
     },
     "zh-Hans": {
-        "name": "Wallnut: WebView测试器",
+        "name": "Walnut: WebView测试器",
         "subtitle": "测试WKWebView和SafariVC",
         "description": """实时测试WKWebView和SFSafariViewController配置的开发者工具。
 
@@ -198,7 +198,7 @@ SFSafariViewController测试
         "promotionalText": "iOS开发者必备的WebView测试工具。"
     },
     "zh-Hant": {
-        "name": "Wallnut: WebView測試器",
+        "name": "Walnut: WebView測試器",
         "subtitle": "測試WKWebView和SafariVC",
         "description": """即時測試WKWebView和SFSafariViewController配置的開發者工具。
 
@@ -240,7 +240,7 @@ SFSafariViewController測試
         "promotionalText": "iOS開發者必備的WebView測試工具。"
     },
     "de-DE": {
-        "name": "Wallnut: WebView Tester",
+        "name": "Walnut: WebView Tester",
         "subtitle": "WKWebView & SafariVC testen",
         "description": """Das ultimative Entwicklertool zum Testen von WKWebView- und SFSafariViewController-Konfigurationen in Echtzeit.
 
@@ -282,7 +282,7 @@ Hinweis: Einige Funktionen erfordern iOS 18.4 oder höher.""",
         "promotionalText": "Das unverzichtbare WebView-Test-Toolkit für iOS-Entwickler."
     },
     "fr-FR": {
-        "name": "Wallnut: Testeur WebView",
+        "name": "Walnut: Testeur WebView",
         "subtitle": "Tester WKWebView & SafariVC",
         "description": """L'outil ultime pour les développeurs pour tester les configurations WKWebView et SFSafariViewController en temps réel.
 
@@ -324,7 +324,7 @@ Note : Certaines fonctionnalités nécessitent iOS 18.4 ou ultérieur.""",
         "promotionalText": "La boîte à outils WebView essentielle pour les développeurs iOS."
     },
     "es-ES": {
-        "name": "Wallnut: Probador WebView",
+        "name": "Walnut: Probador WebView",
         "subtitle": "Probar WKWebView y SafariVC",
         "description": """La herramienta definitiva para desarrolladores para probar configuraciones de WKWebView y SFSafariViewController en tiempo real.
 
@@ -366,7 +366,7 @@ Nota: Algunas características requieren iOS 18.4 o posterior.""",
         "promotionalText": "El kit de herramientas WebView esencial para desarrolladores iOS."
     },
     "it": {
-        "name": "Wallnut: Tester WebView",
+        "name": "Walnut: Tester WebView",
         "subtitle": "Testa WKWebView e SafariVC",
         "description": """Lo strumento definitivo per sviluppatori per testare le configurazioni di WKWebView e SFSafariViewController in tempo reale.
 
@@ -408,7 +408,7 @@ Nota: Alcune funzionalità richiedono iOS 18.4 o successivo.""",
         "promotionalText": "Il toolkit WebView essenziale per sviluppatori iOS."
     },
     "pt-BR": {
-        "name": "Wallnut: Testador WebView",
+        "name": "Walnut: Testador WebView",
         "subtitle": "Testar WKWebView e SafariVC",
         "description": """A ferramenta definitiva para desenvolvedores testarem configurações de WKWebView e SFSafariViewController em tempo real.
 
@@ -450,7 +450,7 @@ Nota: Alguns recursos requerem iOS 18.4 ou posterior.""",
         "promotionalText": "O kit de ferramentas WebView essencial para desenvolvedores iOS."
     },
     "ru": {
-        "name": "Wallnut: Тестер WebView",
+        "name": "Walnut: Тестер WebView",
         "subtitle": "Тест WKWebView и SafariVC",
         "description": """Идеальный инструмент разработчика для тестирования конфигураций WKWebView и SFSafariViewController в реальном времени.
 
@@ -492,7 +492,7 @@ Nota: Alguns recursos requerem iOS 18.4 ou posterior.""",
         "promotionalText": "Незаменимый набор инструментов для тестирования WebView для iOS-разработчиков."
     },
     "ar-SA": {
-        "name": "Wallnut: اختبار WebView",
+        "name": "Walnut: اختبار WebView",
         "subtitle": "اختبار WKWebView و SafariVC",
         "description": """الأداة المثالية للمطورين لاختبار إعدادات WKWebView و SFSafariViewController في الوقت الفعلي.
 
@@ -534,7 +534,7 @@ Nota: Alguns recursos requerem iOS 18.4 ou posterior.""",
         "promotionalText": "مجموعة أدوات WebView الأساسية لمطوري iOS."
     },
     "hi": {
-        "name": "Wallnut: WebView टेस्टर",
+        "name": "Walnut: WebView टेस्टर",
         "subtitle": "WKWebView और SafariVC टेस्ट",
         "description": """WKWebView और SFSafariViewController कॉन्फ़िगरेशन को रीयल-टाइम में टेस्ट करने के लिए परम डेवलपर टूल।
 
@@ -576,7 +576,7 @@ iOS डेवलपर्स के लिए परफेक्ट जिन्
         "promotionalText": "iOS डेवलपर्स के लिए आवश्यक WebView टेस्टिंग टूलकिट।"
     },
     "th": {
-        "name": "Wallnut: ทดสอบ WebView",
+        "name": "Walnut: ทดสอบ WebView",
         "subtitle": "ทดสอบ WKWebView & SafariVC",
         "description": """เครื่องมือสำหรับนักพัฒนาเพื่อทดสอบการกำหนดค่า WKWebView และ SFSafariViewController แบบเรียลไทม์
 
@@ -618,7 +618,7 @@ iOS डेवलपर्स के लिए परफेक्ट जिन्
         "promotionalText": "ชุดเครื่องมือทดสอบ WebView ที่จำเป็นสำหรับนักพัฒนา iOS"
     },
     "vi": {
-        "name": "Wallnut: Kiểm thử WebView",
+        "name": "Walnut: Kiểm thử WebView",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """Công cụ dành cho nhà phát triển để kiểm thử cấu hình WKWebView và SFSafariViewController theo thời gian thực.
 
@@ -660,7 +660,7 @@ Lưu ý: Một số tính năng yêu cầu iOS 18.4 trở lên.""",
         "promotionalText": "Bộ công cụ kiểm thử WebView thiết yếu cho nhà phát triển iOS."
     },
     "id": {
-        "name": "Wallnut: Penguji WebView",
+        "name": "Walnut: Penguji WebView",
         "subtitle": "Tes WKWebView & SafariVC",
         "description": """Alat pengembang terbaik untuk menguji konfigurasi WKWebView dan SFSafariViewController secara real-time.
 
@@ -702,7 +702,7 @@ Catatan: Beberapa fitur memerlukan iOS 18.4 atau lebih baru.""",
         "promotionalText": "Toolkit pengujian WebView penting untuk pengembang iOS."
     },
     "ms": {
-        "name": "Wallnut: Penguji WebView",
+        "name": "Walnut: Penguji WebView",
         "subtitle": "Uji WKWebView & SafariVC",
         "description": """Alat pembangun terbaik untuk menguji konfigurasi WKWebView dan SFSafariViewController secara masa nyata.
 
@@ -744,7 +744,7 @@ Nota: Sesetengah ciri memerlukan iOS 18.4 atau lebih baharu.""",
         "promotionalText": "Kit alat pengujian WebView penting untuk pembangun iOS."
     },
     "nl-NL": {
-        "name": "Wallnut: WebView Tester",
+        "name": "Walnut: WebView Tester",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """De ultieme ontwikkelaarstool voor het testen van WKWebView- en SFSafariViewController-configuraties in realtime.
 
@@ -786,7 +786,7 @@ Opmerking: Sommige functies vereisen iOS 18.4 of hoger.""",
         "promotionalText": "De essentiële WebView-testtoolkit voor iOS-ontwikkelaars."
     },
     "pl": {
-        "name": "Wallnut: Tester WebView",
+        "name": "Walnut: Tester WebView",
         "subtitle": "Testuj WKWebView i SafariVC",
         "description": """Najlepsze narzędzie deweloperskie do testowania konfiguracji WKWebView i SFSafariViewController w czasie rzeczywistym.
 
@@ -828,7 +828,7 @@ Uwaga: Niektóre funkcje wymagają iOS 18.4 lub nowszego.""",
         "promotionalText": "Niezbędny zestaw narzędzi do testowania WebView dla programistów iOS."
     },
     "tr": {
-        "name": "Wallnut: WebView Test",
+        "name": "Walnut: WebView Test",
         "subtitle": "WKWebView & SafariVC Test",
         "description": """WKWebView ve SFSafariViewController yapılandırmalarını gerçek zamanlı test etmek için nihai geliştirici aracı.
 
@@ -870,7 +870,7 @@ Not: Bazı özellikler iOS 18.4 veya sonrasını gerektirir.""",
         "promotionalText": "iOS geliştiricileri için temel WebView test araç seti."
     },
     "uk": {
-        "name": "Wallnut: Тестер WebView",
+        "name": "Walnut: Тестер WebView",
         "subtitle": "Тест WKWebView і SafariVC",
         "description": """Найкращий інструмент розробника для тестування конфігурацій WKWebView та SFSafariViewController в реальному часі.
 
@@ -912,7 +912,7 @@ Not: Bazı özellikler iOS 18.4 veya sonrasını gerektirir.""",
         "promotionalText": "Необхідний набір інструментів для тестування WebView для iOS-розробників."
     },
     "sv": {
-        "name": "Wallnut: WebView-testare",
+        "name": "Walnut: WebView-testare",
         "subtitle": "Testa WKWebView & SafariVC",
         "description": """Det ultimata utvecklarverktyget för att testa WKWebView- och SFSafariViewController-konfigurationer i realtid.
 
@@ -954,7 +954,7 @@ Obs: Vissa funktioner kräver iOS 18.4 eller senare.""",
         "promotionalText": "Det viktiga WebView-testverktyget för iOS-utvecklare."
     },
     "no": {
-        "name": "Wallnut: WebView-tester",
+        "name": "Walnut: WebView-tester",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """Det ultimate utviklerverktøyet for testing av WKWebView- og SFSafariViewController-konfigurasjoner i sanntid.
 
@@ -996,7 +996,7 @@ Merk: Noen funksjoner krever iOS 18.4 eller nyere.""",
         "promotionalText": "Det essensielle WebView-testverktøyet for iOS-utviklere."
     },
     "da": {
-        "name": "Wallnut: WebView-tester",
+        "name": "Walnut: WebView-tester",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """Det ultimative udviklerværktøj til test af WKWebView- og SFSafariViewController-konfigurationer i realtid.
 
@@ -1038,7 +1038,7 @@ Bemærk: Nogle funktioner kræver iOS 18.4 eller nyere.""",
         "promotionalText": "Det essentielle WebView-testværktøj til iOS-udviklere."
     },
     "fi": {
-        "name": "Wallnut: WebView-testaaja",
+        "name": "Walnut: WebView-testaaja",
         "subtitle": "Testaa WKWebView & SafariVC",
         "description": """Kehittäjätyökalu WKWebView- ja SFSafariViewController-konfiguraatioiden reaaliaikaiseen testaamiseen.
 
@@ -1080,7 +1080,7 @@ Huomautus: Jotkin ominaisuudet vaativat iOS 18.4 tai uudemman.""",
         "promotionalText": "Tärkeä WebView-testaustyökalupaketti iOS-kehittäjille."
     },
     "cs": {
-        "name": "Wallnut: WebView Tester",
+        "name": "Walnut: WebView Tester",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """Ultimátní vývojářský nástroj pro testování konfigurací WKWebView a SFSafariViewController v reálném čase.
 
@@ -1122,7 +1122,7 @@ Poznámka: Některé funkce vyžadují iOS 18.4 nebo novější.""",
         "promotionalText": "Nezbytná sada nástrojů pro testování WebView pro iOS vývojáře."
     },
     "sk": {
-        "name": "Wallnut: WebView Tester",
+        "name": "Walnut: WebView Tester",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """Ultimátny vývojársky nástroj pre testovanie konfigurácií WKWebView a SFSafariViewController v reálnom čase.
 
@@ -1164,7 +1164,7 @@ Poznámka: Niektoré funkcie vyžadujú iOS 18.4 alebo novší.""",
         "promotionalText": "Nevyhnutná sada nástrojov pre testovanie WebView pre iOS vývojárov."
     },
     "hu": {
-        "name": "Wallnut: WebView Tesztelő",
+        "name": "Walnut: WebView Tesztelő",
         "subtitle": "WKWebView & SafariVC teszt",
         "description": """A tökéletes fejlesztői eszköz a WKWebView és SFSafariViewController konfigurációk valós idejű teszteléséhez.
 
@@ -1206,7 +1206,7 @@ Megjegyzés: Egyes funkciók iOS 18.4 vagy újabb verziót igényelnek.""",
         "promotionalText": "Az alapvető WebView tesztelő eszközkészlet iOS fejlesztőknek."
     },
     "ro": {
-        "name": "Wallnut: Tester WebView",
+        "name": "Walnut: Tester WebView",
         "subtitle": "Test WKWebView & SafariVC",
         "description": """Instrumentul suprem pentru dezvoltatori pentru testarea configurațiilor WKWebView și SFSafariViewController în timp real.
 
@@ -1248,7 +1248,7 @@ Notă: Unele caracteristici necesită iOS 18.4 sau o versiune ulterioară.""",
         "promotionalText": "Setul esențial de instrumente pentru testarea WebView pentru dezvoltatorii iOS."
     },
     "hr": {
-        "name": "Wallnut: WebView Tester",
+        "name": "Walnut: WebView Tester",
         "subtitle": "Test WKWebView i SafariVC",
         "description": """Ultimativni alat za programere za testiranje WKWebView i SFSafariViewController konfiguracija u stvarnom vremenu.
 
@@ -1290,7 +1290,7 @@ Napomena: Neke značajke zahtijevaju iOS 18.4 ili noviji.""",
         "promotionalText": "Osnovni alat za testiranje WebViewa za iOS programere."
     },
     "el": {
-        "name": "Wallnut: Δοκιμαστής WebView",
+        "name": "Walnut: Δοκιμαστής WebView",
         "subtitle": "Δοκιμή WKWebView & SafariVC",
         "description": """Το απόλυτο εργαλείο προγραμματιστή για δοκιμή διαμορφώσεων WKWebView και SFSafariViewController σε πραγματικό χρόνο.
 
@@ -1332,7 +1332,7 @@ Napomena: Neke značajke zahtijevaju iOS 18.4 ili noviji.""",
         "promotionalText": "Η απαραίτητη εργαλειοθήκη δοκιμών WebView για iOS προγραμματιστές."
     },
     "he": {
-        "name": "Wallnut: בודק WebView",
+        "name": "Walnut: בודק WebView",
         "subtitle": "בדיקת WKWebView ו-SafariVC",
         "description": """הכלי האולטימטיבי למפתחים לבדיקת הגדרות WKWebView ו-SFSafariViewController בזמן אמת.
 
@@ -1374,7 +1374,7 @@ Napomena: Neke značajke zahtijevaju iOS 18.4 ili noviji.""",
         "promotionalText": "ערכת הכלים החיונית לבדיקת WebView למפתחי iOS."
     },
     "ca": {
-        "name": "Wallnut: Provador WebView",
+        "name": "Walnut: Provador WebView",
         "subtitle": "Provar WKWebView i SafariVC",
         "description": """L'eina definitiva per a desenvolupadors per provar configuracions de WKWebView i SFSafariViewController en temps real.
 

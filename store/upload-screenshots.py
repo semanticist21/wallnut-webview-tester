@@ -188,7 +188,7 @@ def main():
     print("\n" + "=" * 60)
     print("Done! Screenshots prepared in fastlane/screenshots/")
     print("\nTo upload to App Store Connect:")
-    print("  cd /Users/semanticist/Documents/code/wallnut")
+    print("  cd /Users/semanticist/Documents/code/walnut")
     print("  fastlane screenshots")
     print("=" * 60)
 

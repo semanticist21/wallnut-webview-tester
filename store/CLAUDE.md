@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-App Store Connect metadata and screenshot management for Wallnut iOS app. Contains localized metadata (39 languages) and screenshot generation tools.
+App Store Connect metadata and screenshot management for Walnut iOS app. Contains localized metadata (39 languages) and screenshot generation tools.
 
 ## Commands
 

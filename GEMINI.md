@@ -1,8 +1,8 @@
-# Wallnut (wina) - iOS WKWebView Tester App
+# Walnut (wina) - iOS WKWebView Tester App
 
 ## Project Overview
 
-**Wallnut (wina)** is an iOS developer tool built with SwiftUI (targeting iOS 16.0+) designed to test `WKWebView` configurations and behaviors in real-time.
+**Walnut (wina)** is an iOS developer tool built with SwiftUI (targeting iOS 16.0+) designed to test `WKWebView` configurations and behaviors in real-time.
 
 **Key Features:**
 *   **WebView Testing:** Toggle between `WKWebView` and `SFSafariViewController`.

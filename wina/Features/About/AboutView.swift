@@ -42,7 +42,7 @@ struct AboutView: View {
                         .scaledToFit()
                         .frame(height: 100)
 
-                    Text(verbatim: "Wallnut")
+                    Text(verbatim: "Walnut")
                         .font(.title2)
                         .fontWeight(.semibold)
 

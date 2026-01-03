@@ -90,7 +90,7 @@ struct winaApp: App {
 
     private static func requestATTAuthorization() {
         ATTrackingManager.requestTrackingAuthorization { status in
-            let logger = Logger(subsystem: "com.wallnut.wina", category: "ATT")
+            let logger = Logger(subsystem: "com.walnut.wina", category: "ATT")
             switch status {
             case .authorized:
                 logger.info("User granted tracking permission")

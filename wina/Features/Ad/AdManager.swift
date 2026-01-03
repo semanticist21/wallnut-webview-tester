@@ -2,7 +2,7 @@ import GoogleMobileAds
 import os.log
 import SwiftUI
 
-private let logger = Logger(subsystem: "com.wallnut.wina", category: "AdManager")
+private let logger = Logger(subsystem: "com.walnut.wina", category: "AdManager")
 
 // MARK: - Banner Ad View
 

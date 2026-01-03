@@ -3,14 +3,14 @@
     <!-- App Store Connect Metadata -->
 
     <!-- Title: 30 characters max -->
-    <title>Wallnut: WebView Tester</title>
+    <title>Walnut: WebView Tester</title>
 
     <!-- Subtitle: 30 characters max -->
     <subtitle>WebView Tester with DevTools</subtitle>
 
     <!-- Description: 4000 characters max -->
     <description>
-Wallnut is a developer tool for testing WKWebView and SFSafariViewController configurations.
+Walnut is a developer tool for testing WKWebView and SFSafariViewController configurations.
 
 FEATURES
 
@@ -59,10 +59,10 @@ Built for developers who need to test WebView behavior without building a separa
     </whats_new>
 
     <!-- Support URL -->
-    <support_url>https://github.com/anthropics/wallnut/issues</support_url>
+    <support_url>https://github.com/anthropics/walnut/issues</support_url>
 
     <!-- Privacy Policy URL -->
-    <privacy_url>https://github.com/anthropics/wallnut/blob/main/PRIVACY.md</privacy_url>
+    <privacy_url>https://github.com/anthropics/walnut/blob/main/PRIVACY.md</privacy_url>
 
     <!-- Category -->
     <primary_category>Developer Tools</primary_category>
