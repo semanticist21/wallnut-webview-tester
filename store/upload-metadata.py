@@ -1850,7 +1850,7 @@ def update_version_localization(localization_id, locale, metadata):
                 "description": metadata.get("description", "")[:4000],
                 "keywords": metadata.get("keywords", "")[:100],
                 "whatsNew": metadata.get("whatsNew", ""),
-                "promotionalText": "Comproveu ràpidament com es comporta el contingut web a WKWebView i SafariVC. Localitzeu la causa amb Console, Network, Storage, Performance i Sources."
+                "promotionalText": metadata.get("promotionalText", "")[:170]
             }
         }
     }
@@ -1881,7 +1881,7 @@ def create_version_localization(version_id, locale, metadata):
                 "description": metadata.get("description", "")[:4000],
                 "keywords": metadata.get("keywords", "")[:100],
                 "whatsNew": metadata.get("whatsNew", ""),
-                "promotionalText": "Comproveu ràpidament com es comporta el contingut web a WKWebView i SafariVC. Localitzeu la causa amb Console, Network, Storage, Performance i Sources."
+                "promotionalText": metadata.get("promotionalText", "")[:170]
             },
             "relationships": {
                 "appStoreVersion": {
